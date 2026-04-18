@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --red: #e74c3c; --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .admin-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+    .content { padding: 32px; flex: 1; max-width: 900px; }
+
+    /* ACCESS DENIED */
+    #accessDenied { display: none; text-align: center; padding: 80px 40px; }
+    #accessDenied .denied-icon { font-size: 48px; margin-bottom: 16px; }
+    #accessDenied h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--navy); margin-bottom: 8px; }
+    #accessDenied p { font-size: 14px; color: var(--gray); }
+
+    /* CARDS */
+    .card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; }
+    .card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); }
+    .card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .card-body { padding: 28px; }
+
+    /* WARNING BOX */
+    .warning-box { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.25); border-radius: 4px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #664400; line-height: 1.6; }
+    .warning-box strong { display: block; margin-bottom: 4px; }
+
+    /* INVITE FORM */
+    .invite-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    .field { flex: 1; min-width: 200px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 11px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .btn-primary { padding: 12px 24px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; white-space: nowrap; }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary.loading .btn-text { opacity: 0; }
+    .btn-primary .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-primary.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .success-msg { background: rgba(39,174,96,0.08); border: 1px solid rgba(39,174,96,0.2); border-radius: 2px; color: var(--green); font-size: 13px; padding: 12px 16px; margin-top: 16px; display: none; }
+    .success-msg.visible { display: block; }
+    .error-msg { background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.2); border-radius: 2px; color: var(--red); font-size: 13px; padding: 12px 16px; margin-top: 16px; display: none; }
+    .error-msg.visible { display: block; }
+
+    /* TEAM MEMBERS LIST */
+    .member-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(15,31,61,0.05); }
+    .member-item:last-child { border-bottom: none; }
+    .member-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--white); flex-shrink: 0; }
+    .member-avatar.gold { background: var(--gold); color: var(--navy); }
+    .member-info { flex: 1; }
+    .member-name { font-size: 14px; font-weight: 500; color: var(--navy); }
+    .member-email { font-size: 12px; color: var(--gray); margin-top: 2px; }
+    .member-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge-admin { background: rgba(201,168,76,0.15); color: #664400; }
+    .badge-member { background: rgba(15,31,61,0.07); color: var(--gray); }
+    .badge-pending { background: rgba(243,156,18,0.1); color: #b7770d; }
+    .member-actions { display: flex; gap: 8px; }
+    .btn-danger { padding: 6px 14px; background: transparent; color: var(--red); border: 1px solid rgba(231,76,60,0.25); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+    .btn-danger:hover { background: rgba(231,76,60,0.06); border-color: var(--red); }
+    .btn-reset { padding: 6px 14px; background: transparent; color: var(--gray); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+    .btn-reset:hover { border-color: var(--gold); color: var(--navy); }
+    .empty-state { text-align: center; padding: 40px; color: var(--gray); font-size: 13px; }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--white); border-radius: 4px; padding: 20px; border: 1px solid rgba(15,31,61,0.07); }
+    .stat-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; }
+    .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; color: var(--navy); line-height: 1; }
+
+    /* CONFIRM MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 4px; width: 90%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 32px; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
+    .modal-text { font-size: 14px; color: var(--gray); margin-bottom: 24px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } .stats-row { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading admin panel...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item active" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role" id="userRole">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Admin Panel</div>
+    <div class="admin-badge">⚙️ Admin Only</div>
+  </div>
+
+  <!-- ACCESS DENIED (shown to non-admins) -->
+  <div id="accessDenied" style="display:none; padding:80px 40px; text-align:center;">
+    <div style="font-size:48px; margin-bottom:16px;">🔒</div>
+    <h2 style="font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--navy); margin-bottom:8px;">Admin Access Only</h2>
+    <p style="font-size:14px; color:var(--gray);">This page is restricted to portal administrators.<br>Contact Daniela if you need access.</p>
+  </div>
+
+  <!-- ADMIN CONTENT -->
+  <div class="content fade-in" id="adminContent" style="display:none;">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Members</div>
+        <div class="stat-value" id="statMembers">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Reports Uploaded</div>
+        <div class="stat-value" id="statReports">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Chat Messages</div>
+        <div class="stat-value" id="statMessages">—</div>
+      </div>
+    </div>
+
+    <!-- INVITE USER -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">✉️ Invite Team Member</div>
+        <div class="card-sub">Send an invite — they will receive an email to set their own password and access the portal</div>
+      </div>
+      <div class="card-body">
+        <div class="warning-box">
+          <strong>⚠️ How inviting works:</strong>
+          Firebase will send a password reset / invite email to the address you enter below. The person clicks the link in their email and sets their own password. They can then sign in at your portal URL.
+        </div>
+        <div class="invite-form">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="inviteName" placeholder="Team member's full name"/>
+          </div>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" id="inviteEmail" placeholder="their@email.com"/>
+          </div>
+          <div class="field" style="max-width:160px;">
+            <label>Role</label>
+            <select id="inviteRole">
+              <option value="member">Team Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="inviteBtn" onclick="inviteUser()" style="margin-bottom:0; align-self:flex-end;">
+            <span class="btn-text">Send Invite</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+        </div>
+        <div class="success-msg" id="inviteSuccess"></div>
+        <div class="error-msg" id="inviteError"></div>
+      </div>
+    </div>
+
+    <!-- TEAM MEMBERS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">👥 Team Members</div>
+        <div class="card-sub">All users who have access to the portal</div>
+      </div>
+      <div class="card-body" id="membersList">
+        <div class="empty-state">Loading team members...</div>
+      </div>
+    </div>
+
+    <!-- PASSWORD RESET -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔑 Send Password Reset</div>
+        <div class="card-sub">Send a password reset email to any team member</div>
+      </div>
+      <div class="card-body">
+        <div class="invite-form">
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" id="resetEmail" placeholder="their@email.com"/>
+          </div>
+          <button class="btn-primary" id="resetBtn" onclick="sendReset()" style="align-self:flex-end;">
+            <span class="btn-text">Send Reset Email</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+        </div>
+        <div class="success-msg" id="resetSuccess"></div>
+        <div class="error-msg" id="resetError"></div>
+      </div>
+    </div>
+
+    <!-- PORTAL SETTINGS INFO -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚙️ Portal Settings</div>
+        <div class="card-sub">Key information about your portal configuration</div>
+      </div>
+      <div class="card-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:6px;">Portal URL</div>
+            <div style="font-size:13px; color:var(--navy);">https://daniela3700.github.io/lsrta-portal</div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:6px;">Firebase Project</div>
+            <div style="font-size:13px; color:var(--navy);">lsrta-portal (Blaze Plan)</div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:6px;">AI Status</div>
+            <div style="font-size:13px; color:var(--navy);" id="aiStatus">⏳ API key not yet connected</div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:6px;">Admin Email</div>
+            <div style="font-size:13px; color:var(--navy);" id="adminEmail">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title">Remove Team Member?</div>
+    <div class="modal-text" id="confirmText">Are you sure you want to remove this team member? They will lose access to the portal immediately.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-primary" id="confirmBtn" style="background:var(--red);" onclick="confirmRemove()">
+        <span class="btn-text">Remove Access</span>
+        <span class="btn-spinner"><span class="spinner-ring"></span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut,
+    createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, deleteUser }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, onValue, remove }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // ── ADMIN EMAILS — Add your email here ──
+  const ADMIN_EMAILS = ['daniela3700@gmail.com', 'daniela@legacysignature.com'];
+  // Add your actual email above so the admin panel unlocks for you
+
+  let currentUser = null;
+  let pendingRemoveUid = null;
+  let allMembers = {};
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('adminEmail').textContent = user.email;
+
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+
+    // Check if admin
+    const isAdmin = ADMIN_EMAILS.includes(user.email) ||
+      await checkAdminRole(user.uid);
+
+    if (!isAdmin) {
+      document.getElementById('accessDenied').style.display = 'block';
+      document.getElementById('userRole').textContent = 'Team Member';
+      return;
+    }
+
+    document.getElementById('adminContent').style.display = 'block';
+    document.getElementById('userRole').textContent = 'Admin';
+    loadStats();
+    loadMembers();
+
+    // Register current user in members db
+    await set(ref(db, 'members/' + user.uid), {
+      name: user.displayName || user.email,
+      email: user.email,
+      role: 'admin',
+      joinedAt: Date.now()
+    });
+  });
+
+  async function checkAdminRole(uid) {
+    try {
+      const snap = await get(ref(db, 'members/' + uid + '/role'));
+      return snap.exists() && snap.val() === 'admin';
+    } catch { return false; }
+  }
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  function loadStats() {
+    onValue(ref(db, 'members'), snap => {
+      document.getElementById('statMembers').textContent = snap.exists() ? Object.keys(snap.val()).length : 0;
+    });
+    onValue(ref(db, 'reports'), snap => {
+      document.getElementById('statReports').textContent = snap.exists() ? Object.keys(snap.val()).length : 0;
+    });
+    // Count chat messages across all channels
+    const channels = ['general', 'reports', 'renewals', 'maintenance'];
+    let totalMsgs = 0;
+    channels.forEach(ch => {
+      onValue(ref(db, 'chat/' + ch), snap => {
+        if (snap.exists()) totalMsgs += Object.keys(snap.val()).length;
+        document.getElementById('statMessages').textContent = totalMsgs;
+      });
+    });
+  }
+
+  function loadMembers() {
+    onValue(ref(db, 'members'), snap => {
+      const list = document.getElementById('membersList');
+      if (!snap.exists()) {
+        list.innerHTML = '<div class="empty-state">No team members yet. Invite your first team member above!</div>';
+        return;
+      }
+      allMembers = snap.val();
+      const members = Object.entries(allMembers).map(([uid, data]) => ({ uid, ...data }));
+      members.sort((a, b) => (a.role === 'admin' ? -1 : 1));
+
+      list.innerHTML = members.map(m => {
+        const initials = (m.name || m.email || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+        const isMe = currentUser && m.uid === currentUser.uid;
+        const roleClass = m.role === 'admin' ? 'badge-admin' : m.role === 'pending' ? 'badge-pending' : 'badge-member';
+        const roleLabel = m.role === 'admin' ? '⭐ Admin' : m.role === 'pending' ? '⏳ Pending' : 'Member';
+        return `
+          <div class="member-item">
+            <div class="member-avatar ${m.role === 'admin' ? 'gold' : ''}">${initials}</div>
+            <div class="member-info">
+              <div class="member-name">${m.name || 'Unknown'} ${isMe ? '(You)' : ''}</div>
+              <div class="member-email">${m.email || '—'}</div>
+            </div>
+            <span class="member-badge ${roleClass}">${roleLabel}</span>
+            <div class="member-actions">
+              ${!isMe ? `<button class="btn-reset" onclick="sendResetForMember('${m.email}')">Reset Password</button>` : ''}
+              ${!isMe ? `<button class="btn-danger" onclick="promptRemove('${m.uid}', '${m.name || m.email}')">Remove</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    });
+  }
+
+  // Invite new user
+  window.inviteUser = async function() {
+    const name = document.getElementById('inviteName').value.trim();
+    const email = document.getElementById('inviteEmail').value.trim();
+    const role = document.getElementById('inviteRole').value;
+    const btn = document.getElementById('inviteBtn');
+
+    if (!name || !email) return showMsg('inviteError', 'Please enter both name and email.');
+
+    setLoading(btn, true);
+    clearMsgs('invite');
+
+    try {
+      // Create account with temp password
+      const tempPass = 'TempPass' + Math.random().toString(36).slice(2, 10) + '!';
+      const cred = await createUserWithEmailAndPassword(auth, email, tempPass);
+      await updateProfile(cred.user, { displayName: name });
+
+      // Save to members db
+      await set(ref(db, 'members/' + cred.user.uid), {
+        name, email, role,
+        invitedBy: currentUser.email,
+        joinedAt: Date.now()
+      });
+
+      // Send password reset so they can set their own password
+      await sendPasswordResetEmail(auth, email);
+
+      showMsg('inviteSuccess', `✅ Invite sent to ${email}! They will receive an email to set their password and can then sign in.`);
+      document.getElementById('inviteName').value = '';
+      document.getElementById('inviteEmail').value = '';
+
+    } catch(e) {
+      const msgs = {
+        'auth/email-already-in-use': 'This email already has an account. Use "Send Password Reset" below if they need access.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+      };
+      showMsg('inviteError', msgs[e.code] || 'Invite failed: ' + e.message);
+    }
+    setLoading(btn, false);
+  };
+
+  // Send password reset
+  window.sendReset = async function() {
+    const email = document.getElementById('resetEmail').value.trim();
+    const btn = document.getElementById('resetBtn');
+    if (!email) return showMsg('resetError', 'Please enter an email address.');
+    setLoading(btn, true);
+    clearMsgs('reset');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showMsg('resetSuccess', `✅ Password reset email sent to ${email}.`);
+      document.getElementById('resetEmail').value = '';
+    } catch(e) {
+      showMsg('resetError', e.code === 'auth/user-not-found' ? 'No account found with that email.' : 'Failed: ' + e.message);
+    }
+    setLoading(btn, false);
+  };
+
+  window.sendResetForMember = async (email) => {
+    if (!email) return;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('Password reset email sent to ' + email);
+    } catch(e) {
+      alert('Failed to send reset: ' + e.message);
+    }
+  };
+
+  // Remove member
+  window.promptRemove = (uid, name) => {
+    pendingRemoveUid = uid;
+    document.getElementById('confirmText').textContent =
+      `Are you sure you want to remove ${name}? They will be removed from the team list. Note: to fully revoke login access, you must also disable their account in the Firebase console.`;
+    document.getElementById('confirmModal').classList.add('open');
+  };
+
+  window.confirmRemove = async () => {
+    if (!pendingRemoveUid) return;
+    const btn = document.getElementById('confirmBtn');
+    setLoading(btn, true);
+    try {
+      await remove(ref(db, 'members/' + pendingRemoveUid));
+      closeConfirm();
+    } catch(e) {
+      alert('Remove failed: ' + e.message);
+    }
+    setLoading(btn, false);
+  };
+
+  window.closeConfirm = () => {
+    document.getElementById('confirmModal').classList.remove('open');
+    pendingRemoveUid = null;
+  };
+
+  function setLoading(btn, state) { btn.disabled = state; btn.classList.toggle('loading', state); }
+  function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('visible'); }
+  function clearMsgs(prefix) {
+    document.getElementById(prefix + 'Success')?.classList.remove('visible');
+    document.getElementById(prefix + 'Error')?.classList.remove('visible');
+  }
+</script>
+
+</body>
+</html>
