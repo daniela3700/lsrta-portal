@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com api.anthropic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://api.anthropic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rent Roll — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --yellow: #f39c12; --red: #e74c3c;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* UPLOAD */
+    .upload-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 28px; overflow: hidden; }
+    .card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); }
+    .card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .upload-zone { margin: 24px 28px; border: 2px dashed rgba(15,31,61,0.15); border-radius: 4px; padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-label { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 4px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); cursor: pointer; font-weight: 500; }
+    #fileInput { display: none; }
+
+    /* FILE SELECTED */
+    .file-bar { display: none; margin: 0 28px 20px; padding: 12px 16px; background: rgba(39,174,96,0.06); border: 1px solid rgba(39,174,96,0.2); border-radius: 2px; display: none; align-items: center; gap: 12px; }
+    .file-bar.visible { display: flex; }
+    .file-bar-name { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .file-bar-size { font-size: 11px; color: var(--gray); }
+    .btn-remove { margin-left: auto; font-size: 11px; color: var(--gray); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+
+    /* FORM */
+    .rent-form { display: none; padding: 0 28px 28px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 10px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .btn-analyze { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-analyze:hover { background: var(--navy-mid); }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-analyze.loading .btn-text { opacity: 0; }
+    .btn-analyze .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-analyze.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* STAT CARDS */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; display: none; }
+    .stats-row.visible { display: grid; }
+    .stat-card { background: var(--white); border-radius: 4px; padding: 20px; border: 1px solid rgba(15,31,61,0.07); }
+    .stat-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; }
+    .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--navy); line-height: 1; margin-bottom: 4px; }
+    .stat-sub { font-size: 12px; color: var(--gray); }
+
+    /* URGENCY LEGEND */
+    .legend { display: flex; gap: 20px; margin-bottom: 20px; align-items: center; display: none; }
+    .legend.visible { display: flex; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* RENEWAL TABLE */
+    .renewal-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; display: none; }
+    .renewal-card.visible { display: block; }
+    .renewal-table { width: 100%; border-collapse: collapse; }
+    .renewal-table th { padding: 12px 16px; text-align: left; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); border-bottom: 1px solid rgba(15,31,61,0.08); background: #fafbfc; font-weight: 500; }
+    .renewal-table td { padding: 14px 16px; font-size: 13px; color: var(--navy); border-bottom: 1px solid rgba(15,31,61,0.05); }
+    .renewal-table tr:last-child td { border-bottom: none; }
+    .renewal-table tr:hover td { background: #fafbfc; }
+    .urgency-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .urgency-red { background: rgba(231,76,60,0.1); color: var(--red); }
+    .urgency-yellow { background: rgba(243,156,18,0.1); color: var(--yellow); }
+    .urgency-green { background: rgba(39,174,96,0.1); color: var(--green); }
+
+    /* AI ANALYSIS */
+    .analysis-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; display: none; }
+    .analysis-card.visible { display: block; }
+    .analysis-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .analysis-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+    .analysis-body { padding: 28px; background: var(--cream); font-size: 14px; line-height: 1.8; color: var(--navy); white-space: pre-wrap; }
+
+    /* INCOME PROJECTION */
+    .projection-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; display: none; }
+    .projection-card.visible { display: block; }
+    .projection-row { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .projection-col { padding: 24px; border-right: 1px solid rgba(15,31,61,0.06); }
+    .projection-col:last-child { border-right: none; }
+    .projection-period { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; }
+    .projection-value { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--navy); margin-bottom: 4px; }
+    .projection-sub { font-size: 12px; color: var(--gray); }
+    .projection-warning { font-size: 12px; color: var(--red); margin-top: 4px; }
+
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; margin-right: 10px; margin-bottom: 28px; }
+    .btn-secondary:hover { border-color: var(--gold); }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2,1fr); } .form-row { grid-template-columns: 1fr; } .projection-row { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading rent roll...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item active" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Rent Roll & Renewal Tracking</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- UPLOAD -->
+    <div class="upload-card">
+      <div class="card-header">
+        <div class="card-title">Upload Rent Roll</div>
+        <div class="card-sub">Export your rent roll from Appfolio and upload it here — AI will flag renewals, project income gaps, and identify seasonal patterns</div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📋</div>
+        <div class="upload-label">Drop your Appfolio rent roll here</div>
+        <div class="upload-sub">or <span>browse to upload</span> &nbsp;·&nbsp; Excel · CSV · PDF</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+      <div class="file-bar" id="fileBar">
+        <span style="font-size:18px">📄</span>
+        <div>
+          <div class="file-bar-name" id="fileName"></div>
+          <div class="file-bar-size" id="fileSize"></div>
+        </div>
+        <button class="btn-remove" onclick="removeFile()">✕ Remove</button>
+      </div>
+
+      <div class="rent-form" id="rentForm">
+        <div class="form-row">
+          <div class="field">
+            <label>Property Name</label>
+            <input type="text" id="propertyName" placeholder="e.g. Sunset Apartments or All Properties"/>
+          </div>
+          <div class="field">
+            <label>As of Date</label>
+            <input type="text" id="asOfDate" placeholder="e.g. April 2026"/>
+          </div>
+          <div class="field">
+            <label>Average Monthly Rent</label>
+            <input type="text" id="avgRent" placeholder="e.g. $1,200"/>
+          </div>
+        </div>
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeRentRoll()">
+          <span class="btn-text">📋 Analyze Rent Roll</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-label">Total Units</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub">In this rent roll</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expiring in 30 Days</div>
+        <div class="stat-value" id="stat30" style="color:var(--red)">—</div>
+        <div class="stat-sub">Immediate action needed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expiring in 60 Days</div>
+        <div class="stat-value" id="stat60" style="color:var(--yellow)">—</div>
+        <div class="stat-sub">Begin outreach soon</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expiring in 90 Days</div>
+        <div class="stat-value" id="stat90" style="color:var(--green)">—</div>
+        <div class="stat-sub">Plan ahead</div>
+      </div>
+    </div>
+
+    <!-- INCOME PROJECTION -->
+    <div class="projection-card" id="projectionCard">
+      <div class="card-header" style="padding:18px 24px;">
+        <div class="card-title">💰 Income at Risk if Leases Don't Renew</div>
+      </div>
+      <div class="projection-row">
+        <div class="projection-col">
+          <div class="projection-period">30-Day Risk</div>
+          <div class="projection-value" id="risk30">—</div>
+          <div class="projection-sub">Monthly income at risk</div>
+          <div class="projection-warning" id="risk30warn"></div>
+        </div>
+        <div class="projection-col">
+          <div class="projection-period">60-Day Risk</div>
+          <div class="projection-value" id="risk60">—</div>
+          <div class="projection-sub">Monthly income at risk</div>
+          <div class="projection-warning" id="risk60warn"></div>
+        </div>
+        <div class="projection-col">
+          <div class="projection-period">90-Day Risk</div>
+          <div class="projection-value" id="risk90">—</div>
+          <div class="projection-sub">Monthly income at risk</div>
+          <div class="projection-warning" id="risk90warn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENEWAL TABLE -->
+    <div class="renewal-card" id="renewalCard">
+      <div class="card-header" style="padding:18px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div class="card-title">⏰ Renewal Timeline</div>
+        <div class="legend" id="legend" style="display:flex; margin-bottom:0;">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Under 30 days</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>31–60 days</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>61–90 days</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="renewal-table">
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Unit</th>
+              <th>Property</th>
+              <th>Lease End</th>
+              <th>Days Left</th>
+              <th>Monthly Rent</th>
+              <th>Urgency</th>
+            </tr>
+          </thead>
+          <tbody id="renewalTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI ANALYSIS -->
+    <div class="analysis-card" id="analysisCard">
+      <div class="analysis-header">
+        <div class="analysis-title">🤖 AI Rent Roll Analysis</div>
+        <div class="ai-badge">✨ Claude AI</div>
+      </div>
+      <div class="analysis-body" id="analysisBody"></div>
+    </div>
+
+    <div id="actionButtons" style="display:none;">
+      <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+      <button class="btn-secondary" onclick="resetAll()">Upload New Rent Roll</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  let currentFile = null;
+  let currentAnalysis = '';
+
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // File handling
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+  document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  function handleFile(file) {
+    currentFile = file;
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('fileBar').classList.add('visible');
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('rentForm').style.display = 'block';
+  }
+
+  window.removeFile = () => {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('fileBar').classList.remove('visible');
+    document.getElementById('rentForm').style.display = 'none';
+  };
+
+  window.analyzeRentRoll = async function() {
+    if (!currentFile) return;
+    const property = document.getElementById('propertyName').value || 'Portfolio';
+    const asOf = document.getElementById('asOfDate').value || 'Current';
+    const avgRent = document.getElementById('avgRent').value || '$1,200';
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    let fileContent = '';
+    try {
+      fileContent = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result);
+        r.onerror = rej;
+        r.readAsText(currentFile);
+      });
+      if (fileContent.length > 8000) fileContent = fileContent.substring(0, 8000);
+    } catch(e) {
+      fileContent = '[File: ' + currentFile.name + ']';
+    }
+
+    const prompt = `You are a professional property management analyst for Legacy Signature Rentals.
+Analyze this rent roll for ${property} as of ${asOf}. Average monthly rent is approximately ${avgRent}.
+
+Provide a complete rent roll analysis including:
+
+1. PORTFOLIO SUMMARY
+- Total units occupied vs vacant
+- Overall occupancy rate
+- Total monthly rent collected
+
+2. RENEWAL TIMELINE (most urgent first)
+For each lease expiring within 90 days, list in this exact format on separate lines:
+TENANT: [name] | UNIT: [unit#] | PROPERTY: [property] | LEASE_END: [MM/DD/YYYY] | RENT: [$amount]
+If tenant names aren't available, use "Tenant - Unit [X]"
+
+3. INCOME AT RISK
+- How much monthly income is at risk in the next 30, 60, and 90 days if leases don't renew
+- Express as dollar amounts based on ${avgRent} average
+
+4. SEASONAL PATTERNS
+- Based on the lease end dates, identify any seasonal clustering
+- Flag if any months have unusually high expiration concentration
+
+5. ACTION ITEMS
+- Specific tenants or units requiring immediate outreach
+- Recommended contact timeline
+
+6. OUTLOOK
+- 90-day occupancy projection if current renewal rate holds
+- Key risks to watch
+
+File content:
+${fileContent}`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      let analysisText = '';
+      if (!response.ok) {
+        // Demo mode
+        analysisText = generateDemoAnalysis(property, asOf, avgRent);
+      } else {
+        const data = await response.json();
+        analysisText = data.content[0].text;
+      }
+
+      currentAnalysis = analysisText;
+      processAndDisplayResults(analysisText, avgRent);
+
+    } catch(e) {
+      currentAnalysis = generateDemoAnalysis(property, asOf, avgRent);
+      processAndDisplayResults(currentAnalysis, avgRent);
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  };
+
+  function generateDemoAnalysis(property, asOf, avgRent) {
+    return `DEMO ANALYSIS — API Key Not Yet Connected\n\nPORTFOLIO SUMMARY\nThis is a preview showing how your rent roll analysis will appear once your Anthropic API key is connected (Steps 15-16 in your build guide).\n\nRENEWAL TIMELINE\nTENANT: Demo Tenant A | UNIT: 101 | PROPERTY: ${property} | LEASE_END: ${getDateInDays(20)} | RENT: ${avgRent}\nTENANT: Demo Tenant B | UNIT: 205 | PROPERTY: ${property} | LEASE_END: ${getDateInDays(45)} | RENT: ${avgRent}\nTENANT: Demo Tenant C | UNIT: 312 | PROPERTY: ${property} | LEASE_END: ${getDateInDays(75)} | RENT: ${avgRent}\n\nINCOME AT RISK\nOnce connected, the AI will calculate exactly how much monthly income is at risk based on your actual rent amounts and expiring leases.\n\nSEASONAL PATTERNS\nThe AI will identify if your lease expirations are clustered in soft rental seasons and flag potential risks.\n\nACTION ITEMS\n• Connect your Anthropic API key to enable real analysis\n• Upload your actual Appfolio rent roll export\n• The AI will then provide specific tenant outreach recommendations\n\nOUTLOOK\nOnce your API key is connected, you will receive a 90-day occupancy projection and key risk factors based on your actual data.`;
+  }
+
+  function getDateInDays(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getDate().toString().padStart(2,'0') + '/' + d.getFullYear();
+  }
+
+  function processAndDisplayResults(analysisText, avgRentStr) {
+    // Parse renewal lines
+    const renewalLines = analysisText.split('\n').filter(l => l.includes('TENANT:') && l.includes('LEASE_END:'));
+    const today = new Date();
+    const rentNum = parseFloat((avgRentStr || '1200').replace(/[^0-9.]/g,'')) || 1200;
+
+    let count30 = 0, count60 = 0, count90 = 0;
+    const renewals = [];
+
+    renewalLines.forEach(line => {
+      const tenant = extractField(line, 'TENANT');
+      const unit = extractField(line, 'UNIT');
+      const property = extractField(line, 'PROPERTY');
+      const leaseEnd = extractField(line, 'LEASE_END');
+      const rent = extractField(line, 'RENT') || avgRentStr;
+
+      if (!leaseEnd) return;
+      const endDate = new Date(leaseEnd);
+      if (isNaN(endDate)) return;
+      const daysLeft = Math.round((endDate - today) / (1000 * 60 * 60 * 24));
+
+      if (daysLeft <= 30) count30++;
+      else if (daysLeft <= 60) count60++;
+      else if (daysLeft <= 90) count90++;
+
+      renewals.push({ tenant, unit, property, leaseEnd, rent, daysLeft });
+    });
+
+    renewals.sort((a, b) => a.daysLeft - b.daysLeft);
+
+    // Stats
+    document.getElementById('statTotal').textContent = renewals.length > 0 ? renewals.length + '+' : '—';
+    document.getElementById('stat30').textContent = count30;
+    document.getElementById('stat60').textContent = count60;
+    document.getElementById('stat90').textContent = count90;
+    document.getElementById('statsRow').classList.add('visible');
+
+    // Income projections
+    const fmt = n => '$' + (n * rentNum).toLocaleString();
+    document.getElementById('risk30').textContent = fmt(count30);
+    document.getElementById('risk60').textContent = fmt(count30 + count60);
+    document.getElementById('risk90').textContent = fmt(count30 + count60 + count90);
+    if (count30 > 0) document.getElementById('risk30warn').textContent = count30 + ' lease(s) need immediate attention!';
+    document.getElementById('projectionCard').classList.add('visible');
+
+    // Renewal table
+    if (renewals.length > 0) {
+      document.getElementById('renewalTableBody').innerHTML = renewals.map(r => {
+        let urgencyClass = 'urgency-green', urgencyLabel = '61-90 days';
+        if (r.daysLeft <= 30) { urgencyClass = 'urgency-red'; urgencyLabel = 'Urgent'; }
+        else if (r.daysLeft <= 60) { urgencyClass = 'urgency-yellow'; urgencyLabel = 'Soon'; }
+        return `<tr>
+          <td>${r.tenant || '—'}</td>
+          <td>${r.unit || '—'}</td>
+          <td>${r.property || '—'}</td>
+          <td>${r.leaseEnd || '—'}</td>
+          <td><strong>${r.daysLeft > 0 ? r.daysLeft + ' days' : 'Expired'}</strong></td>
+          <td>${r.rent || '—'}</td>
+          <td><span class="urgency-badge ${urgencyClass}">${urgencyLabel}</span></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('renewalCard').classList.add('visible');
+    }
+
+    // Full analysis
+    document.getElementById('analysisBody').textContent = analysisText;
+    document.getElementById('analysisCard').classList.add('visible');
+    document.getElementById('actionButtons').style.display = 'block';
+  }
+
+  function extractField(line, field) {
+    const match = line.match(new RegExp(field + ':\\s*([^|]+)'));
+    return match ? match[1].trim() : '';
+  }
+
+  window.copyAnalysis = () => navigator.clipboard.writeText(currentAnalysis).then(() => alert('Copied!'));
+
+  window.resetAll = () => {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('fileBar').classList.remove('visible');
+    document.getElementById('rentForm').style.display = 'none';
+    document.getElementById('statsRow').classList.remove('visible');
+    document.getElementById('projectionCard').classList.remove('visible');
+    document.getElementById('renewalCard').classList.remove('visible');
+    document.getElementById('analysisCard').classList.remove('visible');
+    document.getElementById('actionButtons').style.display = 'none';
+    document.getElementById('propertyName').value = '';
+    document.getElementById('asOfDate').value = '';
+    document.getElementById('avgRent').value = '';
+  };
+</script>
+</body>
+</html>
