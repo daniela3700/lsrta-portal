@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LSRTA — Legacy Signature</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d;
+      --navy-mid: #1a3260;
+      --gold: #c9a84c;
+      --cream: #f7f3ec;
+      --white: #ffffff;
+      --gray: #8a8fa3;
+      --error: #c0392b;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 50%, rgba(201,168,76,0.08) 0%, transparent 60%),
+        linear-gradient(160deg, #0f1f3d 0%, #0a1628 50%, #0d1e3a 100%);
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 580px;
+      margin: 2rem;
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.15);
+    }
+    .panel-left {
+      flex: 1.1;
+      background: linear-gradient(145deg, #1a3260 0%, #0f1f3d 100%);
+      padding: 56px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid rgba(201,168,76,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+    }
+    .brand { opacity: 0; animation: fadeUp 0.8s ease forwards 0.2s; }
+    .brand-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 300;
+      color: var(--white);
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .brand-name span { color: var(--gold); }
+    .brand-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+    .panel-features { opacity: 0; animation: fadeUp 0.8s ease forwards 0.5s; }
+    .feature-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+    .feature-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin-top: 6px; flex-shrink: 0; }
+    .feature-label { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; font-weight: 300; }
+    .feature-label strong { color: rgba(255,255,255,0.85); font-weight: 400; display: block; margin-bottom: 2px; }
+    .panel-footer { font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 0.05em; opacity: 0; animation: fadeUp 0.8s ease forwards 0.7s; }
+    .panel-right { flex: 0.9; background: var(--cream); padding: 56px 48px; display: flex; flex-direction: column; justify-content: center; }
+    .form-header { margin-bottom: 36px; opacity: 0; animation: fadeUp 0.8s ease forwards 0.3s; }
+    .form-title { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+    .form-subtitle { font-size: 13px; color: var(--gray); font-weight: 300; }
+    .form-body { opacity: 0; animation: fadeUp 0.8s ease forwards 0.45s; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input { width: 100%; padding: 12px 16px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+    .field input::placeholder { color: rgba(138,143,163,0.5); }
+    .btn-primary { width: 100%; padding: 14px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s, transform 0.1s; margin-top: 8px; position: relative; overflow: hidden; }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary .btn-text { transition: opacity 0.2s; }
+    .btn-primary.loading .btn-text { opacity: 0; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-primary.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .divider-line { flex: 1; height: 1px; background: rgba(15,31,61,0.1); }
+    .divider-text { font-size: 11px; color: var(--gray); letter-spacing: 0.08em; }
+    .btn-secondary { width: 100%; padding: 13px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .btn-secondary:hover { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+    .error-msg { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2); border-radius: 2px; color: var(--error); font-size: 12px; padding: 10px 14px; margin-bottom: 14px; display: none; }
+    .error-msg.visible { display: block; }
+    .mode-toggle { text-align: center; margin-top: 18px; font-size: 12px; color: var(--gray); opacity: 0; animation: fadeUp 0.8s ease forwards 0.6s; }
+    .mode-toggle a { color: var(--navy); font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 700px) { .panel-left { display: none; } .container { margin: 1rem; } .panel-right { padding: 40px 32px; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="panel-left">
+    <div class="brand">
+      <div class="brand-eyebrow">Internal Portal</div>
+      <div class="brand-name">Legacy<br><span>Signature</span></div>
+      <div class="brand-sub">Rental Trend Analyzer</div>
+    </div>
+    <div class="panel-features">
+      <div class="feature-item">
+        <div class="feature-dot"></div>
+        <div class="feature-label"><strong>AI-Powered Reports</strong>Upload Appfolio exports and receive owner-ready summaries instantly</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot"></div>
+        <div class="feature-label"><strong>Portfolio Health</strong>Real-time occupancy and performance tracking across all properties</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot"></div>
+        <div class="feature-label"><strong>Period Comparisons</strong>Compare any two time periods side by side with AI analysis</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot"></div>
+        <div class="feature-label"><strong>Team Collaboration</strong>Shared analysis, notes, and real-time chat in one place</div>
+      </div>
+    </div>
+    <div class="panel-footer">Legacy Signature Property Management &nbsp;·&nbsp; Internal Use Only</div>
+  </div>
+
+  <div class="panel-right">
+    <div class="form-header">
+      <div class="form-title" id="formTitle">Welcome back</div>
+      <div class="form-subtitle" id="formSubtitle">Sign in to access your portal</div>
+    </div>
+    <div class="form-body">
+      <div class="error-msg" id="errorMsg"></div>
+      <div id="signInForm">
+        <div class="field"><label>Email Address</label><input type="email" id="siEmail" placeholder="you@legacysignature.com" autocomplete="email"/></div>
+        <div class="field"><label>Password</label><input type="password" id="siPassword" placeholder="••••••••" autocomplete="current-password"/></div>
+        <button class="btn-primary" id="signInBtn" onclick="handleSignIn()">
+          <span class="btn-text">Sign In</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+        <div class="divider"><div class="divider-line"></div><div class="divider-text">or</div><div class="divider-line"></div></div>
+        <button class="btn-secondary" onclick="showSignUp()">Create Account</button>
+      </div>
+      <div id="signUpForm" style="display:none;">
+        <div class="field"><label>Full Name</label><input type="text" id="suName" placeholder="Your full name"/></div>
+        <div class="field"><label>Email Address</label><input type="email" id="suEmail" placeholder="you@legacysignature.com"/></div>
+        <div class="field"><label>Password</label><input type="password" id="suPassword" placeholder="Min. 6 characters"/></div>
+        <button class="btn-primary" id="signUpBtn" onclick="handleSignUp()">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+        <div class="divider"><div class="divider-line"></div><div class="divider-text">or</div><div class="divider-line"></div></div>
+        <button class="btn-secondary" onclick="showSignIn()">Back to Sign In</button>
+      </div>
+    </div>
+    <div class="mode-toggle">
+      <span id="modeText">Don't have an account? <a onclick="showSignUp()">Create one</a></span>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  onAuthStateChanged(auth, user => { if (user) window.location.href = 'dashboard.html'; });
+  window.handleSignIn = async function() {
+    const email = document.getElementById('siEmail').value.trim();
+    const password = document.getElementById('siPassword').value;
+    const btn = document.getElementById('signInBtn');
+    if (!email || !password) return showError('Please enter your email and password.');
+    setLoading(btn, true); clearError();
+    try { await signInWithEmailAndPassword(auth, email, password); }
+    catch (e) { setLoading(btn, false); showError(friendlyError(e.code)); }
+  };
+  window.handleSignUp = async function() {
+    const name = document.getElementById('suName').value.trim();
+    const email = document.getElementById('suEmail').value.trim();
+    const password = document.getElementById('suPassword').value;
+    const btn = document.getElementById('signUpBtn');
+    if (!name || !email || !password) return showError('Please fill in all fields.');
+    if (password.length < 6) return showError('Password must be at least 6 characters.');
+    setLoading(btn, true); clearError();
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+    }
+    catch (e) { setLoading(btn, false); showError(friendlyError(e.code)); }
+  };
+  function friendlyError(code) {
+    const map = {
+      'auth/user-not-found': 'No account found with that email.',
+      'auth/wrong-password': 'Incorrect password. Please try again.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/too-many-requests': 'Too many attempts. Please wait a moment.',
+      'auth/invalid-credential': 'Invalid email or password.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+  function setLoading(btn, state) { btn.disabled = state; btn.classList.toggle('loading', state); }
+  function showError(msg) { const el = document.getElementById('errorMsg'); el.textContent = msg; el.classList.add('visible'); }
+  function clearError() { document.getElementById('errorMsg').classList.remove('visible'); }
+</script>
+<script>
+  function showSignUp() {
+    document.getElementById('signInForm').style.display = 'none';
+    document.getElementById('signUpForm').style.display = 'block';
+    document.getElementById('formTitle').textContent = 'Create account';
+    document.getElementById('formSubtitle').textContent = 'Join the Legacy Signature portal';
+    document.getElementById('modeText').innerHTML = 'Already have an account? <a onclick="showSignIn()">Sign in</a>';
+    document.getElementById('errorMsg').classList.remove('visible');
+  }
+  function showSignIn() {
+    document.getElementById('signInForm').style.display = 'block';
+    document.getElementById('signUpForm').style.display = 'none';
+    document.getElementById('formTitle').textContent = 'Welcome back';
+    document.getElementById('formSubtitle').textContent = 'Sign in to access your portal';
+    document.getElementById('modeText').innerHTML = "Don't have an account? <a onclick=\"showSignUp()\">Create one</a>";
+    document.getElementById('errorMsg').classList.remove('visible');
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('signUpForm').style.display !== 'none') handleSignUp();
+      else handleSignIn();
+    }
+  });
+</script>
+</body>
+</html>
