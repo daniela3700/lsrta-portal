@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com api.anthropic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://api.anthropic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR — same as dashboard */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* UPLOAD ZONE */
+    .upload-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 28px; overflow: hidden; }
+    .upload-card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); }
+    .upload-card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .upload-card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .upload-zone {
+      margin: 24px 28px;
+      border: 2px dashed rgba(15,31,61,0.15);
+      border-radius: 4px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafbfc;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 40px; margin-bottom: 12px; }
+    .upload-label { font-size: 15px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); cursor: pointer; font-weight: 500; }
+    #fileInput { display: none; }
+
+    /* REPORT FORM */
+    .report-form { padding: 0 28px 28px; display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 10px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .file-selected { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(39,174,96,0.06); border: 1px solid rgba(39,174,96,0.2); border-radius: 2px; margin-bottom: 16px; }
+    .file-selected-name { font-size: 13px; color: var(--navy); font-weight: 500; }
+    .file-selected-size { font-size: 11px; color: var(--gray); }
+    .btn-remove { margin-left: auto; font-size: 11px; color: var(--gray); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+    .btn-analyze { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-analyze:hover { background: var(--navy-mid); }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-analyze.loading .btn-text { opacity: 0; }
+    .btn-analyze .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-analyze.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* AI RESULT */
+    .ai-result { display: none; margin: 0 28px 28px; }
+    .ai-result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ai-result-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+    .ai-content { background: var(--cream); border: 1px solid rgba(15,31,61,0.08); border-radius: 4px; padding: 28px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; }
+    .ai-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .btn-secondary:hover { border-color: var(--gold); }
+
+    /* NOTES */
+    .notes-area { margin: 0 28px 28px; display: none; }
+    .notes-area textarea { width: 100%; padding: 12px 16px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); outline: none; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+    .notes-area textarea:focus { border-color: var(--gold); }
+
+    /* REPORTS HISTORY */
+    .history-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); overflow: hidden; }
+    .history-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .history-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-item { padding: 16px 24px; border-bottom: 1px solid rgba(15,31,61,0.05); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: background 0.15s; }
+    .report-item:hover { background: #fafbfc; }
+    .report-item:last-child { border-bottom: none; }
+    .report-icon { font-size: 24px; flex-shrink: 0; }
+    .report-name { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .report-type-badge { margin-left: auto; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: rgba(201,168,76,0.1); color: var(--gold); font-weight: 500; flex-shrink: 0; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--gray); font-size: 13px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 4px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { padding: 24px 28px; border-bottom: 1px solid rgba(15,31,61,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+    .modal-body { padding: 28px; }
+    .modal-analysis { background: var(--cream); border-radius: 4px; padding: 24px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; margin-bottom: 16px; }
+    .modal-notes { font-size: 13px; color: var(--gray); font-style: italic; padding: 12px 16px; background: #fafbfc; border-radius: 2px; border: 1px solid rgba(15,31,61,0.07); }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading reports...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item active" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Reports & AI Analysis</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <div class="upload-card-header">
+        <div class="upload-card-title">Upload Appfolio Report</div>
+        <div class="upload-card-sub">Supports PDF, Excel (.xlsx/.csv), and Word (.docx) files exported from Appfolio</div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📤</div>
+        <div class="upload-label">Drop your Appfolio export here</div>
+        <div class="upload-sub">or <span onclick="document.getElementById('fileInput').click()">browse to upload</span></div>
+        <div class="upload-sub" style="margin-top:8px;">PDF · Excel · CSV · Word</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+      <!-- Form shown after file selected -->
+      <div class="report-form" id="reportForm">
+        <div class="file-selected" id="fileSelected">
+          <span style="font-size:20px">📄</span>
+          <div>
+            <div class="file-selected-name" id="fileName">filename.pdf</div>
+            <div class="file-selected-size" id="fileSize">0 KB</div>
+          </div>
+          <button class="btn-remove" onclick="removeFile()">✕ Remove</button>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Report Type</label>
+            <select id="reportType">
+              <option value="">Select type...</option>
+              <option value="Monthly Owner Report">Monthly Owner Report</option>
+              <option value="Occupancy Report">Occupancy Report</option>
+              <option value="Rent Roll">Rent Roll</option>
+              <option value="Financial Summary">Financial Summary</option>
+              <option value="Maintenance Report">Maintenance Report</option>
+              <option value="Delinquency Report">Delinquency Report</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Property Name</label>
+            <input type="text" id="propertyName" placeholder="e.g. Sunset Apartments"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Period (e.g. January 2026)</label>
+            <input type="text" id="reportPeriod" placeholder="e.g. January 2026"/>
+          </div>
+          <div class="field">
+            <label>Notes (optional)</label>
+            <input type="text" id="reportNotes" placeholder="Any context for the team..."/>
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeReport()">
+          <span class="btn-text">✨ Analyze with AI</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+      </div>
+
+      <!-- AI RESULT -->
+      <div class="ai-result" id="aiResult">
+        <div class="ai-result-header">
+          <div class="ai-result-title" id="aiResultTitle">AI Analysis</div>
+          <div class="ai-badge">✨ Claude AI</div>
+        </div>
+        <div class="ai-content" id="aiContent"></div>
+        <div class="ai-actions">
+          <button class="btn-analyze" onclick="saveReport()" id="saveBtn">
+            <span class="btn-text">💾 Save Report</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+          <button class="btn-secondary" onclick="resetForm()">Upload Another</button>
+          <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+        </div>
+      </div>
+
+      <!-- TEAM NOTES -->
+      <div class="notes-area" id="notesArea">
+        <div style="font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); margin-bottom:7px;">Team Notes</div>
+        <textarea id="teamNotes" placeholder="Add notes for your team about this report..."></textarea>
+      </div>
+    </div>
+
+    <!-- REPORTS HISTORY -->
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">📁 Report History</div>
+      </div>
+      <div id="reportsList">
+        <div class="empty-state">
+          No reports yet. Upload your first Appfolio export above to get started!
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL for viewing saved reports -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Report Analysis</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px; color:var(--gray); margin-bottom:16px;" id="modalMeta"></div>
+      <div class="modal-analysis" id="modalAnalysis"></div>
+      <div class="modal-notes" id="modalNotes" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let currentFile = null;
+  let currentAnalysis = '';
+  let currentReportMeta = {};
+
+  // Auth check
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+    loadReports();
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // File handling
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    currentFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('reportForm').style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  }
+
+  window.removeFile = () => {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('reportForm').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  };
+
+  // Read file as text
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      if (file.type === 'application/pdf') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  // Analyze with Claude API
+  window.analyzeReport = async function() {
+    const reportType = document.getElementById('reportType').value || 'Property Report';
+    const propertyName = document.getElementById('propertyName').value || 'Portfolio';
+    const period = document.getElementById('reportPeriod').value || 'Current Period';
+
+    if (!currentFile) return alert('Please select a file first.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      let fileContent = '';
+      try {
+        fileContent = await readFileAsText(currentFile);
+        if (fileContent.length > 8000) fileContent = fileContent.substring(0, 8000) + '\n...[content truncated for analysis]';
+      } catch(e) {
+        fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
+      }
+
+      const prompt = `You are a professional property management analyst for Legacy Signature Rentals. 
+Analyze the following ${reportType} for ${propertyName} covering ${period}.
+
+Generate a clean, professional, owner-ready summary that includes:
+1. EXECUTIVE SUMMARY - 2-3 sentence overview of overall performance
+2. KEY METRICS - Most important numbers and what they mean
+3. OCCUPANCY & LEASING - Current status and trends
+4. FINANCIAL HIGHLIGHTS - Revenue, collections, notable items
+5. MAINTENANCE & OPERATIONS - Any relevant operational notes
+6. ACTION ITEMS - What needs attention or follow-up
+7. OUTLOOK - Brief forward-looking statement
+
+Keep the tone professional, clear, and positive where warranted. Be specific with numbers when available. Format for easy reading.
+
+File: ${currentFile.name}
+Report Type: ${reportType}
+Property: ${propertyName}
+Period: ${period}
+
+Content:
+${fileContent}`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        // API key not set yet — show helpful message
+        const errorData = await response.json();
+        if (response.status === 401) {
+          throw new Error('API_KEY_NEEDED');
+        }
+        throw new Error(errorData.error?.message || 'API error');
+      }
+
+      const data = await response.json();
+      currentAnalysis = data.content[0].text;
+      currentReportMeta = { reportType, propertyName, period, fileName: currentFile.name };
+
+      document.getElementById('aiResultTitle').textContent = reportType + ' — ' + propertyName;
+      document.getElementById('aiContent').textContent = currentAnalysis;
+      document.getElementById('aiResult').style.display = 'block';
+      document.getElementById('notesArea').style.display = 'block';
+
+    } catch(e) {
+      if (e.message === 'API_KEY_NEEDED') {
+        // Show demo analysis so user can see the flow
+        currentAnalysis = `DEMO ANALYSIS — API Key Not Yet Connected\n\n` +
+          `EXECUTIVE SUMMARY\nThis is a preview of how your AI analysis will appear. Once you connect your Anthropic API key via Cloudflare Workers (Step 15-16 in your build guide), real analysis will appear here.\n\n` +
+          `KEY METRICS\n• Occupancy Rate: Will be extracted from your report\n• Total Units: Will be calculated from rent roll\n• Collections Rate: Will be pulled from financial data\n• Maintenance Open Items: Will be counted from maintenance reports\n\n` +
+          `OCCUPANCY & LEASING\nDetailed occupancy trends and leasing activity will be summarized here based on your actual Appfolio export data.\n\n` +
+          `FINANCIAL HIGHLIGHTS\nRevenue, collections, and notable financial items will be highlighted here in a format ready to share with property owners.\n\n` +
+          `ACTION ITEMS\n• Connect Anthropic API key to enable real analysis\n• Follow Steps 15-16 in your LSRTA build guide\n\n` +
+          `OUTLOOK\nOnce connected, every report you upload will receive this same consistent, professional analysis automatically.`;
+
+        currentReportMeta = {
+          reportType: document.getElementById('reportType').value || 'Report',
+          propertyName: document.getElementById('propertyName').value || 'Portfolio',
+          period: document.getElementById('reportPeriod').value || 'Current Period',
+          fileName: currentFile.name
+        };
+        document.getElementById('aiResultTitle').textContent = 'Demo Analysis — Connect API Key to Enable';
+        document.getElementById('aiContent').textContent = currentAnalysis;
+        document.getElementById('aiResult').style.display = 'block';
+        document.getElementById('notesArea').style.display = 'block';
+      } else {
+        alert('Analysis failed: ' + e.message + '\n\nThis will work once your Cloudflare Worker and API key are set up (Steps 15-16).');
+      }
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  };
+
+  // Save report to Firebase
+  window.saveReport = async function() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      await push(ref(db, 'reports'), {
+        ...currentReportMeta,
+        analysis: currentAnalysis,
+        notes: document.getElementById('teamNotes').value,
+        uploadedBy: currentUser.displayName || currentUser.email,
+        uploadedAt: serverTimestamp(),
+        timestamp: Date.now()
+      });
+      alert('Report saved successfully!');
+      resetForm();
+      loadReports();
+    } catch(e) {
+      alert('Save failed: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  };
+
+  window.resetForm = () => {
+    currentFile = null;
+    currentAnalysis = '';
+    document.getElementById('fileInput').value = '';
+    document.getElementById('reportForm').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+    document.getElementById('teamNotes').value = '';
+    document.getElementById('reportType').value = '';
+    document.getElementById('propertyName').value = '';
+    document.getElementById('reportPeriod').value = '';
+  };
+
+  window.copyAnalysis = () => {
+    navigator.clipboard.writeText(currentAnalysis).then(() => alert('Analysis copied to clipboard!'));
+  };
+
+  // Load reports history
+  function loadReports() {
+    const reportsRef = ref(db, 'reports');
+    onValue(reportsRef, snap => {
+      const list = document.getElementById('reportsList');
+      if (!snap.exists()) {
+        list.innerHTML = '<div class="empty-state">No reports yet. Upload your first Appfolio export above to get started!</div>';
+        return;
+      }
+      const reports = [];
+      snap.forEach(child => reports.push({ id: child.key, ...child.val() }));
+      reports.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      list.innerHTML = reports.map(r => `
+        <div class="report-item" onclick="openReport('${r.id}')">
+          <div class="report-icon">📄</div>
+          <div>
+            <div class="report-name">${r.propertyName || 'Unknown Property'} — ${r.period || ''}</div>
+            <div class="report-meta">${r.reportType || 'Report'} · Uploaded by ${r.uploadedBy || 'Team'} · ${r.timestamp ? new Date(r.timestamp).toLocaleDateString() : ''}</div>
+          </div>
+          <div class="report-type-badge">${r.reportType || 'Report'}</div>
+        </div>
+      `).join('');
+    });
+  }
+
+  // View saved report
+  let allReports = {};
+  const reportsRef = ref(db, 'reports');
+  onValue(reportsRef, snap => {
+    if (snap.exists()) snap.forEach(c => allReports[c.key] = c.val());
+  });
+
+  window.openReport = (id) => {
+    const r = allReports[id];
+    if (!r) return;
+    document.getElementById('modalTitle').textContent = (r.propertyName || 'Report') + ' — ' + (r.period || '');
+    document.getElementById('modalMeta').textContent = (r.reportType || '') + ' · Uploaded by ' + (r.uploadedBy || 'Team') + ' · ' + (r.timestamp ? new Date(r.timestamp).toLocaleDateString() : '');
+    document.getElementById('modalAnalysis').textContent = r.analysis || 'No analysis available.';
+    const notesEl = document.getElementById('modalNotes');
+    if (r.notes) { notesEl.textContent = '📝 Team Notes: ' + r.notes; notesEl.style.display = 'block'; }
+    else notesEl.style.display = 'none';
+    document.getElementById('reportModal').classList.add('open');
+  };
+
+  window.closeModal = () => document.getElementById('reportModal').classList.remove('open');
+  document.getElementById('reportModal').addEventListener('click', e => { if (e.target === document.getElementById('reportModal')) closeModal(); });
+</script>
+
+</body>
+</html>
