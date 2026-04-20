@@ -2,359 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — LSRTA</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy: #0f1f3d;
-      --navy-mid: #1a3260;
-      --navy-light: #243d6b;
-      --gold: #c9a84c;
-      --gold-light: #e8c97a;
-      --cream: #f7f3ec;
-      --white: #ffffff;
-      --gray: #8a8fa3;
-      --gray-light: #f0f0f0;
-      --green: #27ae60;
-      --yellow: #f39c12;
-      --red: #e74c3c;
-      --sidebar-w: 240px;
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --yellow: #f39c12; --red: #e74c3c;
+      --blue: #2980b9; --sidebar-w: 240px;
     }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #f4f6fa;
-      color: var(--navy);
-      min-height: 100vh;
-      display: flex;
-    }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      min-height: 100vh;
-      background: var(--navy);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 100;
-      border-right: 1px solid rgba(201,168,76,0.15);
-    }
-    .sidebar-brand {
-      padding: 28px 24px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-    }
-    .sidebar-brand-eye {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 4px;
-    }
-    .sidebar-brand-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 22px;
-      font-weight: 400;
-      color: var(--white);
-      line-height: 1.1;
-    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
     .sidebar-brand-name span { color: var(--gold); }
-    .sidebar-brand-sub {
-      font-size: 10px;
-      color: rgba(255,255,255,0.3);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-    .sidebar-nav {
-      flex: 1;
-      padding: 16px 0;
-      overflow-y: auto;
-    }
-    .nav-section-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.25);
-      padding: 12px 24px 6px;
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 24px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.55);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 3px solid transparent;
-    }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
     .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
-    .nav-item.active {
-      color: var(--white);
-      background: rgba(201,168,76,0.1);
-      border-left-color: var(--gold);
-    }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
     .nav-icon { font-size: 16px; width: 20px; text-align: center; }
-    .sidebar-footer {
-      padding: 16px 24px;
-      border-top: 1px solid rgba(255,255,255,0.07);
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .user-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--gold);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--navy);
-      flex-shrink: 0;
-    }
-    .user-name { font-size: 13px; color: var(--white); font-weight: 400; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
     .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
-    .btn-signout {
-      width: 100%;
-      padding: 8px;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 2px;
-      color: rgba(255,255,255,0.45);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
     .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
-
-    /* ── MAIN ── */
-    .main {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .topbar {
-      background: var(--white);
-      padding: 16px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(15,31,61,0.08);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-    .topbar-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--navy);
-    }
-    .topbar-date {
-      font-size: 12px;
-      color: var(--gray);
-    }
-    .content {
-      padding: 32px;
-      flex: 1;
-    }
-
-    /* ── STAT CARDS ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-bottom: 32px;
-    }
-    .stat-card {
-      background: var(--white);
-      border-radius: 4px;
-      padding: 24px;
-      border: 1px solid rgba(15,31,61,0.07);
-      position: relative;
-      overflow: hidden;
-      transition: box-shadow 0.2s;
-    }
-    .stat-card:hover { box-shadow: 0 4px 20px rgba(15,31,61,0.08); }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-    }
-    .stat-card.green::before { background: var(--green); }
-    .stat-card.yellow::before { background: var(--yellow); }
-    .stat-card.red::before { background: var(--red); }
-    .stat-card.gold::before { background: var(--gold); }
-    .stat-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
-    .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 400; color: var(--navy); line-height: 1; margin-bottom: 6px; }
-    .stat-sub { font-size: 12px; color: var(--gray); }
-    .stat-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-    .badge-green { background: rgba(39,174,96,0.1); color: var(--green); }
-    .badge-yellow { background: rgba(243,156,18,0.1); color: var(--yellow); }
-    .badge-red { background: rgba(231,76,60,0.1); color: var(--red); }
-
-    /* ── TWO COL LAYOUT ── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-    .three-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 24px; }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--white);
-      border-radius: 4px;
-      border: 1px solid rgba(15,31,61,0.07);
-      overflow: hidden;
-    }
-    .card-header {
-      padding: 18px 24px;
-      border-bottom: 1px solid rgba(15,31,61,0.06);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-title { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: 0.05em; }
-    .card-action { font-size: 12px; color: var(--gold); cursor: pointer; text-decoration: none; }
-    .card-body { padding: 20px 24px; }
-
-    /* ── HEALTH SCORES ── */
-    .property-list { list-style: none; }
-    .property-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(15,31,61,0.05);
-    }
-    .property-item:last-child { border-bottom: none; }
-    .property-name { font-size: 13px; color: var(--navy); font-weight: 400; }
-    .property-unit { font-size: 11px; color: var(--gray); }
-    .health-bar-wrap { flex: 1; margin: 0 16px; }
-    .health-bar {
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(15,31,61,0.07);
-      overflow: hidden;
-    }
-    .health-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-    .fill-green { background: var(--green); }
-    .fill-yellow { background: var(--yellow); }
-    .fill-red { background: var(--red); }
-    .health-score { font-size: 13px; font-weight: 500; min-width: 36px; text-align: right; }
-
-    /* ── ACTIVITY FEED ── */
-    .activity-item {
-      display: flex;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(15,31,61,0.05);
-    }
-    .activity-item:last-child { border-bottom: none; }
-    .activity-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      margin-top: 5px;
-      flex-shrink: 0;
-    }
-    .activity-text { font-size: 13px; color: var(--navy); line-height: 1.5; }
-    .activity-time { font-size: 11px; color: var(--gray); margin-top: 2px; }
-
-    /* ── RENEWALS ── */
-    .renewal-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(15,31,61,0.05);
-    }
-    .renewal-item:last-child { border-bottom: none; }
-    .renewal-tenant { font-size: 13px; color: var(--navy); }
-    .renewal-property { font-size: 11px; color: var(--gray); }
-    .renewal-date { font-size: 12px; font-weight: 500; }
-    .days-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 500;
-    }
-
-    /* ── QUICK ACTIONS ── */
-    .quick-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .quick-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      background: var(--cream);
-      border: 1px solid rgba(15,31,61,0.08);
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .quick-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
-    .quick-btn-icon { font-size: 20px; }
-    .quick-btn-label { font-size: 12px; font-weight: 500; color: var(--navy); }
-    .quick-btn-sub { font-size: 11px; color: var(--gray); }
-
-    /* ── LOADING ── */
-    #loadingScreen {
-      position: fixed; inset: 0;
-      background: var(--navy);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
-      transition: opacity 0.4s;
-    }
-    .loading-inner { text-align: center; }
-    .loading-ring {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(201,168,76,0.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
-    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; }
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 12px; }
+    .topbar-left { display: flex; flex-direction: column; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .topbar-sub { font-size: 11px; color: var(--gray); margin-top: 1px; }
+    .portfolio-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+    .port-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid rgba(15,31,61,0.15); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; color: var(--gray); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .port-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .port-btn.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+    .content { padding: 24px 28px; flex: 1; }
+    .top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .view-toggle { display: flex; gap: 6px; align-items: center; }
+    .view-label { font-size: 11px; color: var(--gray); }
+    .view-btn { padding: 5px 14px; border-radius: 2px; border: 1px solid rgba(15,31,61,0.12); background: var(--white); font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--gray); cursor: pointer; transition: all 0.2s; }
+    .view-btn.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+    .btn-upload-kpi { padding: 7px 16px; background: var(--gold); border: none; border-radius: 2px; color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .btn-upload-kpi:hover { background: #b8963e; }
+    .ai-banner { background: linear-gradient(135deg, var(--navy) 0%, #1a3260 100%); border-radius: 4px; padding: 20px 24px; margin-bottom: 24px; display: flex; gap: 16px; align-items: flex-start; }
+    .ai-banner-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+    .ai-banner-content { flex: 1; }
+    .ai-banner-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .ai-banner-text { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.7; }
+    .ai-banner-empty { font-style: italic; color: rgba(255,255,255,0.4); }
+    .ai-banner-meta { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 8px; }
+    .ai-refresh-btn { padding: 6px 12px; background: rgba(201,168,76,0.2); border: 1px solid rgba(201,168,76,0.3); border-radius: 2px; color: var(--gold); font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+    .ai-refresh-btn:hover { background: rgba(201,168,76,0.35); }
+    .section-hdr { display: flex; align-items: center; gap: 10px; margin: 24px 0 14px; }
+    .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); white-space: nowrap; }
+    .section-line { flex: 1; height: 1px; background: rgba(15,31,61,0.08); }
+    .kpi-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 14px; }
+    .kpi-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 14px; }
+    .kpi-grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 14px; }
+    .kc { background: var(--white); border-radius: 4px; padding: 16px 18px; border: 1px solid rgba(15,31,61,0.07); position: relative; overflow: hidden; transition: box-shadow 0.2s; }
+    .kc:hover { box-shadow: 0 4px 16px rgba(15,31,61,0.08); }
+    .kc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(15,31,61,0.07); }
+    .kc.g::before { background: var(--green); }
+    .kc.y::before { background: var(--yellow); }
+    .kc.r::before { background: var(--red); }
+    .kc.b::before { background: var(--blue); }
+    .kc.go::before { background: var(--gold); }
+    .kc-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; line-height: 1.4; }
+    .kc-value { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--navy); line-height: 1; margin-bottom: 4px; }
+    .kc-value.lg { font-size: 34px; }
+    .kc-sub { font-size: 11px; color: var(--gray); margin-top: 3px; }
+    .kc-target { font-size: 10px; color: rgba(138,143,163,0.7); margin-top: 3px; }
+    .badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; margin-top: 6px; }
+    .bg-g { background: rgba(39,174,96,0.1); color: var(--green); }
+    .bg-y { background: rgba(243,156,18,0.1); color: var(--yellow); }
+    .bg-r { background: rgba(231,76,60,0.1); color: var(--red); }
+    .bg-b { background: rgba(41,128,185,0.1); color: var(--blue); }
+    .funnel-wrap { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); padding: 20px 24px; margin-bottom: 14px; }
+    .funnel-steps { display: flex; align-items: stretch; }
+    .f-step { flex: 1; text-align: center; padding: 12px 8px; position: relative; }
+    .f-step::after { content: '›'; position: absolute; right: -4px; top: 40%; font-size: 20px; color: rgba(15,31,61,0.2); }
+    .f-step:last-child::after { display: none; }
+    .f-num { font-family: 'Cormorant Garamond', serif; font-size: 30px; color: var(--navy); line-height: 1; }
+    .f-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .f-conv { font-size: 11px; margin-top: 3px; font-weight: 500; }
+    .period-selector { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .period-label { font-size: 11px; color: var(--gray); }
+    .period-chip { padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(15,31,61,0.12); background: var(--white); font-size: 11px; color: var(--gray); cursor: pointer; transition: all 0.2s; }
+    .period-chip.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+    .empty-dash { text-align: center; padding: 60px 24px; }
+    .empty-dash-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-dash-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--navy); margin-bottom: 8px; }
+    .empty-dash-text { font-size: 13px; color: var(--gray); line-height: 1.6; max-width: 400px; margin: 0 auto 20px; }
+    .btn-primary { padding: 12px 24px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.6); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 4px; width: 92%; max-width: 600px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-hdr { padding: 20px 24px; border-bottom: 1px solid rgba(15,31,61,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+    .modal-body { padding: 24px; }
+    .m-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .m-field { margin-bottom: 0; }
+    .m-field label { display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy); margin-bottom: 6px; }
+    .m-field input, .m-field select { width: 100%; padding: 9px 12px; border: 1px solid rgba(15,31,61,0.12); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .m-field input:focus, .m-field select:focus { border-color: var(--gold); }
+    .upload-zone { border: 2px dashed rgba(15,31,61,0.15); border-radius: 4px; padding: 28px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; margin: 16px 0; }
+    .upload-zone:hover { border-color: var(--gold); background: rgba(201,168,76,0.02); }
+    .file-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 0; }
+    .file-chip { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(15,31,61,0.05); border: 1px solid rgba(15,31,61,0.1); border-radius: 20px; font-size: 11px; color: var(--navy); }
+    .chip-x { background: none; border: none; cursor: pointer; color: var(--gray); font-size: 12px; }
+    .prog-wrap { display: none; margin-bottom: 16px; }
+    .prog-lbl { font-size: 12px; color: var(--gray); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .prog-bg { height: 4px; background: rgba(15,31,61,0.07); border-radius: 2px; }
+    .prog-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s; width: 0%; }
+    .prog-status { font-size: 12px; color: var(--navy); margin-top: 6px; font-style: italic; }
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.5s ease forwards; }
-
-    @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 800px) { .two-col, .three-col { grid-template-columns: 1fr; } .sidebar { display: none; } .main { margin-left: 0; } }
+    @media (max-width: 1100px) { .kpi-grid-4 { grid-template-columns: repeat(2,1fr); } .kpi-grid-5 { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } .kpi-grid-4, .kpi-grid-3, .kpi-grid-5 { grid-template-columns: repeat(2,1fr); } }
   </style>
 </head>
 <body>
-
 <div id="loadingScreen">
-  <div class="loading-inner">
-    <div class="loading-ring"></div>
-    <div class="loading-text">Loading portal...</div>
-  </div>
+  <div><div class="loading-ring"></div><div class="loading-text">Loading dashboard...</div></div>
 </div>
 
-<!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="sidebar-brand">
     <div class="sidebar-brand-eye">Internal Portal</div>
@@ -365,8 +149,8 @@
     <div class="nav-section-label">Main</div>
     <a class="nav-item active" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
     <a class="nav-item" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
-    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
     <a class="nav-item" href="bulk.html"><span class="nav-icon">📦</span> Bulk Analysis</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
     <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
     <div class="nav-section-label">Team</div>
     <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
@@ -376,160 +160,105 @@
   <div class="sidebar-footer">
     <div class="user-info">
       <div class="user-avatar" id="userInitials">?</div>
-      <div>
-        <div class="user-name" id="userName">Loading...</div>
-        <div class="user-role">Team Member</div>
-      </div>
+      <div><div class="user-name" id="userName">Loading...</div><div class="user-role">Team Member</div></div>
     </div>
     <button class="btn-signout" onclick="signOut()">Sign Out</button>
   </div>
 </nav>
 
-<!-- MAIN CONTENT -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">Portfolio Dashboard</div>
-    <div class="topbar-date" id="todayDate"></div>
+    <div class="topbar-left">
+      <div class="topbar-title" id="dashTitle">Portfolio Dashboard</div>
+      <div class="topbar-sub" id="dashSub">Select a portfolio and upload reports to populate</div>
+    </div>
+    <div class="portfolio-toggle">
+      <button class="port-btn active" onclick="switchPortfolio('all',this)">All Portfolios</button>
+      <button class="port-btn" onclick="switchPortfolio('nc_gladysh',this)">NC Gladysh Capital</button>
+      <button class="port-btn" onclick="switchPortfolio('sc_platinum',this)">SC Platinum Estates</button>
+      <button class="port-btn" onclick="switchPortfolio('tx_acorn',this)">TX Acorn Ridge</button>
+    </div>
   </div>
 
   <div class="content fade-in">
-
-    <!-- STAT CARDS -->
-    <div class="stats-grid">
-      <div class="stat-card green">
-        <div class="stat-label">Portfolio Occupancy</div>
-        <div class="stat-value">94<span style="font-size:20px">%</span></div>
-        <div class="stat-sub"><span class="stat-badge badge-green">▲ 2% vs last month</span></div>
+    <div class="top-row">
+      <div class="view-toggle">
+        <span class="view-label">View:</span>
+        <button class="view-btn active" onclick="switchView('weekly',this)">Weekly</button>
+        <button class="view-btn" onclick="switchView('monthly',this)">Monthly</button>
       </div>
-      <div class="stat-card gold">
-        <div class="stat-label">Total Units</div>
-        <div class="stat-value">—</div>
-        <div class="stat-sub">Upload rent roll to populate</div>
-      </div>
-      <div class="stat-card yellow">
-        <div class="stat-label">Renewals This Month</div>
-        <div class="stat-value">3</div>
-        <div class="stat-sub"><span class="stat-badge badge-yellow">2 expiring soon</span></div>
-      </div>
-      <div class="stat-card green">
-        <div class="stat-label">Reports Analyzed</div>
-        <div class="stat-value" id="reportCount">0</div>
-        <div class="stat-sub">Total AI analyses run</div>
-      </div>
+      <button class="btn-upload-kpi" onclick="openModal()">📤 Upload Appfolio Reports</button>
     </div>
 
-    <!-- HEALTH + ACTIVITY -->
-    <div class="three-col">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">🏠 Portfolio Health Scores</div>
-          <a class="card-action" href="reports.html">View Reports →</a>
-        </div>
-        <div class="card-body">
-          <ul class="property-list" id="propertyList">
-            <!-- Sample data — will be replaced by real data from Firebase -->
-            <li class="property-item">
-              <div>
-                <div class="property-name">Property A</div>
-                <div class="property-unit">Upload reports to get score</div>
-              </div>
-              <div class="health-bar-wrap">
-                <div class="health-bar"><div class="health-bar-fill fill-green" style="width:0%"></div></div>
-              </div>
-              <div class="health-score" style="color:var(--gray)">—</div>
-            </li>
-          </ul>
-          <div style="text-align:center; padding:24px 0; color:var(--gray); font-size:13px;" id="noHealthData">
-            Upload your first Appfolio report to see property health scores here.
-            <br><br>
-            <a href="reports.html" style="color:var(--gold); text-decoration:none; font-weight:500;">Upload a Report →</a>
-          </div>
-        </div>
+    <div class="ai-banner">
+      <div class="ai-banner-icon">✨</div>
+      <div class="ai-banner-content">
+        <div class="ai-banner-label">AI Executive Summary</div>
+        <div class="ai-banner-text ai-banner-empty" id="aiText">Upload Appfolio reports to generate an AI executive summary for this portfolio.</div>
+        <div class="ai-banner-meta" id="aiMeta"></div>
       </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">⏰ Upcoming Renewals</div>
-          <a class="card-action" href="rentroll.html">Full List →</a>
-        </div>
-        <div class="card-body">
-          <div style="text-align:center; padding:24px 0; color:var(--gray); font-size:13px;">
-            Upload your rent roll to see upcoming renewals here.
-            <br><br>
-            <a href="rentroll.html" style="color:var(--gold); text-decoration:none; font-weight:500;">Upload Rent Roll →</a>
-          </div>
-        </div>
-      </div>
+      <button class="ai-refresh-btn" id="aiBtn" onclick="genSummary()" style="display:none;">↻ Refresh</button>
     </div>
 
-    <!-- ACTIVITY + QUICK ACTIONS -->
-    <div class="two-col">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">📝 Recent Activity</div>
-        </div>
-        <div class="card-body" id="activityFeed">
-          <div class="activity-item">
-            <div class="activity-dot" style="background:var(--gold)"></div>
-            <div>
-              <div class="activity-text">Portal is live and ready to use!</div>
-              <div class="activity-time">Just now</div>
-            </div>
-          </div>
-          <div style="text-align:center; padding:16px 0; color:var(--gray); font-size:13px;">
-            Activity will appear here as your team uploads reports and analyzes data.
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">⚡ Quick Actions</div>
-        </div>
-        <div class="card-body">
-          <div class="quick-actions">
-            <a class="quick-btn" href="reports.html">
-              <div class="quick-btn-icon">📤</div>
-              <div>
-                <div class="quick-btn-label">Upload Report</div>
-                <div class="quick-btn-sub">Appfolio export</div>
-              </div>
-            </a>
-            <a class="quick-btn" href="compare.html">
-              <div class="quick-btn-icon">🔄</div>
-              <div>
-                <div class="quick-btn-label">Compare Reports</div>
-                <div class="quick-btn-sub">Side by side AI</div>
-              </div>
-            </a>
-            <a class="quick-btn" href="rentroll.html">
-              <div class="quick-btn-icon">📋</div>
-              <div>
-                <div class="quick-btn-label">Rent Roll</div>
-                <div class="quick-btn-sub">Renewal tracking</div>
-              </div>
-            </a>
-            <a class="quick-btn" href="chat.html">
-              <div class="quick-btn-icon">💬</div>
-              <div>
-                <div class="quick-btn-label">Team Chat</div>
-                <div class="quick-btn-sub">Message your team</div>
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
+    <div class="period-selector" id="periodSel" style="display:none;">
+      <span class="period-label">Period:</span>
+      <div id="periodChips"></div>
     </div>
 
+    <div id="dash">
+      <div class="empty-dash">
+        <div class="empty-dash-icon">📊</div>
+        <div class="empty-dash-title">No data yet</div>
+        <div class="empty-dash-text">Upload your Appfolio exports and Claude will automatically extract all KPIs and populate this dashboard.</div>
+        <button class="btn-primary" onclick="openModal()">📤 Upload Reports Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Upload Appfolio Reports</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="m-row">
+        <div class="m-field">
+          <label>Portfolio</label>
+          <select id="mPortfolio">
+            <option value="nc_gladysh">NC Gladysh Capital</option>
+            <option value="sc_platinum">SC Platinum Estates</option>
+            <option value="tx_acorn">TX Acorn Ridge</option>
+          </select>
+        </div>
+        <div class="m-field">
+          <label>Period (e.g. Week 15 or April 2026)</label>
+          <input type="text" id="mPeriod" placeholder="e.g. April 2026"/>
+        </div>
+      </div>
+      <div class="upload-zone" id="mZone" onclick="document.getElementById('mFile').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div style="font-size:13px;font-weight:500;color:var(--navy);margin-bottom:4px;">Drop Appfolio exports here</div>
+        <div style="font-size:11px;color:var(--gray);">Occupancy · Leasing · Work Orders · Cash Flow · Rent Roll</div>
+      </div>
+      <input type="file" id="mFile" multiple accept=".csv,.xlsx,.xls,.pdf,.docx,.txt" style="display:none;"/>
+      <div class="file-chips" id="mChips"></div>
+      <div class="prog-wrap" id="mProg">
+        <div class="prog-lbl"><span id="pLabel">Reading...</span><span id="pPct">0%</span></div>
+        <div class="prog-bg"><div class="prog-fill" id="pFill"></div></div>
+        <div class="prog-status" id="pStatus"></div>
+      </div>
+      <button class="btn-primary" id="mBtn" onclick="extractKPIs()" style="width:100%;">🧠 Extract KPIs with AI</button>
+    </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getDatabase, ref, onValue }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
@@ -544,42 +273,259 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
+  let currentUser = null, currentPortfolio = 'all', currentView = 'weekly', currentPeriod = null;
+  let allData = {}, modalFiles = [];
 
-  // Auth check
+  const portNames = { all:'All Portfolios', nc_gladysh:'NC Gladysh Capital', sc_platinum:'SC Platinum Estates', tx_acorn:'TX Acorn Ridge' };
+
   onAuthStateChanged(auth, user => {
-    if (!user) {
-      window.location.href = 'index.html';
-      return;
-    }
-    // Set user info in sidebar
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
     const name = user.displayName || user.email;
     document.getElementById('userName').textContent = name;
-    document.getElementById('userInitials').textContent =
-      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
-
-    // Hide loading screen
+    document.getElementById('userInitials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     const loader = document.getElementById('loadingScreen');
     loader.style.opacity = '0';
     setTimeout(() => loader.style.display = 'none', 400);
-
-    // Load report count
-    const reportsRef = ref(db, 'reports');
-    onValue(reportsRef, snap => {
-      const count = snap.exists() ? Object.keys(snap.val()).length : 0;
-      document.getElementById('reportCount').textContent = count;
-    });
+    onValue(ref(db, 'kpis'), snap => { allData = snap.exists() ? snap.val() : {}; render(); });
   });
 
-  // Sign out
-  window.signOut = async function() {
-    await fbSignOut(auth);
-    window.location.href = 'index.html';
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+  window.switchPortfolio = (p, btn) => { currentPortfolio = p; currentPeriod = null; document.querySelectorAll('.port-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('dashTitle').textContent = portNames[p] + ' Dashboard'; render(); };
+  window.switchView = (v, btn) => { currentView = v; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); };
+  window.selectPeriod = p => { currentPeriod = p; render(); };
+
+  function getPeriods() {
+    const ports = currentPortfolio === 'all' ? Object.keys(allData) : [currentPortfolio];
+    const set = new Set();
+    ports.forEach(p => { if (allData[p]) Object.entries(allData[p]).forEach(([k,v]) => { if (!v.viewType || v.viewType === currentView) set.add(k); }); });
+    return Array.from(set).sort().reverse();
+  }
+
+  function getMerged(period) {
+    const ports = currentPortfolio === 'all' ? Object.keys(allData) : [currentPortfolio];
+    const m = {};
+    ports.forEach(p => { if (allData[p] && allData[p][period]) { const d = allData[p][period]; Object.keys(d).forEach(k => { if (typeof d[k] === 'number') m[k] = (m[k]||0) + d[k]; else if (!m[k]) m[k] = d[k]; }); } });
+    return Object.keys(m).length > 0 ? m : null;
+  }
+
+  function kc(color, label, value, sub, target, badge) {
+    const bc = badge ? (badge[0]==='g' ? 'bg-g' : badge[0]==='y' ? 'bg-y' : 'bg-r') : '';
+    const bt = badge ? (badge[0]==='g' ? '✅ On Target' : badge[0]==='y' ? '⚠️ Watch' : '🔴 Below Target') : '';
+    return `<div class="kc ${color}">
+      <div class="kc-label">${label}</div>
+      <div class="kc-value lg">${value ?? '—'}</div>
+      ${sub ? `<div class="kc-sub">${sub}</div>` : ''}
+      ${target ? `<div class="kc-target">Target: ${target}</div>` : ''}
+      ${badge ? `<div class="badge ${bc}">${bt}</div>` : ''}
+    </div>`;
+  }
+
+  function render() {
+    const periods = getPeriods();
+    if (periods.length === 0) {
+      document.getElementById('periodSel').style.display = 'none';
+      document.getElementById('aiBtn').style.display = 'none';
+      document.getElementById('aiText').textContent = 'Upload Appfolio reports to generate an AI executive summary.';
+      document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty';
+      document.getElementById('aiMeta').textContent = '';
+      document.getElementById('dash').innerHTML = `<div class="empty-dash"><div class="empty-dash-icon">📊</div><div class="empty-dash-title">No data yet for ${portNames[currentPortfolio]}</div><div class="empty-dash-text">Upload your Appfolio exports and Claude will automatically extract all KPIs and populate this dashboard.</div><button class="btn-primary" onclick="openModal()">📤 Upload Reports Now</button></div>`;
+      return;
+    }
+    if (!currentPeriod || !periods.includes(currentPeriod)) currentPeriod = periods[0];
+    document.getElementById('periodSel').style.display = 'flex';
+    document.getElementById('periodChips').innerHTML = periods.map(p => `<button class="period-chip ${p===currentPeriod?'active':''}" onclick="selectPeriod('${p}')">${p.replace(/_/g,' ')}</button>`).join('');
+    const d = getMerged(currentPeriod);
+    if (!d) { document.getElementById('dash').innerHTML = '<div style="padding:24px;color:var(--gray);text-align:center;">No data for this period.</div>'; return; }
+    document.getElementById('dashSub').textContent = currentPeriod.replace(/_/g,' ') + ' · ' + (currentView==='weekly'?'Weekly':'Monthly');
+    document.getElementById('aiBtn').style.display = 'block';
+    if (d.aiSummary) { document.getElementById('aiText').textContent = d.aiSummary; document.getElementById('aiText').className = 'ai-banner-text'; document.getElementById('aiMeta').textContent = 'Generated ' + (d.aiSummaryDate||'') + ' · ' + portNames[currentPortfolio]; }
+    else { document.getElementById('aiText').textContent = 'Click "Refresh" to generate an AI executive summary for this period.'; document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty'; document.getElementById('aiMeta').textContent = ''; }
+
+    const occ = d.occupied && d.total_units ? ((d.occupied/d.total_units)*100).toFixed(1) : d.occupancy_rate;
+    const stabOcc = d.stabilized_units && d.occupied ? ((d.occupied/d.stabilized_units)*100).toFixed(1) : null;
+    const woRate = d.wo_completed && d.wo_in ? ((d.wo_completed/d.wo_in)*100).toFixed(1) : d.wo_completion_rate;
+    const showConv = d.showings && d.leads ? ((d.showings/d.leads)*100).toFixed(1) : null;
+    const appConv = d.applications && d.showings ? ((d.applications/d.showings)*100).toFixed(1) : null;
+    const leaseConv = d.leased && d.applications ? ((d.leased/d.applications)*100).toFixed(1) : null;
+    const occC = occ>=95?'g':occ>=85?'y':'r';
+    const woC = woRate>=90?'g':woRate>=70?'y':'r';
+    const moC = d.moveout<=5?'g':d.moveout<=8?'y':'r';
+    const daysC = d.avg_days_lease<=20?'g':d.avg_days_lease<=25?'y':'r';
+    const collC = d.collection_rate>=98?'g':d.collection_rate>=90?'y':'r';
+    const delqC = d.delinquencies>5?'r':d.delinquencies>2?'y':'g';
+
+    document.getElementById('dash').innerHTML = `
+      <div class="section-hdr"><div class="section-title">🏠 Occupancy</div><div class="section-line"></div></div>
+      <div class="kpi-grid-4">
+        ${kc('b','Total Units',d.total_units,'Current portfolio size')}
+        ${kc(occC,'Occupancy Rate — Total',occ?occ+'%':null,d.stabilized_units?d.stabilized_units+' stabilized units':null,'≥ 95%',occ?[occC]:null)}
+        ${kc(stabOcc>=95?'g':stabOcc>=85?'y':stabOcc?'r':'','Occupancy — Stabilized',stabOcc?stabOcc+'%':null,d.occupied?d.occupied+' occupied':null,'≥ 95%',stabOcc?[stabOcc>=95?'g':stabOcc>=85?'y':'r']:null)}
+        ${kc(moC,'Move Outs',d.moveout??null,'Move Ins: '+(d.movein??'—')+'  |  Net: '+(d.movein&&d.moveout!=null?'+'+(d.movein-d.moveout):'—'),'< 5/period',d.moveout!=null?[moC]:null)}
+      </div>
+      <div class="kpi-grid-4">
+        ${kc(d.vacant_unrented>12?'r':d.vacant_unrented>5?'y':'g','Vacant Unrented',d.vacant_unrented??null,'Vacant Rented: '+(d.vacant_rented??'—'))}
+        ${kc('go','Notice Given',d.notice_unrented??null,'Notice Rented: '+(d.notice_rented??'—'))}
+        ${kc('b','Total Occupied',d.occupied??null)}
+        ${kc('b','Inbound Calls',d.inbound_calls??null)}
+      </div>
+
+      <div class="section-hdr"><div class="section-title">🎯 Leasing Funnel</div><div class="section-line"></div></div>
+      <div class="funnel-wrap">
+        <div class="funnel-steps">
+          <div class="f-step"><div class="f-num">${d.leads??'—'}</div><div class="f-label">Leads</div></div>
+          <div class="f-step"><div class="f-num">${d.showings??'—'}</div><div class="f-label">Showings</div>${showConv?`<div class="f-conv" style="color:${showConv>=40?'var(--green)':'var(--yellow)'}">${showConv}%</div>`:''}</div>
+          <div class="f-step"><div class="f-num">${d.applications??'—'}</div><div class="f-label">Applications</div>${appConv?`<div class="f-conv" style="color:${appConv>=50?'var(--green)':'var(--yellow)'}">${appConv}%</div>`:''}</div>
+          <div class="f-step"><div class="f-num">${d.leased??'—'}</div><div class="f-label">Leased</div>${leaseConv?`<div class="f-conv" style="color:${leaseConv>=50?'var(--green)':'var(--yellow)'}">${leaseConv}%</div>`:''}</div>
+          <div class="f-step"><div class="f-num">${d.movein??'—'}</div><div class="f-label">Move Ins</div></div>
+          <div class="f-step"><div class="f-num" style="color:${daysC==='g'?'var(--green)':daysC==='y'?'var(--yellow)':'var(--red)'}">${d.avg_days_lease!=null?d.avg_days_lease+'d':'—'}</div><div class="f-label">Avg Days to Lease</div><div class="f-conv" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>
+        </div>
+      </div>
+
+      <div class="section-hdr"><div class="section-title">🔧 Maintenance</div><div class="section-line"></div></div>
+      <div class="kpi-grid-4">
+        ${kc('b','Incoming Work Orders',d.wo_in??null)}
+        ${kc(woC,'WO Completion Rate',woRate?woRate+'%':null,(d.wo_completed??'—')+' of '+(d.wo_in??'—')+' completed','≥ 90%',woRate?[woC]:null)}
+        ${kc('go','Unit Turns Completed',d.turns_done??null,'In Progress: '+(d.turns_prog??'—'))}
+        ${kc(d.wo_cancel>10?'y':'','WO Canceled',d.wo_cancel??null)}
+      </div>
+
+      <div class="section-hdr"><div class="section-title">👥 Tenant Relations</div><div class="section-line"></div></div>
+      <div class="kpi-grid-4">
+        ${kc(delqC,'Delinquencies',d.delinquencies??null,d.delinquencies_amt?'$'+Number(d.delinquencies_amt).toLocaleString():null)}
+        ${kc(d.evictions>0?'r':'g','Evictions in Progress',d.evictions??null)}
+        ${kc('g','Renewals',d.renewals??null)}
+        ${kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',d.collection_rate?[collC]:null)}
+      </div>
+
+      ${d.noi||d.total_income ? `
+      <div class="section-hdr"><div class="section-title">💰 Financials</div><div class="section-line"></div></div>
+      <div class="kpi-grid-4">
+        ${kc('g','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null)}
+        ${kc('b','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null)}
+        ${kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%')}
+        ${kc('go','NOI Margin',d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null)}
+      </div>` : ''}
+    `;
+  }
+
+  // MODAL
+  window.openModal = () => { if (currentPortfolio!=='all') document.getElementById('mPortfolio').value = currentPortfolio; document.getElementById('uploadModal').classList.add('open'); };
+  window.closeModal = () => document.getElementById('uploadModal').classList.remove('open');
+  document.getElementById('uploadModal').addEventListener('click', e => { if (e.target===document.getElementById('uploadModal')) closeModal(); });
+
+  const mZone = document.getElementById('mZone');
+  mZone.addEventListener('dragover', e => { e.preventDefault(); mZone.style.borderColor='var(--gold)'; });
+  mZone.addEventListener('dragleave', () => mZone.style.borderColor='');
+  mZone.addEventListener('drop', e => { e.preventDefault(); mZone.style.borderColor=''; addFiles(Array.from(e.dataTransfer.files)); });
+  document.getElementById('mFile').addEventListener('change', e => addFiles(Array.from(e.target.files)));
+
+  function addFiles(files) { files.forEach(f => { if (!modalFiles.find(x=>x.name===f.name)) modalFiles.push(f); }); renderChips(); }
+  function renderChips() { document.getElementById('mChips').innerHTML = modalFiles.map((f,i) => `<div class="file-chip">📄 ${f.name} <button class="chip-x" onclick="rmFile(${i})">✕</button></div>`).join(''); }
+  window.rmFile = i => { modalFiles.splice(i,1); renderChips(); };
+
+  function setP(pct, lbl, status) {
+    document.getElementById('pFill').style.width = pct+'%';
+    document.getElementById('pPct').textContent = pct+'%';
+    document.getElementById('pLabel').textContent = lbl;
+    document.getElementById('pStatus').textContent = status;
+  }
+
+  window.extractKPIs = async function() {
+    if (modalFiles.length===0) return alert('Please select at least one file.');
+    const portfolio = document.getElementById('mPortfolio').value;
+    const period = document.getElementById('mPeriod').value.trim();
+    if (!period) return alert('Please enter the period.');
+    const btn = document.getElementById('mBtn');
+    btn.disabled = true; btn.textContent = 'Extracting...';
+    document.getElementById('mProg').style.display = 'block';
+    setP(10,'Reading files...','Loading your Appfolio exports...');
+
+    const fileContents = [];
+    for (let i=0; i<modalFiles.length; i++) {
+      setP(Math.round(10+(i/modalFiles.length)*30),'Reading...','Reading: '+modalFiles[i].name);
+      try {
+        const text = await new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(modalFiles[i]); });
+        fileContents.push({ name: modalFiles[i].name, content: text.length>4000?text.substring(0,4000):text });
+      } catch(e) { fileContents.push({ name: modalFiles[i].name, content: '[File: '+modalFiles[i].name+']' }); }
+    }
+
+    setP(50,'Sending to AI...','Claude is extracting KPIs...');
+    const filesSection = fileContents.map((f,i)=>'--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content).join('\n\n');
+    const viewType = period.toLowerCase().includes('week')?'weekly':'monthly';
+
+    const prompt = `Extract KPI data from these Appfolio property management reports. Return ONLY a valid JSON object with these exact keys (use null if not found in the files):
+{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}
+Rules: Return ONLY the JSON. No text before or after. No markdown. No backticks. Use null for missing values. Do NOT calculate or estimate — only use numbers explicitly in the files.
+Files:\n${filesSection}`;
+
+    try {
+      const res = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model:'claude-opus-4-6', max_tokens:800, system:'Return only valid JSON, nothing else.', messages:[{role:'user',content:prompt}] })
+      });
+      if (!res.ok) throw new Error('API error '+res.status);
+      const resp = await res.json();
+      let extracted = JSON.parse(resp.content[0].text.trim().replace(/```json|```/g,''));
+      extracted.viewType = viewType;
+      extracted.uploadedBy = currentUser.displayName||currentUser.email;
+      extracted.uploadedAt = Date.now();
+      setP(80,'Saving...','Saving to Firebase...');
+      const key = period.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
+      await set(ref(db,'kpis/'+portfolio+'/'+key), extracted);
+      setP(100,'Done!','KPIs saved!');
+      setTimeout(() => {
+        closeModal(); modalFiles=[]; renderChips();
+        document.getElementById('mPeriod').value='';
+        document.getElementById('mProg').style.display='none';
+        btn.disabled=false; btn.textContent='🧠 Extract KPIs with AI';
+        const portBtn = document.querySelector('[onclick="switchPortfolio(\''+portfolio+'\',this)"]');
+        if (portBtn) switchPortfolio(portfolio, portBtn);
+        currentPeriod = period.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
+      }, 1200);
+    } catch(e) {
+      setP(0,'Error','Failed: '+e.message);
+      btn.disabled=false; btn.textContent='🧠 Extract KPIs with AI';
+    }
   };
 
-  // Today's date
-  document.getElementById('todayDate').textContent =
-    new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  window.genSummary = async function() {
+    const d = getMerged(currentPeriod);
+    if (!d) return;
+    document.getElementById('aiText').textContent = 'Generating summary...';
+    document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty';
+    const occ = d.occupied&&d.total_units ? ((d.occupied/d.total_units)*100).toFixed(1) : d.occupancy_rate;
+    const woRate = d.wo_completed&&d.wo_in ? ((d.wo_completed/d.wo_in)*100).toFixed(1) : d.wo_completion_rate;
+    const prompt = `Write a 3-4 sentence executive summary for a property management CEO. Be direct and specific. Mention what is performing well, what needs attention, and one forward-looking point. No bullet points. No headers. Plain paragraph only.
+Portfolio: ${portNames[currentPortfolio]} | Period: ${currentPeriod.replace(/_/g,' ')}
+Occupancy: ${occ?occ+'%':'unknown'} (target 95%) | Total Units: ${d.total_units||'unknown'} | Vacant Unrented: ${d.vacant_unrented??'unknown'}
+Leads: ${d.leads??'unknown'} | Showings: ${d.showings??'unknown'} | Leased: ${d.leased??'unknown'}
+Move Ins: ${d.movein??'unknown'} | Move Outs: ${d.moveout??'unknown'} | Avg Days to Lease: ${d.avg_days_lease??'unknown'} (target <20)
+WO Completion: ${woRate?woRate+'%':'unknown'} (target 90%) | Delinquencies: ${d.delinquencies??'unknown'} ($${d.delinquencies_amt??'unknown'})
+Evictions: ${d.evictions??'unknown'} | Renewals: ${d.renewals??'unknown'} | NOI: ${d.noi?'$'+d.noi:'unknown'}`;
+    try {
+      const res = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model:'claude-opus-4-6', max_tokens:300, system:'Write concise executive summaries. Plain text only.', messages:[{role:'user',content:prompt}] })
+      });
+      if (!res.ok) throw new Error('API error');
+      const resp = await res.json();
+      const summary = resp.content[0].text.trim();
+      const key = currentPeriod.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
+      const ports = currentPortfolio==='all' ? Object.keys(allData) : [currentPortfolio];
+      for (const p of ports) {
+        if (allData[p]&&allData[p][key]) {
+          await set(ref(db,'kpis/'+p+'/'+key+'/aiSummary'), summary);
+          await set(ref(db,'kpis/'+p+'/'+key+'/aiSummaryDate'), new Date().toLocaleDateString());
+        }
+      }
+      document.getElementById('aiText').textContent = summary;
+      document.getElementById('aiText').className = 'ai-banner-text';
+      document.getElementById('aiMeta').textContent = 'Generated '+new Date().toLocaleDateString()+' · '+portNames[currentPortfolio];
+    } catch(e) {
+      document.getElementById('aiText').textContent = 'Could not generate summary. Please try again.';
+    }
+  };
 </script>
-
 </body>
 </html>
