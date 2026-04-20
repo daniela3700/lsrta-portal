@@ -323,13 +323,10 @@
   function kc(color, label, value, sub, target, badge) {
     const bc = badge ? (badge[0]==='g' ? 'bg-g' : badge[0]==='y' ? 'bg-y' : 'bg-r') : '';
     const bt = badge ? (badge[0]==='g' ? '✅ On Target' : badge[0]==='y' ? '⚠️ Watch' : '🔴 Below Target') : '';
-    return `<div class="kc ${color}">
-      <div class="kc-label">${label}</div>
-      <div class="kc-value lg">${value ?? '—'}</div>
-      ${sub ? `<div class="kc-sub">${sub}</div>` : ''}
-      ${target ? `<div class="kc-target">Target: ${target}</div>` : ''}
-      ${badge ? `<div class="badge ${bc}">${bt}</div>` : ''}
-    </div>`;
+    const subHtml = sub ? '<div class="kc-sub">' + sub + '</div>' : '';
+    const targetHtml = target ? '<div class="kc-target">Target: ' + target + '</div>' : '';
+    const badgeHtml = badge ? '<div class="badge ' + bc + '">' + bt + '</div>' : '';
+    return '<div class="kc ' + color + '"><div class="kc-label">' + label + '</div><div class="kc-value lg">' + (value ?? '—') + '</div>' + subHtml + targetHtml + badgeHtml + '</div>';
   }
 
   function render() {
@@ -389,9 +386,9 @@
       <div class="funnel-wrap">
         <div class="funnel-steps">
           <div class="f-step"><div class="f-num">${d.leads??'—'}</div><div class="f-label">Leads</div></div>
-          <div class="f-step"><div class="f-num">${d.showings??'—'}</div><div class="f-label">Showings</div>${showConv?`<div class="f-conv" style="color:${showConv>=40?'var(--green)':'var(--yellow)'}">${showConv}%</div>`:''}</div>
-          <div class="f-step"><div class="f-num">${d.applications??'—'}</div><div class="f-label">Applications</div>${appConv?`<div class="f-conv" style="color:${appConv>=50?'var(--green)':'var(--yellow)'}">${appConv}%</div>`:''}</div>
-          <div class="f-step"><div class="f-num">${d.leased??'—'}</div><div class="f-label">Leased</div>${leaseConv?`<div class="f-conv" style="color:${leaseConv>=50?'var(--green)':'var(--yellow)'}">${leaseConv}%</div>`:''}</div>
+          <div class="f-step"><div class="f-num">${d.showings??'—'}</div><div class="f-label">Showings</div>' + (showConv ? '<div class="f-conv" style="color:' + (showConv>=40?'var(--green)':'var(--yellow)') + '">' + showConv + '%</div>' : '') + '</div>
+          <div class="f-step"><div class="f-num">${d.applications??'—'}</div><div class="f-label">Applications</div>' + (appConv ? '<div class="f-conv" style="color:' + (appConv>=50?'var(--green)':'var(--yellow)') + '">' + appConv + '%</div>' : '') + '</div>
+          <div class="f-step"><div class="f-num">${d.leased??'—'}</div><div class="f-label">Leased</div>' + (leaseConv ? '<div class="f-conv" style="color:' + (leaseConv>=50?'var(--green)':'var(--yellow)') + '">' + leaseConv + '%</div>' : '') + '</div>
           <div class="f-step"><div class="f-num">${d.movein??'—'}</div><div class="f-label">Move Ins</div></div>
           <div class="f-step"><div class="f-num" style="color:${daysC==='g'?'var(--green)':daysC==='y'?'var(--yellow)':'var(--red)'}">${d.avg_days_lease!=null?d.avg_days_lease+'d':'—'}</div><div class="f-label">Avg Days to Lease</div><div class="f-conv" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>
         </div>
@@ -413,14 +410,7 @@
         ${kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',d.collection_rate?[collC]:null)}
       </div>
 
-      ${d.noi||d.total_income ? `
-      <div class="section-hdr"><div class="section-title">💰 Financials</div><div class="section-line"></div></div>
-      <div class="kpi-grid-4">
-        ${kc('g','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null)}
-        ${kc('b','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null)}
-        ${kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%')}
-        ${kc('go','NOI Margin',d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null)}
-      </div>` : ''}
+      ' + (d.noi||d.total_income ? '<div class="section-hdr"><div class="section-title">💰 Financials</div><div class="section-line"></div></div><div class="kpi-grid-4">' + kc('g','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null) + kc('b','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null) + kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%') + kc('go','NOI Margin',d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null) + '</div>' : '') + '
     `;
   }
 
@@ -590,7 +580,7 @@ ${filesSection}`;
         <thead>
           <tr style="background:#fafbfc;">
             <th style="padding:10px 16px;text-align:left;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);white-space:nowrap;position:sticky;left:0;background:#fafbfc;">KPI</th>
-            ${displayPeriods.map(p => `<th style="padding:10px 14px;text-align:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);white-space:nowrap;">${p.replace(/_/g,' ')}</th>`).join('')}
+            ${displayPeriods.map(p => '<th style="padding:10px 14px;text-align:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);white-space:nowrap;">' + p.replace(/_/g,' ') + '</th>').join('')}
             <th style="padding:10px 14px;text-align:center;font-size:10px;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);">Trend</th>
           </tr>
         </thead>
@@ -607,7 +597,7 @@ ${filesSection}`;
       const bg = i % 2 === 0 ? '' : 'background:rgba(15,31,61,0.015);';
       tableHTML += `<tr style="${bg}">
         <td style="padding:10px 16px;font-size:12px;color:var(--navy);font-weight:500;white-space:nowrap;position:sticky;left:0;background:${i%2===0?'var(--white)':'rgba(15,31,61,0.015)'};">${kpi.label}</td>
-        ${displayVals.map((v,j) => `<td style="padding:10px 14px;text-align:center;font-size:13px;font-family:'Cormorant Garamond',serif;${bg}" ${cellColor(kpi, v)}>${kpi.format(v)}</td>`).join('')}
+        ${displayVals.map((v,j) => '<td style="padding:10px 14px;text-align:center;font-size:13px;font-family:\'Cormorant Garamond\',serif;' + bg + '" ' + cellColor(kpi, v) + '>' + kpi.format(v) + '</td>').join('')}
         <td style="padding:10px 14px;text-align:center;font-size:16px;">${trendArrow(displayVals)}</td>
       </tr>`;
     });
