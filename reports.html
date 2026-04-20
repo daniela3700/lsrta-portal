@@ -882,6 +882,1004 @@ Data:
         fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
       }
 
+      const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear, honest story — what happened, why, and what comes next.
+
+CRITICAL RULES — READ CAREFULLY:
+1. ONLY use numbers that appear directly in the uploaded files. Never calculate, estimate, or assume occupancy rates, unit counts, or percentages unless the file explicitly states them.
+2. If a number is not in the file, write "Data not available in source files" — never guess.
+3. NO markdown ## headers. Section titles are plain ALL CAPS on their own line.
+4. NO bold bullet points. Bullets are plain text with a • character.
+5. Tables are allowed and encouraged for KPI summaries — use simple pipe tables.
+6. Every number must have a source citation in parentheses: (Source: filename)
+7. Every negative number must have a plain-English explanation of why it exists.
+8. Name specific properties and units whenever they appear in the data.
+9. Write in a confident, clear narrative voice — like a smart CFO writing to their board.
+10. End with a forward-looking paragraph.
+
+HOW TO READ APPFOLIO EXPORTS:
+- Cash Flow CSV: Look for rows: "NOI - Net Operating Income", "Cash Flow", "Actual Ending Cash", "Total Operating Income", "Total Expense". YTD numbers are in the "Fiscal Year To Date" column.
+- Property Comparison CSV: Property names are column headers in row 1. "Total Operating Income" and "NOI - Net Operating Income" rows show per-property performance. Last column is portfolio total.
+- Gross Potential Rent CSV: Last summary row has portfolio totals for GPR, Vacancy Loss, Concessions, Net Rent Income. Properties with $0 in Net Rent Income column are vacant.
+
+WHAT YOU CAN AND CANNOT DO:
+
+YOU CAN calculate metrics when BOTH numbers come from the files. Always show your math and cite both sources. Examples:
+- Financial Occupancy = Rent Income / GPR: write as "Financial occupancy is 60.4% — calculated as $55,652 rent income (Source: cash_flow.csv) against $92,153 GPR (Source: gross_potential_rent.csv)"
+- Collection Rate = Operating Income / Rent Income — show the math
+- NOI Margin = NOI / Operating Income — show the math
+- Vacancy Loss % = Vacancy Loss / GPR — show the math
+- Per-property NOI margin = property NOI / property Operating Income
+
+YOU CANNOT assume or state:
+- How many physical units are vacant (unless the file explicitly states unit count)
+- Any number not directly in the files or calculable from two numbers that are both in the files
+- If data is missing write "Data not available in source files"
+
+CRITICAL STYLE RULES:
+1. NO markdown ## headers — section titles are plain ALL CAPS on their own line
+2. NO bold bullet points — bullets are plain text with a bullet character only
+3. Tables are allowed and encouraged for KPI summaries
+4. Every raw number needs a source citation: (Source: filename)
+5. Every calculated metric must show the calculation and cite both source files
+6. Every negative number gets a plain-English explanation
+7. Name specific properties from the data whenever possible
+8. Write like a smart CFO to their board — clear, confident, narrative
+9. End with a forward-looking paragraph
+
+HERE IS THE PERFECT EXAMPLE OUTPUT — match this style exactly:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGACY SIGNATURE RENTALS — PORTFOLIO PERFORMANCE REPORT
+Reporting Period: March 2026 | Prepared by: Legacy Signature Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OVERALL PERFORMANCE
+March closed with a Net Operating Income of $6,413 on $50,039 in operating income — a 12.82% NOI margin. Portfolio cash flow came in at $6,126 for the month, with ending cash of $38,147. (Source: Cash Flow Report)
+
+| Metric | March 2026 | YTD |
+|---|---|---|
+| Gross Rent Income | $55,652 | $151,338 |
+| Total Operating Income | $50,039 | $147,149 |
+| Total Expenses | $43,626 | $142,829 |
+| Net Operating Income | $6,413 (12.82%) | $4,320 (2.94%) |
+| Cash Flow | $6,126 | -$3,078 |
+| Ending Cash | $38,147 | — |
+
+VACANCY
+Gross Potential Rent for the portfolio is $92,153 per month (Source: Gross Potential Rent Report). Financial occupancy is 60.4% — calculated as $55,652 rent income divided by $92,153 GPR (Source: Cash Flow Report + Gross Potential Rent Report). Vacancy loss totaled $26,247 this month — 28.5% of GPR, calculated as $26,247 vacancy loss divided by $92,153 GPR (Source: Gross Potential Rent Report) — and is the primary driver of the gap between potential and actual income. The following properties reported zero net rent income in March:
+• Burnett Ave Duplex — 100% vacant
+• N 14th St Duplex — 100% vacant
+• S 12th St Duplex — 100% vacant
+• S 17th St Duplex — 100% vacant
+• S 5th St Townhome — 100% vacant
+• S 9th St Duplex — 100% vacant
+• S 10th St Duplex — 100% vacant
+• Alexander Ave Duplex — renovation loss recorded
+As these units lease up, income will increase substantially. (Source: Gross Potential Rent Report)
+
+TOP PERFORMER
+S 26th St Duplex generated $19,872 in operating income and $2,771 in NOI — by far the strongest property in the portfolio this month. (Source: Property Comparison)
+
+TO BE AWARE OF
+• S 18th St Duplex: $1,395 in rent income against expenses producing -$2,611 NOI. This property is operating at a loss and requires immediate attention. (Source: Property Comparison)
+• S MLK Dr Duplex: one unit received a $1,895 concession as a move-in special, reducing NOI to $2,613 this month. This is a one-time cost to stabilize occupancy. (Source: Gross Potential Rent Report)
+• Prepaid rent adjustment of -$4,486 reduces reported income this month, but reflects rent already collected and applied from prior payments — this is not a loss. (Source: Cash Flow Report)
+• S 24th St Duplex: negative NOI of -$1,917 despite $11,160 in rent income — expenses at this property are unusually high this month and should be reviewed. (Source: Property Comparison)
+
+YEAR-TO-DATE
+YTD cash flow stands at -$3,078. This is explained by three factors: (1) $19,665 in concessions through March, concentrated in January and February to stabilize newly acquired properties; (2) $41,047 in owner distributions taken YTD; and (3) $11,633 in one-time refinance income received earlier in the year. With March concessions dropping sharply to $1,900, the trend is moving in the right direction. YTD ending cash is $38,147. (Source: Cash Flow Report)
+
+| YTD Item | Amount |
+|---|---|
+| Total YTD Revenue | $158,781 |
+| Total YTD Expenses | $142,829 |
+| YTD NOI | $4,320 |
+| YTD Concessions | -$19,665 |
+| YTD Owner Distributions | -$41,047 |
+| YTD Refinance Income | +$11,633 |
+| Ending Cash | $38,147 |
+
+ACTION ITEMS
+1. Prioritize lease-up at Burnett Ave, N 14th St, S 12th St, S 17th St, S 5th St, S 9th St, and S 10th St — these vacant properties represent the single largest income opportunity in the portfolio
+2. Investigate and address the expense structure at S 18th St Duplex — negative NOI at -$2,611 requires immediate review
+3. Review high expenses at S 24th St Duplex causing negative NOI despite strong rent income
+4. Confirm move-in timeline for all properties currently under renovation or in active lease-up
+
+As the vacant and newly acquired properties come online through Q2, we expect significant improvement in both income and cash flow. The portfolio fundamentals are solid — the current vacancy is largely the result of a deliberate acquisition and lease-up strategy, not operational weakness. Please don't hesitate to reach out with any questions.
+
+---END EXAMPLE---
+
+Now generate a report in that EXACT same style — same section names in plain ALL CAPS, same mix of narrative + tables, same source citations, same tone — for the following data. Do not invent numbers. Do not calculate occupancy unless unit counts are explicitly stated in the files.
+
+Reporting Period: \${period}
+Property: \${propertyName}
+Report Type: \${reportType}
+Source File: \${currentFile.name}
+
+Data:
+\${fileContent}\`; lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR — same as dashboard */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* UPLOAD ZONE */
+    .upload-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 28px; overflow: hidden; }
+    .upload-card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); }
+    .upload-card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .upload-card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .upload-zone {
+      margin: 24px 28px;
+      border: 2px dashed rgba(15,31,61,0.15);
+      border-radius: 4px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafbfc;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 40px; margin-bottom: 12px; }
+    .upload-label { font-size: 15px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); cursor: pointer; font-weight: 500; }
+    #fileInput { display: none; }
+
+    /* REPORT FORM */
+    .report-form { padding: 0 28px 28px; display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 10px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .file-selected { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(39,174,96,0.06); border: 1px solid rgba(39,174,96,0.2); border-radius: 2px; margin-bottom: 16px; }
+    .file-selected-name { font-size: 13px; color: var(--navy); font-weight: 500; }
+    .file-selected-size { font-size: 11px; color: var(--gray); }
+    .btn-remove { margin-left: auto; font-size: 11px; color: var(--gray); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+    .btn-analyze { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-analyze:hover { background: var(--navy-mid); }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-analyze.loading .btn-text { opacity: 0; }
+    .btn-analyze .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-analyze.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* AI RESULT */
+    .ai-result { display: none; margin: 0 28px 28px; }
+    .ai-result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ai-result-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+    .ai-content { background: var(--cream); border: 1px solid rgba(15,31,61,0.08); border-radius: 4px; padding: 28px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; }
+    .ai-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .btn-secondary:hover { border-color: var(--gold); }
+
+    /* NOTES */
+    .notes-area { margin: 0 28px 28px; display: none; }
+    .notes-area textarea { width: 100%; padding: 12px 16px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); outline: none; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+    .notes-area textarea:focus { border-color: var(--gold); }
+
+    /* REPORTS HISTORY */
+    .history-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); overflow: hidden; }
+    .history-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .history-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-item { padding: 16px 24px; border-bottom: 1px solid rgba(15,31,61,0.05); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: background 0.15s; }
+    .report-item:hover { background: #fafbfc; }
+    .report-item:last-child { border-bottom: none; }
+    .report-icon { font-size: 24px; flex-shrink: 0; }
+    .report-name { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .report-type-badge { margin-left: auto; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: rgba(201,168,76,0.1); color: var(--gold); font-weight: 500; flex-shrink: 0; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--gray); font-size: 13px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 4px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { padding: 24px 28px; border-bottom: 1px solid rgba(15,31,61,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+    .modal-body { padding: 28px; }
+    .modal-analysis { background: var(--cream); border-radius: 4px; padding: 24px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; margin-bottom: 16px; }
+    .modal-notes { font-size: 13px; color: var(--gray); font-style: italic; padding: 12px 16px; background: #fafbfc; border-radius: 2px; border: 1px solid rgba(15,31,61,0.07); }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading reports...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item active" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="bulk.html"><span class="nav-icon">📦</span> Bulk Analysis</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Reports & AI Analysis</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <div class="upload-card-header">
+        <div class="upload-card-title">Upload Appfolio Report</div>
+        <div class="upload-card-sub">Supports PDF, Excel (.xlsx/.csv), and Word (.docx) files exported from Appfolio</div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📤</div>
+        <div class="upload-label">Drop your Appfolio export here</div>
+        <div class="upload-sub">or <span onclick="document.getElementById('fileInput').click()">browse to upload</span></div>
+        <div class="upload-sub" style="margin-top:8px;">PDF · Excel · CSV · Word</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+      <!-- Form shown after file selected -->
+      <div class="report-form" id="reportForm">
+        <div class="file-selected" id="fileSelected">
+          <span style="font-size:20px">📄</span>
+          <div>
+            <div class="file-selected-name" id="fileName">filename.pdf</div>
+            <div class="file-selected-size" id="fileSize">0 KB</div>
+          </div>
+          <button class="btn-remove" onclick="removeFile()">✕ Remove</button>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Report Type</label>
+            <select id="reportType">
+              <option value="">Select type...</option>
+              <option value="Monthly Owner Report">Monthly Owner Report</option>
+              <option value="Occupancy Report">Occupancy Report</option>
+              <option value="Rent Roll">Rent Roll</option>
+              <option value="Financial Summary">Financial Summary</option>
+              <option value="Maintenance Report">Maintenance Report</option>
+              <option value="Delinquency Report">Delinquency Report</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Property Name</label>
+            <input type="text" id="propertyName" placeholder="e.g. Sunset Apartments"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Period (e.g. January 2026)</label>
+            <input type="text" id="reportPeriod" placeholder="e.g. January 2026"/>
+          </div>
+          <div class="field">
+            <label>Notes (optional)</label>
+            <input type="text" id="reportNotes" placeholder="Any context for the team..."/>
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeReport()">
+          <span class="btn-text">✨ Analyze with AI</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+      </div>
+
+      <!-- AI RESULT -->
+      <div class="ai-result" id="aiResult">
+        <div class="ai-result-header">
+          <div class="ai-result-title" id="aiResultTitle">AI Analysis</div>
+          <div class="ai-badge">✨ Claude AI</div>
+        </div>
+        <div class="ai-content" id="aiContent"></div>
+        <div class="ai-actions">
+          <button class="btn-analyze" onclick="saveReport()" id="saveBtn">
+            <span class="btn-text">💾 Save Report</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+          <button class="btn-secondary" onclick="resetForm()">Upload Another</button>
+          <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+        </div>
+      </div>
+
+      <!-- TEAM NOTES -->
+      <div class="notes-area" id="notesArea">
+        <div style="font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); margin-bottom:7px;">Team Notes</div>
+        <textarea id="teamNotes" placeholder="Add notes for your team about this report..."></textarea>
+      </div>
+    </div>
+
+    <!-- REPORTS HISTORY -->
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">📁 Report History</div>
+      </div>
+      <div id="reportsList">
+        <div class="empty-state">
+          No reports yet. Upload your first Appfolio export above to get started!
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL for viewing saved reports -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Report Analysis</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px; color:var(--gray); margin-bottom:16px;" id="modalMeta"></div>
+      <div class="modal-analysis" id="modalAnalysis"></div>
+      <div class="modal-notes" id="modalNotes" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let currentFile = null;
+  let currentAnalysis = '';
+  let currentReportMeta = {};
+
+  // Auth check
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+    loadReports();
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // File handling
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    currentFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('reportForm').style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  }
+
+  window.removeFile = () => {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('reportForm').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  };
+
+  // Read file as text
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      if (file.type === 'application/pdf') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  // Analyze with Claude API
+  window.analyzeReport = async function() {
+    const reportType = document.getElementById('reportType').value || 'Property Report';
+    const propertyName = document.getElementById('propertyName').value || 'Portfolio';
+    const period = document.getElementById('reportPeriod').value || 'Current Period';
+
+    if (!currentFile) return alert('Please select a file first.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      let fileContent = '';
+      try {
+        fileContent = await readFileAsText(currentFile);
+        if (fileContent.length > 8000) fileContent = fileContent.substring(0, 8000) + '\n...[content truncated for analysis]';
+      } catch(e) {
+        fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
+      }
+
+      const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear story — what happened, why it happened, and what comes next.
+
+WRITING STYLE:
+- Mix narrative paragraphs WITH simple tables where tables add clarity
+- Every section opens with a narrative sentence explaining what the numbers mean
+- Every number must have a source citation: (Source: filename)
+- Negative numbers always get a plain-English explanation of why they exist
+- Named specific properties whenever possible — never say "some properties"
+- Write like a smart CFO writing to their board — clear, confident, no jargon
+- End every report with a forward-looking paragraph
+
+HERE IS A PERFECT EXAMPLE OF THE OUTPUT YOU SHOULD PRODUCE — match this exactly:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGACY SIGNATURE RENTALS — PORTFOLIO PERFORMANCE REPORT
+Reporting Period: March 2026 | Prepared by: Legacy Signature Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OVERALL PERFORMANCE
+March closed with a Net Operating Income of $6,413 on $50,039 in operating income — a 12.8% NOI margin. Portfolio cash flow came in at $6,126 for the month. (Source: Cash Flow Report)
+
+| Metric | March 2026 | YTD |
+|---|---|---|
+| Gross Rent Income | $55,652 | $151,338 |
+| Total Operating Income | $50,039 | $147,149 |
+| Total Expenses | $43,626 | $142,829 |
+| Net Operating Income | $6,413 | $4,320 |
+| Cash Flow | $6,126 | -$3,078 |
+
+VACANCY
+Gross Potential Rent for the portfolio is $92,153/month. However, vacancy loss totaled $26,247 this month (28.5% of GPR), which is the primary driver of the gap between potential and actual income. Several properties are in active lease-up:
+• S 28th St Duplex: 75% vacant — only 2 of ~8 units had active tenants; the rest are coming online
+• S 12th St, S 17th St, N 14th St, Burnett Ave Duplexes: 100% vacant, newly acquired or between leases
+• Alexander Ave, S 9th St, S 5th St, S Main St: no activity recorded this month
+As these units lease up, income will increase substantially. (Source: Gross Potential Rent Report)
+
+TOP PERFORMER
+S 26th St Duplex generated $19,872 in income and $2,771 in NOI — by far the strongest property in the portfolio this month, with only 8% vacancy. (Source: Property Comparison)
+
+TO BE AWARE OF
+• S 18th St Duplex collected only $1,395 in rent against a $3,956 mortgage, resulting in -$2,611 NOI for March. This is a property to watch. (Source: Property Comparison)
+• S MLK Dr Duplex (905B): one unit received a full month rent concession ($1,395) as a move-in special affecting NOI. (Source: Gross Potential Rent Report)
+• S 26th St, units 1011A and 1011B: delinquency credits appear in the GPR report indicating these tenants paid back-owed balances this month — a positive sign. (Source: Gross Potential Rent Report)
+• The prepaid rent adjustment of -$4,486 reduces reported income this month, but reflects rent already collected and applied from prior payments — not a loss. (Source: Cash Flow Report)
+
+YEAR-TO-DATE
+YTD cash flow stands at -$3,078. This is largely explained by: (1) heavy concessions in January–February (~$17,765) used to stabilize occupancy; (2) the $41,047 owner distribution taken YTD; and (3) a $11,633 one-time refinance income item earlier in the year. March concessions dropped sharply to $1,900 — a positive trend. Ending cash is $38,147. (Source: Cash Flow Report)
+
+| YTD Item | Amount |
+|---|---|
+| Concessions (Jan-Mar) | -$19,665 |
+| Owner Distribution | -$41,047 |
+| Refinance Income | +$11,633 |
+| Ending Cash | $38,147 |
+
+ACTION ITEMS
+1. Prioritize lease-up of S 28th St, S 12th St, S 17th St, N 14th St, and Burnett Ave — these vacant units represent the single biggest income opportunity
+2. Monitor S 18th St Duplex closely — NOI is negative and mortgage coverage is at risk
+3. Confirm move-in timeline for all units currently in renovation or lease-up
+4. Review delinquency accounts at S 26th St 1011A and 1011B for payment plan compliance
+
+As the newly acquired and vacant properties come online through Q2, we expect significant improvement in both income and cash flow. The portfolio fundamentals are solid — the vacancy is largely explained by a deliberate acquisition and lease-up strategy, not operational weakness. Please don't hesitate to reach out with any questions.
+
+---END EXAMPLE---
+
+Now generate a report in that EXACT same style — same mix of narrative + tables, same section names, same source citations, same tone — for the following data:
+
+Reporting Period: \${period}
+Property: \${propertyName}
+Report Type: \${reportType}
+Source File: \${currentFile.name}
+
+Data:
+\${fileContent}\`; lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR — same as dashboard */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* UPLOAD ZONE */
+    .upload-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 28px; overflow: hidden; }
+    .upload-card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); }
+    .upload-card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .upload-card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .upload-zone {
+      margin: 24px 28px;
+      border: 2px dashed rgba(15,31,61,0.15);
+      border-radius: 4px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafbfc;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 40px; margin-bottom: 12px; }
+    .upload-label { font-size: 15px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); cursor: pointer; font-weight: 500; }
+    #fileInput { display: none; }
+
+    /* REPORT FORM */
+    .report-form { padding: 0 28px 28px; display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 10px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .file-selected { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(39,174,96,0.06); border: 1px solid rgba(39,174,96,0.2); border-radius: 2px; margin-bottom: 16px; }
+    .file-selected-name { font-size: 13px; color: var(--navy); font-weight: 500; }
+    .file-selected-size { font-size: 11px; color: var(--gray); }
+    .btn-remove { margin-left: auto; font-size: 11px; color: var(--gray); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+    .btn-analyze { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-analyze:hover { background: var(--navy-mid); }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-analyze.loading .btn-text { opacity: 0; }
+    .btn-analyze .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-analyze.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* AI RESULT */
+    .ai-result { display: none; margin: 0 28px 28px; }
+    .ai-result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ai-result-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+    .ai-content { background: var(--cream); border: 1px solid rgba(15,31,61,0.08); border-radius: 4px; padding: 28px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; }
+    .ai-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .btn-secondary:hover { border-color: var(--gold); }
+
+    /* NOTES */
+    .notes-area { margin: 0 28px 28px; display: none; }
+    .notes-area textarea { width: 100%; padding: 12px 16px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); outline: none; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+    .notes-area textarea:focus { border-color: var(--gold); }
+
+    /* REPORTS HISTORY */
+    .history-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); overflow: hidden; }
+    .history-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .history-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-item { padding: 16px 24px; border-bottom: 1px solid rgba(15,31,61,0.05); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: background 0.15s; }
+    .report-item:hover { background: #fafbfc; }
+    .report-item:last-child { border-bottom: none; }
+    .report-icon { font-size: 24px; flex-shrink: 0; }
+    .report-name { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .report-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .report-type-badge { margin-left: auto; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: rgba(201,168,76,0.1); color: var(--gold); font-weight: 500; flex-shrink: 0; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--gray); font-size: 13px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 4px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { padding: 24px 28px; border-bottom: 1px solid rgba(15,31,61,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+    .modal-body { padding: 28px; }
+    .modal-analysis { background: var(--cream); border-radius: 4px; padding: 24px; line-height: 1.8; font-size: 14px; color: var(--navy); white-space: pre-wrap; margin-bottom: 16px; }
+    .modal-notes { font-size: 13px; color: var(--gray); font-style: italic; padding: 12px 16px; background: #fafbfc; border-radius: 2px; border: 1px solid rgba(15,31,61,0.07); }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading reports...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item active" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="bulk.html"><span class="nav-icon">📦</span> Bulk Analysis</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Reports & AI Analysis</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <div class="upload-card-header">
+        <div class="upload-card-title">Upload Appfolio Report</div>
+        <div class="upload-card-sub">Supports PDF, Excel (.xlsx/.csv), and Word (.docx) files exported from Appfolio</div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📤</div>
+        <div class="upload-label">Drop your Appfolio export here</div>
+        <div class="upload-sub">or <span onclick="document.getElementById('fileInput').click()">browse to upload</span></div>
+        <div class="upload-sub" style="margin-top:8px;">PDF · Excel · CSV · Word</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+      <!-- Form shown after file selected -->
+      <div class="report-form" id="reportForm">
+        <div class="file-selected" id="fileSelected">
+          <span style="font-size:20px">📄</span>
+          <div>
+            <div class="file-selected-name" id="fileName">filename.pdf</div>
+            <div class="file-selected-size" id="fileSize">0 KB</div>
+          </div>
+          <button class="btn-remove" onclick="removeFile()">✕ Remove</button>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Report Type</label>
+            <select id="reportType">
+              <option value="">Select type...</option>
+              <option value="Monthly Owner Report">Monthly Owner Report</option>
+              <option value="Occupancy Report">Occupancy Report</option>
+              <option value="Rent Roll">Rent Roll</option>
+              <option value="Financial Summary">Financial Summary</option>
+              <option value="Maintenance Report">Maintenance Report</option>
+              <option value="Delinquency Report">Delinquency Report</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Property Name</label>
+            <input type="text" id="propertyName" placeholder="e.g. Sunset Apartments"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Period (e.g. January 2026)</label>
+            <input type="text" id="reportPeriod" placeholder="e.g. January 2026"/>
+          </div>
+          <div class="field">
+            <label>Notes (optional)</label>
+            <input type="text" id="reportNotes" placeholder="Any context for the team..."/>
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeReport()">
+          <span class="btn-text">✨ Analyze with AI</span>
+          <span class="btn-spinner"><span class="spinner-ring"></span></span>
+        </button>
+      </div>
+
+      <!-- AI RESULT -->
+      <div class="ai-result" id="aiResult">
+        <div class="ai-result-header">
+          <div class="ai-result-title" id="aiResultTitle">AI Analysis</div>
+          <div class="ai-badge">✨ Claude AI</div>
+        </div>
+        <div class="ai-content" id="aiContent"></div>
+        <div class="ai-actions">
+          <button class="btn-analyze" onclick="saveReport()" id="saveBtn">
+            <span class="btn-text">💾 Save Report</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+          <button class="btn-secondary" onclick="resetForm()">Upload Another</button>
+          <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+        </div>
+      </div>
+
+      <!-- TEAM NOTES -->
+      <div class="notes-area" id="notesArea">
+        <div style="font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); margin-bottom:7px;">Team Notes</div>
+        <textarea id="teamNotes" placeholder="Add notes for your team about this report..."></textarea>
+      </div>
+    </div>
+
+    <!-- REPORTS HISTORY -->
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">📁 Report History</div>
+      </div>
+      <div id="reportsList">
+        <div class="empty-state">
+          No reports yet. Upload your first Appfolio export above to get started!
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL for viewing saved reports -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Report Analysis</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px; color:var(--gray); margin-bottom:16px;" id="modalMeta"></div>
+      <div class="modal-analysis" id="modalAnalysis"></div>
+      <div class="modal-notes" id="modalNotes" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let currentFile = null;
+  let currentAnalysis = '';
+  let currentReportMeta = {};
+
+  // Auth check
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+    loadReports();
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // File handling
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    currentFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('reportForm').style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  }
+
+  window.removeFile = () => {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('reportForm').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('aiResult').style.display = 'none';
+    document.getElementById('notesArea').style.display = 'none';
+  };
+
+  // Read file as text
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      if (file.type === 'application/pdf') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  // Analyze with Claude API
+  window.analyzeReport = async function() {
+    const reportType = document.getElementById('reportType').value || 'Property Report';
+    const propertyName = document.getElementById('propertyName').value || 'Portfolio';
+    const period = document.getElementById('reportPeriod').value || 'Current Period';
+
+    if (!currentFile) return alert('Please select a file first.');
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      let fileContent = '';
+      try {
+        fileContent = await readFileAsText(currentFile);
+        if (fileContent.length > 8000) fileContent = fileContent.substring(0, 8000) + '\n...[content truncated for analysis]';
+      } catch(e) {
+        fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
+      }
+
       const prompt = `You are writing a monthly portfolio report for Legacy Signature Rentals. Write EXACTLY like the example below — short narrative paragraphs, no tables, no markdown headers with ##, no bold KPI blocks. Just clean professional paragraphs with a section label in ALL CAPS followed by the narrative. Cite the source file in parentheses after every data point.
 
 CRITICAL STYLE RULES:
