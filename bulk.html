@@ -472,7 +472,34 @@
       `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
     ).join('\n\n');
 
-    const prompt = `You are a senior property management analyst preparing a formal ${analysisTypeLabels[analysisType]} for Legacy Signature Rentals ownership. You have been provided ${selectedFiles.length} report files covering ${period}. Analyze ALL files together as a complete dataset to provide a true portfolio-wide picture.
+    const prompt = `You are a senior property management analyst preparing a formal portfolio report for Legacy Signature Rentals ownership. You write in a professional, narrative style — not just bullet points. Every data point must cite its source file in parentheses like (Source: filename). Explain the WHY behind every number. Never leave a bad metric without context. Always end with a forward-looking statement.
+
+Here is an example of the EXACT writing style, tone, and format you must follow:
+
+---EXAMPLE START---
+OVERALL PERFORMANCE
+March closed with a Net Operating Income of $6,413 on $50,039 in operating income — a 12.8% margin. Portfolio cash flow came in at $6,126 for the month. (Source: Cash Flow Report)
+
+VACANCY
+Gross Potential Rent for the portfolio is $92,153/month. However, vacancy loss totaled $26,247 this month (28.5% of GPR), which is the primary driver of the gap between potential and actual income. Several properties are in active lease-up:
+• S 28th St Duplex: 75% vacant — only 2 of ~8 units had active tenants; the rest are coming online
+• S 12th St, S 17th St, N 14th St: 100% vacant, newly acquired or between leases
+As these units lease up, income will increase substantially. (Source: Gross Potential Rent Report)
+
+TOP PERFORMER
+S 26th St Duplex generated $19,872 in income and $2,771 in NOI — by far the strongest property this month, with only 8% vacancy. (Source: Property Comparison)
+
+TO BE AWARE OF
+• S 18th St Duplex collected only $1,395 in rent against a $3,956 mortgage, resulting in -$2,611 NOI. This is a property to watch. (Source: Property Comparison)
+• The prepaid rent adjustment of -$4,486 reduces reported income this month, but reflects rent already collected — not a loss. (Source: Cash Flow Report)
+
+YEAR-TO-DATE
+YTD cash flow stands at -$3,078. This is largely explained by heavy concessions in January–February used to stabilize occupancy, owner distributions taken YTD, and a one-time refinance income item. March concessions dropped sharply — a positive trend. (Source: Cash Flow Report)
+
+As the vacant properties come online through Q2, we expect significant improvement in both income and cash flow.
+---EXAMPLE END---
+
+Now generate a BULK PORTFOLIO report in that exact same style using ALL ${selectedFiles.length} submitted files together. Cross-reference data across files to find insights that only appear when looking at everything together. Cite the specific source file after every data point.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LEGACY SIGNATURE RENTALS
@@ -487,83 +514,23 @@ Prepared by: Legacy Signature Management Team
 ${notes ? 'Special Focus: ' + notes : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-EXECUTIVE SUMMARY
-[3-4 sentences giving ownership the complete portfolio picture across all submitted reports]
+Sections to include (in this order):
+1. OVERALL PERFORMANCE — NOI, operating income, margin, cash flow with source citations
+2. VACANCY — GPR, vacancy loss %, named properties, context for why they are vacant
+3. TOP PERFORMER — best property with specifics and source
+4. TO BE AWARE OF — problem properties, delinquencies, concessions, anything unusual with context and source
+5. CROSS-REPORT INSIGHTS — findings only visible when all files are analyzed together
+6. DELINQUENCY SUMMARY — specifics with sources
+7. YEAR-TO-DATE — totals with explanation of any negatives
+8. RENEWAL PIPELINE — upcoming expirations and income at risk
+9. ACTION ITEMS — numbered, specific, prioritized
+10. OUTLOOK — forward-looking paragraph, professional close
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PORTFOLIO-WIDE KEY PERFORMANCE INDICATORS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Overall Occupancy Rate: [X%]
-• Portfolio Vacancy Rate: [X units / X total]
-• Total Monthly Rent Roll: [$X]
-• Overall Collection Rate: [X%]
-• Total Net Operating Income (NOI): [$X]
-• Gross Potential Rent: [$X]
-• YTD Gross Revenue: [$X]
-• YTD NOI: [$X]
-• YTD Maintenance Costs: [$X]
-• Average Days to Lease: [X days]
-
-🚨 PORTFOLIO RISK FLAGS
-[List 1-5 specific risks identified across ALL submitted reports. Be direct and specific with property names and numbers.]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROPERTY PERFORMANCE RANKING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Top Performing Properties:
-[Rank properties by performance with key metric for each]
-
-Underperforming Properties:
-[List underperforming properties, specific reason, and recommended action]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DELINQUENCY SUMMARY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Total Portfolio Delinquent Balance: [$X]
-• Delinquent Units: [X]
-• 30 Days Overdue: [$X]
-• 60+ Days Overdue: [$X]
-[Note specific properties or patterns]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FINANCIAL HIGHLIGHTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Revenue vs expenses across all properties, notable variances, maintenance cost impact on NOI, any financial trends across the period]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LEASING & OCCUPANCY TRENDS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Cross-portfolio occupancy patterns, leasing velocity, move-in/move-out trends, seasonal patterns identified across the data]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RENEWAL PIPELINE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Expiring in 30 Days: [X leases / $X monthly at risk]
-• Expiring in 60 Days: [X leases / $X monthly at risk]
-• Expiring in 90 Days: [X leases / $X monthly at risk]
-[Identify which properties have the most urgent renewal needs]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CROSS-REPORT INSIGHTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Insights that could ONLY be discovered by analyzing all reports together — patterns, correlations, trends that span multiple properties or time periods]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PRIORITIZED ACTION ITEMS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Numbered list of actions ranked by urgency, with specific property/unit/tenant references where available]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PORTFOLIO OUTLOOK — 30/60/90 DAY FORECAST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Forward-looking projection for the entire portfolio: expected occupancy, income trends, key risks and opportunities, seasonal factors]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-If data is not available for a line item write "Data not available in source files" rather than guessing. Use numbers and percentages wherever available.
+After EVERY data point write (Source: [filename]) — this is mandatory.
+If data is not available in any file write "Data not available in source files" — never invent numbers.
 
 SUBMITTED REPORT FILES:
-${filesSection}`;
+\${filesSection}\`;
 
     try {
       setProgress(60, 'AI analyzing...', 'Claude is reading all reports and building your portfolio picture...');
