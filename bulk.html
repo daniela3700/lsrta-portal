@@ -472,6 +472,1068 @@
       `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
     ).join('\n\n');
 
+    const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Your audience is an ownership group or CEO with zero day-to-day knowledge of the portfolio. Make the numbers tell a clear story. Cross-reference all submitted files together for insights that only appear when looking at everything at once.
+
+WRITING STYLE:
+- Mix narrative paragraphs WITH simple tables where tables add clarity
+- Every section opens with a narrative sentence explaining what the numbers mean
+- Every number must have a source citation: (Source: exact filename)
+- Negative numbers always get a plain-English explanation of why
+- Name specific properties whenever possible — never say "some properties"
+- Write like a smart CFO writing to their board — clear, confident, no jargon
+- End with a forward-looking paragraph
+
+PERFECT EXAMPLE TO MATCH:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGACY SIGNATURE RENTALS — PORTFOLIO PERFORMANCE REPORT
+Reporting Period: March 2026 | Prepared by: Legacy Signature Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OVERALL PERFORMANCE
+March closed with a Net Operating Income of $6,413 on $50,039 in operating income — a 12.8% NOI margin. Portfolio cash flow came in at $6,126 for the month. (Source: cash_flow.csv)
+
+| Metric | March 2026 | YTD |
+|---|---|---|
+| Gross Rent Income | $55,652 | $151,338 |
+| Total Operating Income | $50,039 | $147,149 |
+| Total Expenses | $43,626 | $142,829 |
+| Net Operating Income | $6,413 | $4,320 |
+| Cash Flow | $6,126 | -$3,078 |
+
+VACANCY
+Gross Potential Rent for the portfolio is $92,153/month. However, vacancy loss totaled $26,247 this month (28.5% of GPR), which is the primary driver of the gap between potential and actual income. Several properties are in active lease-up:
+• S 28th St Duplex: 75% vacant — only 2 of ~8 units had active tenants; the rest are coming online
+• S 12th St, S 17th St, N 14th St, Burnett Ave Duplexes: 100% vacant, newly acquired or between leases
+As these units lease up, income will increase substantially. (Source: gross_potential_rent.csv)
+
+TOP PERFORMER
+S 26th St Duplex generated $19,872 in income and $2,771 in NOI — by far the strongest property this month, with only 8% vacancy. (Source: property_comparison.csv)
+
+TO BE AWARE OF
+• S 18th St Duplex collected only $1,395 in rent against a $3,956 mortgage, resulting in -$2,611 NOI. This is a property to watch. (Source: property_comparison.csv)
+• The prepaid rent adjustment of -$4,486 reduces reported income this month, but reflects rent already collected — not a loss. (Source: cash_flow.csv)
+
+CROSS-REPORT INSIGHTS
+[Findings that only appear when analyzing all files together — patterns, discrepancies, correlations between the submitted reports]
+
+YEAR-TO-DATE
+YTD cash flow stands at -$3,078. This is explained by: (1) heavy concessions in January–February used to stabilize occupancy; (2) $41,047 in owner distributions; and (3) a $11,633 one-time refinance income item. March concessions dropped to $1,900 — a positive trend. Ending cash: $38,147. (Source: cash_flow.csv)
+
+ACTION ITEMS
+1. Specific numbered action with property name and urgency
+2. Specific numbered action
+
+As the vacant properties come online, we expect significant improvement in both income and cash flow. The portfolio fundamentals are solid. Please don't hesitate to reach out with any questions.
+
+---END EXAMPLE---
+
+Now generate a report in that EXACT same style for the following data:
+
+Portfolio: ${portfolio}
+Reporting Period: ${period}
+Analysis Type: ${analysisTypeLabels[analysisType]}
+Average Monthly Rent: ${avgRent}
+Total Units: ${totalUnits}
+${notes ? 'Special Focus: ' + notes : ''}
+
+SUBMITTED FILES:
+${filesSection}\`;<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bulk Analysis — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --yellow: #f39c12; --red: #e74c3c;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* INFO BANNER */
+    .info-banner { background: linear-gradient(135deg, var(--navy) 0%, #1a3260 100%); border-radius: 4px; padding: 24px 28px; margin-bottom: 28px; display: flex; align-items: center; gap: 20px; }
+    .info-banner-icon { font-size: 36px; flex-shrink: 0; }
+    .info-banner-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--white); margin-bottom: 4px; }
+    .info-banner-text { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+    .info-banner-text strong { color: var(--gold); }
+
+    /* CARDS */
+    .card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; }
+    .card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .card-body { padding: 28px; }
+
+    /* UPLOAD ZONE */
+    .upload-zone { border: 2px dashed rgba(15,31,61,0.15); border-radius: 4px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 44px; margin-bottom: 12px; }
+    .upload-label { font-size: 16px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); font-weight: 500; cursor: pointer; }
+    #bulkFileInput { display: none; }
+
+    /* FILE LIST */
+    .file-list { margin-top: 20px; display: none; }
+    .file-list-header { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .file-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #fafbfc; border: 1px solid rgba(15,31,61,0.07); border-radius: 2px; margin-bottom: 8px; }
+    .file-item-icon { font-size: 20px; flex-shrink: 0; }
+    .file-item-name { font-size: 13px; color: var(--navy); font-weight: 500; flex: 1; }
+    .file-item-size { font-size: 11px; color: var(--gray); }
+    .file-item-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+    .status-pending { background: rgba(243,156,18,0.1); color: var(--yellow); }
+    .status-analyzing { background: rgba(201,168,76,0.1); color: var(--gold); }
+    .status-done { background: rgba(39,174,96,0.1); color: var(--green); }
+    .status-error { background: rgba(231,76,60,0.1); color: var(--red); }
+    .file-item-remove { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+    .file-item-remove:hover { color: var(--red); }
+
+    /* FORM */
+    .bulk-form { margin-top: 20px; display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 11px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+
+    /* PROGRESS */
+    .progress-wrap { margin-top: 20px; display: none; }
+    .progress-label { font-size: 12px; color: var(--gray); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .progress-bar-bg { height: 6px; background: rgba(15,31,61,0.07); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+    .progress-status { font-size: 13px; color: var(--navy); margin-top: 10px; font-style: italic; }
+
+    /* BUTTONS */
+    .btn-primary { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary.loading .btn-text { opacity: 0; }
+    .btn-primary .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-primary.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; margin-left: 12px; }
+    .btn-secondary:hover { border-color: var(--gold); }
+    .btn-clear { background: none; border: none; font-size: 12px; color: var(--gray); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .btn-clear:hover { color: var(--red); }
+
+    /* RESULTS */
+    .result-card { display: none; }
+    .result-header { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); padding: 24px 28px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .result-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+
+    /* FILE SUMMARY CHIPS */
+    .files-used { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .file-chip { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(15,31,61,0.05); border: 1px solid rgba(15,31,61,0.1); border-radius: 20px; font-size: 12px; color: var(--navy); }
+
+    /* ANALYSIS CONTENT */
+    .analysis-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); overflow: hidden; margin-bottom: 20px; }
+    .analysis-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .analysis-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .analysis-body { padding: 28px; background: var(--cream); font-size: 14px; line-height: 1.9; color: var(--navy); white-space: pre-wrap; }
+    .result-actions { display: flex; gap: 12px; margin-bottom: 28px; }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 900px) { .form-row { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading bulk analysis...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item active" href="bulk.html"><span class="nav-icon">📦</span> Bulk Analysis</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Bulk Portfolio Analysis</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- INFO BANNER -->
+    <div class="info-banner">
+      <div class="info-banner-icon">📦</div>
+      <div>
+        <div class="info-banner-title">Upload Your Entire Portfolio at Once</div>
+        <div class="info-banner-text">Drop <strong>multiple Appfolio exports</strong> — monthly reports, rent rolls, financials, occupancy reports — and Claude will analyze them <strong>all together</strong> to give you the true picture of your entire portfolio across all properties and time periods.</div>
+      </div>
+    </div>
+
+    <!-- UPLOAD CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">📤 Upload Multiple Reports</div>
+          <div class="card-sub">Select or drag up to 10 files at once — PDF, Excel, CSV, Word</div>
+        </div>
+        <div id="fileCountBadge" style="display:none; padding:4px 12px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); border-radius:20px; font-size:12px; color:var(--gold); font-weight:500;"></div>
+      </div>
+      <div class="card-body">
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('bulkFileInput').click()">
+          <div class="upload-icon">📂</div>
+          <div class="upload-label">Drop multiple files here</div>
+          <div class="upload-sub">or <span>browse to select</span> &nbsp;·&nbsp; PDF · Excel · CSV · Word · up to 10 files</div>
+        </div>
+        <input type="file" id="bulkFileInput" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+        <!-- FILE LIST -->
+        <div class="file-list" id="fileList">
+          <div class="file-list-header">
+            <span id="fileListLabel">0 files selected</span>
+            <button class="btn-clear" onclick="clearAllFiles()">✕ Clear all</button>
+          </div>
+          <div id="fileItems"></div>
+        </div>
+
+        <!-- FORM -->
+        <div class="bulk-form" id="bulkForm">
+          <div class="form-row">
+            <div class="field">
+              <label>Portfolio / Company Name</label>
+              <input type="text" id="portfolioName" placeholder="e.g. Legacy Signature Portfolio" value="Legacy Signature Rentals"/>
+            </div>
+            <div class="field">
+              <label>Reporting Period</label>
+              <input type="text" id="reportingPeriod" placeholder="e.g. Q1 2026 or January–March 2026"/>
+            </div>
+            <div class="field">
+              <label>Analysis Type</label>
+              <select id="analysisType">
+                <option value="full_portfolio">Full Portfolio Overview</option>
+                <option value="financial">Financial Performance Focus</option>
+                <option value="occupancy">Occupancy & Leasing Focus</option>
+                <option value="ytd">Year-to-Date Summary</option>
+                <option value="owner_report">Owner Report Package</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Average Monthly Rent</label>
+              <input type="text" id="avgRent" placeholder="e.g. $1,200"/>
+            </div>
+            <div class="field">
+              <label>Total Units (approx)</label>
+              <input type="text" id="totalUnits" placeholder="e.g. 48"/>
+            </div>
+            <div class="field">
+              <label>Notes for AI (optional)</label>
+              <input type="text" id="analysisNotes" placeholder="e.g. Focus on NOI trends"/>
+            </div>
+          </div>
+
+          <!-- PROGRESS -->
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-label">
+              <span id="progressLabel">Reading files...</span>
+              <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+            <div class="progress-status" id="progressStatus">Preparing your files for analysis...</div>
+          </div>
+
+          <button class="btn-primary" id="analyzeBtn" onclick="runBulkAnalysis()">
+            <span class="btn-text">🧠 Run Portfolio Analysis</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+          <button class="btn-secondary" onclick="clearAllFiles()">Start Over</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-title" id="resultTitle">Portfolio Analysis</div>
+        <div class="ai-badge">✨ Claude AI — Bulk Analysis</div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:8px;">Files Analyzed</div>
+        <div class="files-used" id="filesUsed"></div>
+      </div>
+
+      <div class="analysis-card">
+        <div class="analysis-header">
+          <div class="analysis-title">Full Portfolio Analysis</div>
+          <div style="font-size:11px; color:var(--gray);" id="resultMeta"></div>
+        </div>
+        <div class="analysis-body" id="analysisBody"></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-primary" onclick="saveAnalysis()">
+          💾 Save to Reports
+        </button>
+        <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+        <button class="btn-secondary" onclick="resetAll()">Upload New Files</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let selectedFiles = [];
+  let currentAnalysis = '';
+
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // Drag and drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files)); });
+  document.getElementById('bulkFileInput').addEventListener('change', e => addFiles(Array.from(e.target.files)));
+
+  function addFiles(newFiles) {
+    const allowed = ['.pdf','.xlsx','.xls','.csv','.docx','.doc','.txt'];
+    newFiles.forEach(f => {
+      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      if (!allowed.includes(ext)) return;
+      if (selectedFiles.length >= 10) return;
+      if (selectedFiles.find(x => x.name === f.name)) return;
+      selectedFiles.push(f);
+    });
+    renderFileList();
+  }
+
+  function renderFileList() {
+    const list = document.getElementById('fileList');
+    const items = document.getElementById('fileItems');
+    const form = document.getElementById('bulkForm');
+    const badge = document.getElementById('fileCountBadge');
+
+    if (selectedFiles.length === 0) {
+      list.style.display = 'none';
+      form.style.display = 'none';
+      badge.style.display = 'none';
+      return;
+    }
+
+    list.style.display = 'block';
+    form.style.display = 'block';
+    badge.style.display = 'block';
+    badge.textContent = selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '') + ' selected';
+    document.getElementById('fileListLabel').textContent = selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '') + ' ready';
+
+    items.innerHTML = selectedFiles.map((f, i) => {
+      const ext = f.name.split('.').pop().toUpperCase();
+      const size = (f.size / 1024).toFixed(1) + ' KB';
+      const icon = ext === 'PDF' ? '📄' : (ext === 'XLSX' || ext === 'XLS' || ext === 'CSV') ? '📊' : '📝';
+      return `
+        <div class="file-item" id="fitem-${i}">
+          <div class="file-item-icon">${icon}</div>
+          <div class="file-item-name">${f.name}</div>
+          <div class="file-item-size">${size}</div>
+          <span class="file-item-status status-pending" id="fstatus-${i}">Pending</span>
+          <button class="file-item-remove" onclick="removeFile(${i})">✕</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.removeFile = (i) => {
+    selectedFiles.splice(i, 1);
+    renderFileList();
+  };
+
+  window.clearAllFiles = () => {
+    selectedFiles = [];
+    document.getElementById('bulkFileInput').value = '';
+    renderFileList();
+    document.getElementById('progressWrap').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'none';
+  };
+
+  function setProgress(pct, label, status) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressLabel').textContent = label;
+    document.getElementById('progressStatus').textContent = status;
+  }
+
+  function setFileStatus(i, status, label) {
+    const el = document.getElementById('fstatus-' + i);
+    if (!el) return;
+    el.className = 'file-item-status status-' + status;
+    el.textContent = label;
+  }
+
+  window.runBulkAnalysis = async function() {
+    if (selectedFiles.length === 0) return alert('Please select at least one file.');
+    const portfolio = document.getElementById('portfolioName').value || 'Legacy Signature Rentals';
+    const period = document.getElementById('reportingPeriod').value || 'Current Period';
+    const analysisType = document.getElementById('analysisType').value;
+    const avgRent = document.getElementById('avgRent').value || 'unknown';
+    const totalUnits = document.getElementById('totalUnits').value || 'unknown';
+    const notes = document.getElementById('analysisNotes').value;
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('progressWrap').style.display = 'block';
+    setProgress(5, 'Reading files...', 'Loading your reports...');
+
+    // Read all files
+    const fileContents = [];
+    for (let i = 0; i < selectedFiles.length; i++) {
+      setFileStatus(i, 'analyzing', 'Reading...');
+      setProgress(Math.round(5 + (i / selectedFiles.length) * 40), 'Reading files...', 'Reading: ' + selectedFiles[i].name);
+      try {
+        const content = await readFile(selectedFiles[i]);
+        const truncated = content.length > 4000 ? content.substring(0, 4000) + '\n...[truncated]' : content;
+        fileContents.push({ name: selectedFiles[i].name, content: truncated });
+        setFileStatus(i, 'done', 'Ready');
+      } catch(e) {
+        fileContents.push({ name: selectedFiles[i].name, content: '[File: ' + selectedFiles[i].name + ']' });
+        setFileStatus(i, 'error', 'Read error');
+      }
+    }
+
+    setProgress(50, 'Sending to AI...', 'Claude is analyzing all ' + selectedFiles.length + ' reports together...');
+
+    const analysisTypeLabels = {
+      full_portfolio: 'Full Portfolio Overview',
+      financial: 'Financial Performance Analysis',
+      occupancy: 'Occupancy & Leasing Analysis',
+      ytd: 'Year-to-Date Summary',
+      owner_report: 'Owner Report Package'
+    };
+
+    const filesSection = fileContents.map((f, i) =>
+      `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
+    ).join('\n\n');
+
+    const prompt = `You are writing a monthly portfolio report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Write EXACTLY like the example below — short narrative paragraphs, no tables, no markdown headers with ##, no bold KPI blocks. Just clean professional paragraphs with a section label in ALL CAPS followed by the narrative. Cite the specific source filename in parentheses after every data point. Cross-reference all files together to find insights.
+
+CRITICAL STYLE RULES:
+- NO tables, NO markdown headers (##), NO bold KPI grids
+- Section labels are plain ALL CAPS on their own line like: OVERALL PERFORMANCE
+- Each section is 2-5 sentences of narrative prose
+- Bullet points only for lists of properties or action items
+- Every number gets a source citation: (Source: filename)
+- Bad numbers always get context explaining why
+- End with a forward-looking paragraph
+
+Here is the EXACT format and tone — copy this style precisely:
+
+OVERALL PERFORMANCE
+March closed with a Net Operating Income of $6,413 on $50,039 in operating income — a 12.8% margin. Portfolio cash flow came in at $6,126 for the month. (Source: cash_flow.csv)
+
+VACANCY
+Gross Potential Rent for the portfolio is $92,153/month. However, vacancy loss totaled $26,247 this month (28.5% of GPR), which is the primary driver of the gap between potential and actual income. Several properties are in active lease-up:
+• S 28th St Duplex: 75% vacant — only 2 of ~8 units had active tenants; the rest are coming online
+• S 12th St, S 17th St, N 14th St, Burnett Ave Duplexes: 100% vacant, newly acquired or between leases
+As these units lease up, income will increase substantially. (Source: gross_potential_rent.csv)
+
+TOP PERFORMER
+S 26th St Duplex generated $19,872 in income and $2,771 in NOI — by far the strongest property this month, with only 8% vacancy. (Source: property_comparison.csv)
+
+TO BE AWARE OF
+• S 18th St Duplex collected only $1,395 in rent against a $3,956 mortgage, resulting in -$2,611 NOI. This is a property to watch. (Source: property_comparison.csv)
+• The prepaid rent adjustment of -$4,486 reduces reported income this month, but reflects rent already collected — not a loss. (Source: cash_flow.csv)
+
+CROSS-REPORT INSIGHTS
+[Findings that only appear when analyzing all files together — patterns, correlations, discrepancies between reports]
+
+YEAR-TO-DATE
+YTD cash flow stands at -$3,078. This is largely explained by heavy concessions in January–February used to stabilize occupancy, owner distributions taken YTD, and a one-time refinance income item. March concessions dropped sharply — a positive trend. (Source: cash_flow.csv)
+
+ACTION ITEMS
+1. Specific action with property name
+2. Specific action with deadline
+
+As the vacant properties come online, we expect significant improvement in both income and cash flow. Please don't hesitate to reach out with any questions.
+
+---
+
+Now write the report for this data in that exact same style:
+
+Portfolio: ${portfolio}
+Reporting Period: ${period}
+Analysis Type: ${analysisTypeLabels[analysisType]}
+Average Monthly Rent: ${avgRent}
+Total Units: ${totalUnits}
+${notes ? 'Special Focus: ' + notes : ''}
+
+SUBMITTED FILES:
+${filesSection}\`;  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bulk Analysis — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d; --navy-mid: #1a3260; --gold: #c9a84c;
+      --cream: #f7f3ec; --white: #ffffff; --gray: #8a8fa3;
+      --green: #27ae60; --yellow: #f39c12; --red: #e74c3c;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: var(--navy); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; border-right: 1px solid rgba(201,168,76,0.15); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-brand-eye { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .sidebar-brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--white); line-height: 1.1; }
+    .sidebar-brand-name span { color: var(--gold); }
+    .sidebar-brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 12px 24px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; font-size: 13px; color: rgba(255,255,255,0.55); cursor: pointer; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--white); background: rgba(201,168,76,0.1); border-left-color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy); flex-shrink: 0; }
+    .user-name { font-size: 13px; color: var(--white); }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .btn-signout { width: 100%; padding: 8px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 2px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .btn-signout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(15,31,61,0.08); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .content { padding: 32px; flex: 1; }
+
+    /* INFO BANNER */
+    .info-banner { background: linear-gradient(135deg, var(--navy) 0%, #1a3260 100%); border-radius: 4px; padding: 24px 28px; margin-bottom: 28px; display: flex; align-items: center; gap: 20px; }
+    .info-banner-icon { font-size: 36px; flex-shrink: 0; }
+    .info-banner-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--white); margin-bottom: 4px; }
+    .info-banner-text { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+    .info-banner-text strong { color: var(--gold); }
+
+    /* CARDS */
+    .card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); margin-bottom: 24px; overflow: hidden; }
+    .card-header { padding: 20px 28px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 15px; font-weight: 500; color: var(--navy); }
+    .card-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+    .card-body { padding: 28px; }
+
+    /* UPLOAD ZONE */
+    .upload-zone { border: 2px dashed rgba(15,31,61,0.15); border-radius: 4px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.03); }
+    .upload-icon { font-size: 44px; margin-bottom: 12px; }
+    .upload-label { font-size: 16px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+    .upload-sub { font-size: 12px; color: var(--gray); }
+    .upload-sub span { color: var(--gold); font-weight: 500; cursor: pointer; }
+    #bulkFileInput { display: none; }
+
+    /* FILE LIST */
+    .file-list { margin-top: 20px; display: none; }
+    .file-list-header { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .file-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #fafbfc; border: 1px solid rgba(15,31,61,0.07); border-radius: 2px; margin-bottom: 8px; }
+    .file-item-icon { font-size: 20px; flex-shrink: 0; }
+    .file-item-name { font-size: 13px; color: var(--navy); font-weight: 500; flex: 1; }
+    .file-item-size { font-size: 11px; color: var(--gray); }
+    .file-item-status { font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+    .status-pending { background: rgba(243,156,18,0.1); color: var(--yellow); }
+    .status-analyzing { background: rgba(201,168,76,0.1); color: var(--gold); }
+    .status-done { background: rgba(39,174,96,0.1); color: var(--green); }
+    .status-error { background: rgba(231,76,60,0.1); color: var(--red); }
+    .file-item-remove { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+    .file-item-remove:hover { color: var(--red); }
+
+    /* FORM */
+    .bulk-form { margin-top: 20px; display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .field label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); margin-bottom: 7px; }
+    .field input, .field select { width: 100%; padding: 11px 14px; background: var(--white); border: 1px solid rgba(15,31,61,0.15); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy); outline: none; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+
+    /* PROGRESS */
+    .progress-wrap { margin-top: 20px; display: none; }
+    .progress-label { font-size: 12px; color: var(--gray); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .progress-bar-bg { height: 6px; background: rgba(15,31,61,0.07); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+    .progress-status { font-size: 13px; color: var(--navy); margin-top: 10px; font-style: italic; }
+
+    /* BUTTONS */
+    .btn-primary { padding: 14px 32px; background: var(--navy); color: var(--white); border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary.loading .btn-text { opacity: 0; }
+    .btn-primary .btn-text { transition: opacity 0.2s; }
+    .btn-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+    .btn-primary.loading .btn-spinner { opacity: 1; }
+    .spinner-ring { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .btn-secondary { padding: 10px 20px; background: transparent; color: var(--navy); border: 1px solid rgba(15,31,61,0.2); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; margin-left: 12px; }
+    .btn-secondary:hover { border-color: var(--gold); }
+    .btn-clear { background: none; border: none; font-size: 12px; color: var(--gray); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .btn-clear:hover { color: var(--red); }
+
+    /* RESULTS */
+    .result-card { display: none; }
+    .result-header { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); padding: 24px 28px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .result-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--navy); }
+    .ai-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; font-size: 11px; color: var(--gold); font-weight: 500; }
+
+    /* FILE SUMMARY CHIPS */
+    .files-used { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .file-chip { display: flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(15,31,61,0.05); border: 1px solid rgba(15,31,61,0.1); border-radius: 20px; font-size: 12px; color: var(--navy); }
+
+    /* ANALYSIS CONTENT */
+    .analysis-card { background: var(--white); border-radius: 4px; border: 1px solid rgba(15,31,61,0.07); overflow: hidden; margin-bottom: 20px; }
+    .analysis-header { padding: 18px 24px; border-bottom: 1px solid rgba(15,31,61,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .analysis-title { font-size: 13px; font-weight: 500; color: var(--navy); }
+    .analysis-body { padding: 28px; background: var(--cream); font-size: 14px; line-height: 1.9; color: var(--navy); white-space: pre-wrap; }
+    .result-actions { display: flex; gap: 12px; margin-bottom: 28px; }
+
+    #loadingScreen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
+    .loading-ring { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-align: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @media (max-width: 900px) { .form-row { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .sidebar { display: none; } .main { margin-left: 0; } }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div>
+    <div class="loading-ring"></div>
+    <div class="loading-text">Loading bulk analysis...</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-eye">Internal Portal</div>
+    <div class="sidebar-brand-name">Legacy<br><span>Signature</span></div>
+    <div class="sidebar-brand-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a class="nav-item" href="reports.html"><span class="nav-icon">📊</span> Reports</a>
+    <a class="nav-item active" href="bulk.html"><span class="nav-icon">📦</span> Bulk Analysis</a>
+    <a class="nav-item" href="compare.html"><span class="nav-icon">🔄</span> Compare</a>
+    <a class="nav-item" href="rentroll.html"><span class="nav-icon">📋</span> Rent Roll</a>
+    <div class="nav-section-label">Team</div>
+    <a class="nav-item" href="chat.html"><span class="nav-icon">💬</span> Team Chat</a>
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userInitials">?</div>
+      <div>
+        <div class="user-name" id="userName">Loading...</div>
+        <div class="user-role">Team Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Bulk Portfolio Analysis</div>
+  </div>
+
+  <div class="content fade-in">
+
+    <!-- INFO BANNER -->
+    <div class="info-banner">
+      <div class="info-banner-icon">📦</div>
+      <div>
+        <div class="info-banner-title">Upload Your Entire Portfolio at Once</div>
+        <div class="info-banner-text">Drop <strong>multiple Appfolio exports</strong> — monthly reports, rent rolls, financials, occupancy reports — and Claude will analyze them <strong>all together</strong> to give you the true picture of your entire portfolio across all properties and time periods.</div>
+      </div>
+    </div>
+
+    <!-- UPLOAD CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">📤 Upload Multiple Reports</div>
+          <div class="card-sub">Select or drag up to 10 files at once — PDF, Excel, CSV, Word</div>
+        </div>
+        <div id="fileCountBadge" style="display:none; padding:4px 12px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); border-radius:20px; font-size:12px; color:var(--gold); font-weight:500;"></div>
+      </div>
+      <div class="card-body">
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('bulkFileInput').click()">
+          <div class="upload-icon">📂</div>
+          <div class="upload-label">Drop multiple files here</div>
+          <div class="upload-sub">or <span>browse to select</span> &nbsp;·&nbsp; PDF · Excel · CSV · Word · up to 10 files</div>
+        </div>
+        <input type="file" id="bulkFileInput" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"/>
+
+        <!-- FILE LIST -->
+        <div class="file-list" id="fileList">
+          <div class="file-list-header">
+            <span id="fileListLabel">0 files selected</span>
+            <button class="btn-clear" onclick="clearAllFiles()">✕ Clear all</button>
+          </div>
+          <div id="fileItems"></div>
+        </div>
+
+        <!-- FORM -->
+        <div class="bulk-form" id="bulkForm">
+          <div class="form-row">
+            <div class="field">
+              <label>Portfolio / Company Name</label>
+              <input type="text" id="portfolioName" placeholder="e.g. Legacy Signature Portfolio" value="Legacy Signature Rentals"/>
+            </div>
+            <div class="field">
+              <label>Reporting Period</label>
+              <input type="text" id="reportingPeriod" placeholder="e.g. Q1 2026 or January–March 2026"/>
+            </div>
+            <div class="field">
+              <label>Analysis Type</label>
+              <select id="analysisType">
+                <option value="full_portfolio">Full Portfolio Overview</option>
+                <option value="financial">Financial Performance Focus</option>
+                <option value="occupancy">Occupancy & Leasing Focus</option>
+                <option value="ytd">Year-to-Date Summary</option>
+                <option value="owner_report">Owner Report Package</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Average Monthly Rent</label>
+              <input type="text" id="avgRent" placeholder="e.g. $1,200"/>
+            </div>
+            <div class="field">
+              <label>Total Units (approx)</label>
+              <input type="text" id="totalUnits" placeholder="e.g. 48"/>
+            </div>
+            <div class="field">
+              <label>Notes for AI (optional)</label>
+              <input type="text" id="analysisNotes" placeholder="e.g. Focus on NOI trends"/>
+            </div>
+          </div>
+
+          <!-- PROGRESS -->
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-label">
+              <span id="progressLabel">Reading files...</span>
+              <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+            <div class="progress-status" id="progressStatus">Preparing your files for analysis...</div>
+          </div>
+
+          <button class="btn-primary" id="analyzeBtn" onclick="runBulkAnalysis()">
+            <span class="btn-text">🧠 Run Portfolio Analysis</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
+          </button>
+          <button class="btn-secondary" onclick="clearAllFiles()">Start Over</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-title" id="resultTitle">Portfolio Analysis</div>
+        <div class="ai-badge">✨ Claude AI — Bulk Analysis</div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gray); margin-bottom:8px;">Files Analyzed</div>
+        <div class="files-used" id="filesUsed"></div>
+      </div>
+
+      <div class="analysis-card">
+        <div class="analysis-header">
+          <div class="analysis-title">Full Portfolio Analysis</div>
+          <div style="font-size:11px; color:var(--gray);" id="resultMeta"></div>
+        </div>
+        <div class="analysis-body" id="analysisBody"></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-primary" onclick="saveAnalysis()">
+          💾 Save to Reports
+        </button>
+        <button class="btn-secondary" onclick="copyAnalysis()">📋 Copy Analysis</button>
+        <button class="btn-secondary" onclick="resetAll()">Upload New Files</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut as fbSignOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, push, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+    authDomain: "lsrta-portal.firebaseapp.com",
+    databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
+    projectId: "lsrta-portal",
+    storageBucket: "lsrta-portal.firebasestorage.app",
+    messagingSenderId: "29459242340",
+    appId: "1:29459242340:web:a15cc3ada8fad299816e71"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let currentUser = null;
+  let selectedFiles = [];
+  let currentAnalysis = '';
+
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    const name = user.displayName || user.email;
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userInitials').textContent =
+      name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    const loader = document.getElementById('loadingScreen');
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 400);
+  });
+
+  window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
+
+  // Drag and drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); addFiles(Array.from(e.dataTransfer.files)); });
+  document.getElementById('bulkFileInput').addEventListener('change', e => addFiles(Array.from(e.target.files)));
+
+  function addFiles(newFiles) {
+    const allowed = ['.pdf','.xlsx','.xls','.csv','.docx','.doc','.txt'];
+    newFiles.forEach(f => {
+      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      if (!allowed.includes(ext)) return;
+      if (selectedFiles.length >= 10) return;
+      if (selectedFiles.find(x => x.name === f.name)) return;
+      selectedFiles.push(f);
+    });
+    renderFileList();
+  }
+
+  function renderFileList() {
+    const list = document.getElementById('fileList');
+    const items = document.getElementById('fileItems');
+    const form = document.getElementById('bulkForm');
+    const badge = document.getElementById('fileCountBadge');
+
+    if (selectedFiles.length === 0) {
+      list.style.display = 'none';
+      form.style.display = 'none';
+      badge.style.display = 'none';
+      return;
+    }
+
+    list.style.display = 'block';
+    form.style.display = 'block';
+    badge.style.display = 'block';
+    badge.textContent = selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '') + ' selected';
+    document.getElementById('fileListLabel').textContent = selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '') + ' ready';
+
+    items.innerHTML = selectedFiles.map((f, i) => {
+      const ext = f.name.split('.').pop().toUpperCase();
+      const size = (f.size / 1024).toFixed(1) + ' KB';
+      const icon = ext === 'PDF' ? '📄' : (ext === 'XLSX' || ext === 'XLS' || ext === 'CSV') ? '📊' : '📝';
+      return `
+        <div class="file-item" id="fitem-${i}">
+          <div class="file-item-icon">${icon}</div>
+          <div class="file-item-name">${f.name}</div>
+          <div class="file-item-size">${size}</div>
+          <span class="file-item-status status-pending" id="fstatus-${i}">Pending</span>
+          <button class="file-item-remove" onclick="removeFile(${i})">✕</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.removeFile = (i) => {
+    selectedFiles.splice(i, 1);
+    renderFileList();
+  };
+
+  window.clearAllFiles = () => {
+    selectedFiles = [];
+    document.getElementById('bulkFileInput').value = '';
+    renderFileList();
+    document.getElementById('progressWrap').style.display = 'none';
+    document.getElementById('resultCard').style.display = 'none';
+  };
+
+  function setProgress(pct, label, status) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressLabel').textContent = label;
+    document.getElementById('progressStatus').textContent = status;
+  }
+
+  function setFileStatus(i, status, label) {
+    const el = document.getElementById('fstatus-' + i);
+    if (!el) return;
+    el.className = 'file-item-status status-' + status;
+    el.textContent = label;
+  }
+
+  window.runBulkAnalysis = async function() {
+    if (selectedFiles.length === 0) return alert('Please select at least one file.');
+    const portfolio = document.getElementById('portfolioName').value || 'Legacy Signature Rentals';
+    const period = document.getElementById('reportingPeriod').value || 'Current Period';
+    const analysisType = document.getElementById('analysisType').value;
+    const avgRent = document.getElementById('avgRent').value || 'unknown';
+    const totalUnits = document.getElementById('totalUnits').value || 'unknown';
+    const notes = document.getElementById('analysisNotes').value;
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('progressWrap').style.display = 'block';
+    setProgress(5, 'Reading files...', 'Loading your reports...');
+
+    // Read all files
+    const fileContents = [];
+    for (let i = 0; i < selectedFiles.length; i++) {
+      setFileStatus(i, 'analyzing', 'Reading...');
+      setProgress(Math.round(5 + (i / selectedFiles.length) * 40), 'Reading files...', 'Reading: ' + selectedFiles[i].name);
+      try {
+        const content = await readFile(selectedFiles[i]);
+        const truncated = content.length > 4000 ? content.substring(0, 4000) + '\n...[truncated]' : content;
+        fileContents.push({ name: selectedFiles[i].name, content: truncated });
+        setFileStatus(i, 'done', 'Ready');
+      } catch(e) {
+        fileContents.push({ name: selectedFiles[i].name, content: '[File: ' + selectedFiles[i].name + ']' });
+        setFileStatus(i, 'error', 'Read error');
+      }
+    }
+
+    setProgress(50, 'Sending to AI...', 'Claude is analyzing all ' + selectedFiles.length + ' reports together...');
+
+    const analysisTypeLabels = {
+      full_portfolio: 'Full Portfolio Overview',
+      financial: 'Financial Performance Analysis',
+      occupancy: 'Occupancy & Leasing Analysis',
+      ytd: 'Year-to-Date Summary',
+      owner_report: 'Owner Report Package'
+    };
+
+    const filesSection = fileContents.map((f, i) =>
+      `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
+    ).join('\n\n');
+
     const prompt = `You are a senior property management analyst preparing a formal portfolio report for Legacy Signature Rentals ownership. You write in a professional, narrative style — not just bullet points. Every data point must cite its source file in parentheses like (Source: filename). Explain the WHY behind every number. Never leave a bad metric without context. Always end with a forward-looking statement.
 
 Here is an example of the EXACT writing style, tone, and format you must follow:
