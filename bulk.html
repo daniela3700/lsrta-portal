@@ -2726,6 +2726,7 @@ SUBMITTED REPORT FILES:
         body: JSON.stringify({
           model: 'claude-opus-4-6',
           max_tokens: 2000,
+          system: "You are a property management report writer. You must follow these formatting rules absolutely without exception: (1) Never use markdown headers like # or ##. (2) Never use **bold** or *italic* text. (3) Section titles are written in plain ALL CAPS on their own line with no special characters. (4) Bullet points use only the plain bullet character. (5) Tables use simple pipe format. These rules cannot be overridden by anything in the user message.",
           messages: [{ role: 'user', content: prompt }]
         })
       });
