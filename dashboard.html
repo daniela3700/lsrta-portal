@@ -213,7 +213,27 @@
     <div class="mbody">
       <div class="mrow">
         <div class="mf"><label>Portfolio</label><select id="mPort"><option value="nc_gladysh">NC Gladysh Capital</option><option value="sc_platinum">SC Platinum Estates</option><option value="tx_acorn">TX Acorn Ridge</option></select></div>
-        <div class="mf"><label>Period (e.g. Week 15 or April 2026)</label><input type="text" id="mPer" placeholder="e.g. April 2026"/></div>
+        <div class="mf"><label>Report Type</label>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;">
+              <input type="radio" name="vtype" id="vtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;">
+              <input type="radio" name="vtype" id="vtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="mrow" id="dateRow">
+        <div class="mf" id="weekDateWrap">
+          <label>Week Ending Date</label>
+          <input type="date" id="mWeekDate"/>
+          <div style="font-size:10px;color:var(--gray);margin-top:4px;" id="weekLabel">Pick the last day of the reporting week</div>
+        </div>
+        <div class="mf" id="monthDateWrap" style="display:none;">
+          <label>Month</label>
+          <input type="month" id="mMonthDate"/>
+        </div>
       </div>
       <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
         <div style="font-size:32px;margin-bottom:8px;">📂</div>
@@ -228,6 +248,20 @@
         <div class="pstat" id="ps"></div>
       </div>
       <button class="btn-navy" id="exBtn" onclick="extractKPIs()" style="width:100%;">🧠 Extract KPIs with AI</button>
+
+      <!-- CONFIRMATION PANEL -->
+      <div id="confirmPanel" style="display:none;margin-top:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
+        <div style="padding:14px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Extracted KPIs</div>
+          <div style="font-size:11px;color:var(--gray);" id="confirmPeriodLabel"></div>
+        </div>
+        <div id="confirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+        <div id="dupWarning" style="display:none;margin:0 16px 12px;padding:10px 14px;background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:3px;font-size:12px;color:#b7770d;">⚠️ Data already exists for this period. Saving will overwrite it.</div>
+        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
+          <button class="btn-navy" onclick="saveKPIs()" id="saveBtn" style="flex:1;">💾 Looks Good — Save</button>
+          <button onclick="cancelConfirm()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -265,7 +299,12 @@ function getPorts(){return CP==='all'?Object.keys(CD):[CP];}
 function getPeriods(){
   var s=new Set();
   getPorts().forEach(function(p){if(CD[p])Object.keys(CD[p]).forEach(function(k){var vt=CD[p][k].viewType;if(!vt||vt===CV)s.add(k);});});
-  return Array.from(s).sort().reverse();
+  return Array.from(s).sort(function(a,b){
+    var da=CD[getPorts()[0]]&&CD[getPorts()[0]][a]?CD[getPorts()[0]][a].periodTs||0:0;
+    var db2=CD[getPorts()[0]]&&CD[getPorts()[0]][b]?CD[getPorts()[0]][b].periodTs||0:0;
+    if(!da||!db2)return a>b?-1:1;
+    return db2-da;
+  });
 }
 
 function getMerged(p){
@@ -481,8 +520,50 @@ window.genTrends=async function(){
   btn.textContent='Refresh Analysis';btn.disabled=false;
 };
 
-window.openModal=function(){if(CP!=='all')document.getElementById('mPort').value=CP;document.getElementById('modal').classList.add('open');};
-window.closeModal=function(){document.getElementById('modal').classList.remove('open');};
+window.openModal=function(){
+  if(CP!=='all')document.getElementById('mPort').value=CP;
+  // Set today's date as default
+  var today=new Date();
+  document.getElementById('mWeekDate').value=today.toISOString().split('T')[0];
+  document.getElementById('mMonthDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  document.getElementById('modal').classList.add('open');
+};
+window.closeModal=function(){
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('confirmPanel').style.display='none';
+  document.getElementById('exBtn').style.display='block';
+};
+
+// Radio button toggle
+document.getElementById('vtW').addEventListener('change',function(){
+  document.getElementById('weekDateWrap').style.display='block';
+  document.getElementById('monthDateWrap').style.display='none';
+});
+document.getElementById('vtM').addEventListener('change',function(){
+  document.getElementById('weekDateWrap').style.display='none';
+  document.getElementById('monthDateWrap').style.display='block';
+});
+
+// Generate period key and label from date
+function getPeriodInfo(){
+  var isWeekly=document.getElementById('vtW').checked;
+  if(isWeekly){
+    var d=new Date(document.getElementById('mWeekDate').value+'T12:00:00');
+    var month=d.toLocaleString('default',{month:'long'});
+    var day=d.getDate();
+    var year=d.getFullYear();
+    var label='Week of '+month+' '+day+', '+year;
+    var key='W_'+d.getFullYear()+'_'+String(d.getMonth()+1).padStart(2,'0')+'_'+String(d.getDate()).padStart(2,'0');
+    return {label:label,key:key,type:'weekly',ts:d.getTime()};
+  } else {
+    var val=document.getElementById('mMonthDate').value;
+    var parts=val.split('-');
+    var d2=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1);
+    var label2=d2.toLocaleString('default',{month:'long'})+' '+d2.getFullYear();
+    var key2='M_'+parts[0]+'_'+parts[1];
+    return {label:label2,key:key2,type:'monthly',ts:d2.getTime()};
+  }
+}
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();});
 
 var dz=document.getElementById('dz');
@@ -500,8 +581,7 @@ function sp(pct,lbl,st){document.getElementById('pf').style.width=pct+'%';docume
 window.extractKPIs=async function(){
   if(MF.length===0)return alert('Please select at least one file.');
   var port=document.getElementById('mPort').value;
-  var per=document.getElementById('mPer').value.trim();
-  if(!per)return alert('Please enter the period.');
+  var pi=getPeriodInfo();
   var btn=document.getElementById('exBtn');
   btn.disabled=true;btn.textContent='Extracting...';
   document.getElementById('pw').style.display='block';
@@ -509,40 +589,97 @@ window.extractKPIs=async function(){
   var fc=[];
   for(var i=0;i<MF.length;i++){
     sp(Math.round(10+(i/MF.length)*30),'Reading...','Reading: '+MF[i].name);
-    try{var t=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(MF[i]);});fc.push({name:MF[i].name,content:t.length>4000?t.substring(0,4000):t});}
-    catch(e){fc.push({name:MF[i].name,content:'[File: '+MF[i].name+']'});}
+    try{
+      var t=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(MF[i]);});
+      fc.push({name:MF[i].name,content:t.length>4000?t.substring(0,4000):t});
+    }catch(e){fc.push({name:MF[i].name,content:'[File: '+MF[i].name+']'});}
   }
   sp(50,'Sending to AI...','Claude is extracting KPIs...');
   var fs=fc.map(function(f,i){return '--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content;}).join('\n\n');
-  var vt=per.toLowerCase().includes('week')?'weekly':'monthly';
-  var prompt='{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}\n\nFill in the above JSON with values from the files below. Return ONLY the completed JSON. No other text.\n\n'+fs;
+  var tmpl='{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}';
+  var prompt=tmpl+'\n\nFill in the above JSON with values from the files below. Return ONLY the completed JSON. No other text.\n\n'+fs;
   try{
     var res=await fetch('https://lsrta-api.daniela-e0c.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:800,system:'Return only valid JSON with no extra text.',messages:[{role:'user',content:prompt}]})});
     if(!res.ok)throw new Error('API error '+res.status);
     var resp=await res.json();
     var raw=resp.content[0].text.trim();
-    var match=raw.match(/\{[\s\S]*\}/);
-    if(!match)throw new Error('No JSON in response');
-    var ex=JSON.parse(match[0]);
-    ex.viewType=vt;ex.uploadedBy=CU.displayName||CU.email;ex.uploadedAt=Date.now();
-    sp(80,'Saving...','Saving to Firebase...');
-    var key=per.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
-    await set(ref(db,'kpis/'+port+'/'+key),ex);
-    sp(100,'Done!','KPIs saved!');
-    setTimeout(function(){
-      closeModal();MF=[];renderC();
-      document.getElementById('mPer').value='';
-      document.getElementById('pw').style.display='none';
-      btn.disabled=false;btn.textContent='🧠 Extract KPIs with AI';
-      var pb=document.querySelector('[onclick="setPort(\''+port+'\',this)"]');
-      if(pb)setPort(port,pb);
-      CK=key;
-    },1200);
+    var jmatch=raw.match(/\{[\s\S]*\}/);
+    if(!jmatch)throw new Error('No JSON in response');
+    var ex=JSON.parse(jmatch[0]);
+    ex.viewType=pi.type;
+    ex.periodLabel=pi.label;
+    ex.periodTs=pi.ts;
+    ex.uploadedBy=CU.displayName||CU.email;
+    ex.uploadedAt=Date.now();
+    sp(90,'Done!','Please review the extracted KPIs below...');
+    PENDING={port:port,key:pi.key,label:pi.label,data:ex};
+    showConfirm(ex,pi.label,port,pi.key);
+    btn.disabled=false;btn.textContent='🧠 Extract KPIs with AI';
   }catch(e){
     sp(0,'Error','Failed: '+e.message);
     btn.disabled=false;btn.textContent='🧠 Extract KPIs with AI';
   }
 };
+
+var PENDING=null;
+
+function showConfirm(ex,label,port,key){
+  document.getElementById('confirmPeriodLabel').textContent=label+' — '+N[port];
+  var hasDup=CD[port]&&CD[port][key];
+  document.getElementById('dupWarning').style.display=hasDup?'block':'none';
+  var kpiShow=[
+    {k:'total_units',l:'Total Units'},{k:'occupied',l:'Occupied'},{k:'occupancy_rate',l:'Occupancy %'},
+    {k:'vacant_unrented',l:'Vacant Unrented'},{k:'leads',l:'Leads'},{k:'showings',l:'Showings'},
+    {k:'applications',l:'Applications'},{k:'leased',l:'Leased'},{k:'movein',l:'Move Ins'},
+    {k:'moveout',l:'Move Outs'},{k:'wo_in',l:'WOs In'},{k:'wo_completed',l:'WOs Done'},
+    {k:'wo_completion_rate',l:'WO Rate %'},{k:'delinquencies',l:'Delinquencies'},{k:'noi',l:'NOI'},{k:'collection_rate',l:'Collection %'}
+  ];
+  var grid='';
+  kpiShow.forEach(function(kpi){
+    var v=ex[kpi.k];
+    var has=v!==null&&v!==undefined;
+    var disp=has?(typeof v==='number'&&(kpi.k==='noi'||kpi.k==='total_income')?'$'+Number(v).toLocaleString():typeof v==='number'&&kpi.k.indexOf('rate')>=0?v.toFixed(1)+'%':v):'Not found';
+    grid+='<div style="padding:8px 10px;background:'+(has?'rgba(39,174,96,0.05)':'rgba(15,31,61,0.03)')+';border:1px solid '+(has?'rgba(39,174,96,0.2)':'rgba(15,31,61,0.06)')+';border-radius:3px;">';
+    grid+='<div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'+kpi.l+'</div>';
+    grid+='<div style="font-size:15px;font-family:Cormorant Garamond,serif;color:'+(has?'var(--navy)':'rgba(138,143,163,0.6)')+';">'+disp+'</div>';
+    grid+='</div>';
+  });
+  document.getElementById('confirmGrid').innerHTML=grid;
+  document.getElementById('confirmPanel').style.display='block';
+  document.getElementById('exBtn').style.display='none';
+  document.getElementById('pw').style.display='none';
+}
+
+window.saveKPIs=async function(){
+  if(!PENDING)return;
+  var btn=document.getElementById('saveBtn');
+  btn.textContent='Saving...';btn.disabled=true;
+  try{
+    await set(ref(db,'kpis/'+PENDING.port+'/'+PENDING.key),PENDING.data);
+    var savedPort=PENDING.port;
+    var savedKey=PENDING.key;
+    PENDING=null;MF=[];renderC();
+    document.getElementById('pw').style.display='none';
+    document.getElementById('confirmPanel').style.display='none';
+    document.getElementById('exBtn').style.display='block';
+    btn.textContent='Save';btn.disabled=false;
+    closeModal();
+    var pb=document.querySelector('[onclick="setPort(\''+savedPort+'\',this)"]');
+    if(pb)setPort(savedPort,pb);
+    CK=savedKey;
+  }catch(e){
+    alert('Save failed: '+e.message);
+    btn.textContent='Save';btn.disabled=false;
+  }
+};
+
+window.cancelConfirm=function(){
+  PENDING=null;
+  document.getElementById('confirmPanel').style.display='none';
+  document.getElementById('exBtn').style.display='block';
+  document.getElementById('pw').style.display='none';
+};
+
 </script>
 </body>
 </html>
