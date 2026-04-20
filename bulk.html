@@ -468,7 +468,7 @@
     };
 
     const filesSection = fileContents.map((f, i) =>
-      `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
+      '--- FILE ' + (i+1) + ': ' + f.name + ' ---\n' + f.content
     ).join('\n\n');
 
     const prompt = `ABSOLUTE FORMATTING RULES - NO EXCEPTIONS:
