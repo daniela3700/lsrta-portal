@@ -404,7 +404,10 @@
         fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
       }
 
-      const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear story — what happened, why it happened, and what comes next.
+      const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear story — what happened, why it happened, and what comes next.
 
 WRITING STYLE:
 - Mix narrative paragraphs WITH simple tables where tables add clarity
@@ -882,7 +885,10 @@ Data:
         fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
       }
 
-      const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear, honest story — what happened, why, and what comes next.
+      const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear, honest story — what happened, why, and what comes next.
 
 CRITICAL RULES — READ CAREFULLY:
 1. ONLY use numbers that appear directly in the uploaded files. Never calculate, estimate, or assume occupancy rates, unit counts, or percentages unless the file explicitly states them.
@@ -899,7 +905,7 @@ CRITICAL RULES — READ CAREFULLY:
 HOW TO READ APPFOLIO EXPORTS:
 - Cash Flow CSV: Look for rows: "NOI - Net Operating Income", "Cash Flow", "Actual Ending Cash", "Total Operating Income", "Total Expense". YTD numbers are in the "Fiscal Year To Date" column.
 - Property Comparison CSV: Property names are column headers in row 1. "Total Operating Income" and "NOI - Net Operating Income" rows show per-property performance. Last column is portfolio total.
-- Gross Potential Rent CSV: Last summary row has portfolio totals for GPR, Vacancy Loss, Concessions, Net Rent Income. Properties with $0 in Net Rent Income column are vacant.
+- Gross Potential Rent CSV: The VERY LAST data row (labeled "Total") contains the portfolio totals. Look for the row that starts with "Total," — this has the real GPR total, total vacancy loss, total concessions, and total net rent income. Do NOT sum individual rows — use this Total row. Properties listed with $0 in the Net Rent Income column are vacant.
 
 WHAT YOU CAN AND CANNOT DO:
 
@@ -1402,7 +1408,10 @@ Data:
         fileContent = '[File uploaded: ' + currentFile.name + ' - ' + (currentFile.size/1024).toFixed(1) + 'KB]';
       }
 
-      const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear story — what happened, why it happened, and what comes next.
+      const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals. Your audience is an ownership group or CEO who may have zero day-to-day knowledge of the portfolio. Your job is to make the numbers tell a clear story — what happened, why it happened, and what comes next.
 
 WRITING STYLE:
 - Mix narrative paragraphs WITH simple tables where tables add clarity
@@ -2398,7 +2407,7 @@ Report content:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-opus-4-6',
-          max_tokens: 1000,
+          max_tokens: 2000,
           messages: [{ role: 'user', content: prompt }]
         })
       });

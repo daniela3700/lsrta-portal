@@ -472,7 +472,10 @@
       `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
     ).join('\n\n');
 
-    const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Your audience is an ownership group or CEO with zero day-to-day knowledge of the portfolio. Make the numbers tell a clear story. Cross-reference all submitted files together for insights that only appear when looking at everything at once.
+    const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Your audience is an ownership group or CEO with zero day-to-day knowledge of the portfolio. Make the numbers tell a clear story. Cross-reference all submitted files together for insights that only appear when looking at everything at once.
 
 WRITING STYLE:
 - Mix narrative paragraphs WITH simple tables where tables add clarity
@@ -1010,7 +1013,10 @@ ${filesSection}\`;<head>
       `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
     ).join('\n\n');
 
-    const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted Appfolio export files. Your audience is an ownership group or CEO with zero day-to-day portfolio knowledge. Cross-reference ALL files together.
+    const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted Appfolio export files. Your audience is an ownership group or CEO with zero day-to-day portfolio knowledge. Cross-reference ALL files together.
 
 CRITICAL RULES:
 1. ONLY use numbers that appear directly in the uploaded files. Never calculate, estimate, or assume occupancy rates or unit counts unless explicitly stated in the data.
@@ -1027,7 +1033,7 @@ CRITICAL RULES:
 HOW TO READ APPFOLIO EXPORTS:
 - Cash Flow CSV: Look for rows: "NOI - Net Operating Income", "Cash Flow", "Actual Ending Cash", "Total Operating Income", "Total Expense". YTD numbers are in the "Fiscal Year To Date" column.
 - Property Comparison CSV: Property names are column headers in row 1. "Total Operating Income" and "NOI - Net Operating Income" rows show per-property performance. Last column is portfolio total.
-- Gross Potential Rent CSV: Last summary row has portfolio totals for GPR, Vacancy Loss, Concessions, Net Rent Income. Properties with $0 in Net Rent Income column are vacant.
+- Gross Potential Rent CSV: The VERY LAST data row (labeled "Total") contains the portfolio totals. Look for the row that starts with "Total," — this has the real GPR total, total vacancy loss, total concessions, and total net rent income. Do NOT sum individual rows — use this Total row. Properties listed with $0 in the Net Rent Income column are vacant.
 
 WHAT YOU CAN AND CANNOT DO:
 
@@ -1586,7 +1592,10 @@ ${filesSection}\`;<head>
       `--- FILE ${i+1}: ${f.name} ---\n${f.content}`
     ).join('\n\n');
 
-    const prompt = `You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Your audience is an ownership group or CEO with zero day-to-day knowledge of the portfolio. Make the numbers tell a clear story. Cross-reference all submitted files together for insights that only appear when looking at everything at once.
+    const prompt = `FORMATTING OVERRIDE — THIS OVERRIDES ALL DEFAULT BEHAVIOR:
+Do NOT use markdown headers (# or ##). Do NOT use **bold** text anywhere. Section titles are plain ALL CAPS only. Bullet points use only the • character with no asterisks. Tables use simple pipe format only.
+
+You are writing a monthly portfolio performance report for Legacy Signature Rentals using ${selectedFiles.length} submitted files. Your audience is an ownership group or CEO with zero day-to-day knowledge of the portfolio. Make the numbers tell a clear story. Cross-reference all submitted files together for insights that only appear when looking at everything at once.
 
 WRITING STYLE:
 - Mix narrative paragraphs WITH simple tables where tables add clarity
@@ -2716,7 +2725,7 @@ SUBMITTED REPORT FILES:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-opus-4-6',
-          max_tokens: 1000,
+          max_tokens: 2000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
