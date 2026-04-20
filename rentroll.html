@@ -403,38 +403,76 @@
       fileContent = '[File: ' + currentFile.name + ']';
     }
 
-    const prompt = `You are a professional property management analyst for Legacy Signature Rentals.
-Analyze this rent roll for ${property} as of ${asOf}. Average monthly rent is approximately ${avgRent}.
+    const prompt = `You are a senior property management analyst preparing a formal rent roll report for Legacy Signature Rentals ownership.
 
-Provide a complete rent roll analysis including:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGACY SIGNATURE RENTALS
+RENT ROLL & RENEWAL ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Property: ${property}
+As of Date: ${asOf}
+Average Monthly Rent: ${avgRent}
+Prepared by: Legacy Signature Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. PORTFOLIO SUMMARY
-- Total units occupied vs vacant
-- Overall occupancy rate
-- Total monthly rent collected
+EXECUTIVE SUMMARY
+[2-3 sentences on overall portfolio occupancy health and most urgent renewal concerns]
 
-2. RENEWAL TIMELINE (most urgent first)
-For each lease expiring within 90 days, list in this exact format on separate lines:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PORTFOLIO SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Total Units: [X]
+• Occupied Units: [X]
+• Vacant Units: [X]
+• Occupancy Rate: [X%]
+• Vacancy Rate: [X%]
+• Total Monthly Rent Roll: [$X]
+• Collection Rate: [X%]
+
+🚨 RISK FLAGS
+[Any units vacant 30+ days, high delinquency, or concerning trends]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RENEWAL TIMELINE (Most Urgent First)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+For each lease expiring within 90 days, list in this EXACT format on separate lines:
 TENANT: [name] | UNIT: [unit#] | PROPERTY: [property] | LEASE_END: [MM/DD/YYYY] | RENT: [$amount]
-If tenant names aren't available, use "Tenant - Unit [X]"
+If tenant names are not available use "Tenant - Unit [X]"
 
-3. INCOME AT RISK
-- How much monthly income is at risk in the next 30, 60, and 90 days if leases don't renew
-- Express as dollar amounts based on ${avgRent} average
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INCOME AT RISK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 30-Day Risk: [$X monthly income if expiring leases don't renew]
+• 60-Day Risk: [$X monthly income cumulative]
+• 90-Day Risk: [$X monthly income cumulative]
 
-4. SEASONAL PATTERNS
-- Based on the lease end dates, identify any seasonal clustering
-- Flag if any months have unusually high expiration concentration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DELINQUENCY SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Total Delinquent Balance: [$X]
+• Units with Outstanding Balance: [X]
+[List specific delinquent units if available]
 
-5. ACTION ITEMS
-- Specific tenants or units requiring immediate outreach
-- Recommended contact timeline
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SEASONAL PATTERNS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Identify any clustering of lease expirations by month/season. Flag months with unusually high concentration. Note soft leasing seasons to watch for.]
 
-6. OUTLOOK
-- 90-day occupancy projection if current renewal rate holds
-- Key risks to watch
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACTION ITEMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Numbered list of specific outreach and follow-up actions, prioritized by urgency]
 
-File content:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTLOOK — 90-DAY FORECAST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Projected occupancy rate in 90 days if no renewals convert vs if all renew. Key risks and opportunities ahead.]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If data is not available for a line item write "Data not available in source" rather than guessing.
+
+Rent roll content:
 ${fileContent}`;
 
     try {

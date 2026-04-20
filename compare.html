@@ -374,30 +374,65 @@
     btn.disabled = true;
     btn.classList.add('loading');
 
-    const prompt = `You are a professional property management analyst for Legacy Signature Rentals.
-Compare these two reports and provide a detailed analysis of what changed between the periods.
+    const prompt = `You are a senior property management analyst preparing a formal comparison report for Legacy Signature Rentals ownership.
 
-REPORT A (Earlier Period):
-Property: ${selectedA.propertyName || 'Unknown'}
-Period: ${selectedA.period || 'Unknown'}
-Type: ${selectedA.reportType || 'Report'}
-Analysis: ${selectedA.analysis || 'No analysis available'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGACY SIGNATURE RENTALS
+PERIOD COMPARISON REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Report A (Earlier): ${selectedA.propertyName || 'Unknown'} — ${selectedA.period || 'Unknown'}
+Report B (Later): ${selectedB.propertyName || 'Unknown'} — ${selectedB.period || 'Unknown'}
+Prepared by: Legacy Signature Management Team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-REPORT B (Later Period):
-Property: ${selectedB.propertyName || 'Unknown'}
-Period: ${selectedB.period || 'Unknown'}
-Type: ${selectedB.reportType || 'Report'}
-Analysis: ${selectedB.analysis || 'No analysis available'}
+EXECUTIVE SUMMARY OF CHANGES
+[2-3 sentences on the most significant changes between these two periods]
 
-Please provide:
-1. EXECUTIVE SUMMARY OF CHANGES - Overall what changed between these two periods
-2. WHAT IMPROVED - Specific metrics or areas that got better (list 3-5 items)
-3. WHAT NEEDS ATTENTION - Areas that declined or require follow-up (list 3-5 items)
-4. KEY DIFFERENCES - Notable changes between the periods (list 3-5 items)
-5. TREND ANALYSIS - What patterns or trends are emerging
-6. RECOMMENDATIONS - What actions should be taken based on this comparison
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KPI COMPARISON
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Occupancy Rate: [A: X%] → [B: X%] ([+/-X%])
+• Collection Rate: [A: X%] → [B: X%]
+• NOI: [A: ] → [B: ] ([+/-])
+• Vacancy: [A: X units] → [B: X units]
+• Delinquency: [A: ] → [B: ]
+• YTD Revenue: [A: ] → [B: ]
 
-Be specific with numbers and percentages where available. Keep it professional and actionable.`;
+🚨 RISK FLAGS
+[Any new or worsening risks between the two periods]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ WHAT IMPROVED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[List 3-5 specific metrics or areas that improved with numbers]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ WHAT NEEDS ATTENTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[List 3-5 areas that declined or require follow-up with specifics]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 KEY DIFFERENCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[List 3-5 notable changes between the periods]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TREND ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Patterns emerging across both periods, seasonal factors, trajectory]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RECOMMENDATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Numbered action items based on this comparison, with urgency]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REPORT A DATA:
+${selectedA.analysis || 'No analysis available'}
+
+REPORT B DATA:
+${selectedB.analysis || 'No analysis available'}`;
 
     try {
       const response = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
