@@ -524,7 +524,8 @@ ACTION ITEMS
 SUBMITTED FILES:
 ${filesSection}`;
 
-      const response = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
+      try {
+      const response://lsrta-api.daniela-e0c.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
