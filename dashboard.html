@@ -337,23 +337,32 @@
       document.getElementById('aiText').textContent = 'Upload Appfolio reports to generate an AI executive summary.';
       document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty';
       document.getElementById('aiMeta').textContent = '';
-      document.getElementById('dash').innerHTML = `<div class="empty-dash"><div class="empty-dash-icon">📊</div><div class="empty-dash-title">No data yet for ${portNames[currentPortfolio]}</div><div class="empty-dash-text">Upload your Appfolio exports and Claude will automatically extract all KPIs and populate this dashboard.</div><button class="btn-primary" onclick="openModal()">📤 Upload Reports Now</button></div>`;
+      document.getElementById('dash').innerHTML = '<div class="empty-dash"><div class="empty-dash-icon">📊</div><div class="empty-dash-title">No data yet for ' + portNames[currentPortfolio] + '</div><div class="empty-dash-text">Upload your Appfolio exports and Claude will automatically extract all KPIs and populate this dashboard.</div><button class="btn-primary" onclick="openModal()">📤 Upload Reports Now</button></div>';
       return;
     }
     if (!currentPeriod || !periods.includes(currentPeriod)) currentPeriod = periods[0];
     document.getElementById('periodSel').style.display = 'flex';
-    document.getElementById('periodChips').innerHTML = periods.map(p => `
-      <div style="display:inline-flex;align-items:center;gap:4px;margin-right:4px;">
-        <button class="period-chip ${p===currentPeriod?'active':''}" onclick="selectPeriod('${p}')">${p.replace(/_/g,' ')}</button>
-        <button onclick="deletePeriod('${p}')" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:11px;padding:2px 4px;border-radius:2px;" title="Delete this period">✕</button>
-      </div>`).join('');
+    document.getElementById('periodChips').innerHTML = periods.map(function(p) {
+      return '<div style="display:inline-flex;align-items:center;gap:4px;margin-right:4px;"><button class="period-chip ' + (p===currentPeriod?'active':'') + '" onclick="selectPeriod('' + p + '')">' + p.replace(/_/g,' ') + '</button><button onclick="deletePeriod('' + p + '')" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:11px;padding:2px 4px;" title="Delete">✕</button></div>';
+    }).join('');
+
     const d = getMerged(currentPeriod);
     if (!d) { document.getElementById('dash').innerHTML = '<div style="padding:24px;color:var(--gray);text-align:center;">No data for this period.</div>'; return; }
+
     document.getElementById('dashSub').textContent = currentPeriod.replace(/_/g,' ') + ' · ' + (currentView==='weekly'?'Weekly':'Monthly');
     document.getElementById('aiBtn').style.display = 'block';
-    if (d.aiSummary) { document.getElementById('aiText').textContent = d.aiSummary; document.getElementById('aiText').className = 'ai-banner-text'; document.getElementById('aiMeta').textContent = 'Generated ' + (d.aiSummaryDate||'') + ' · ' + portNames[currentPortfolio]; }
-    else { document.getElementById('aiText').textContent = 'Click "Refresh" to generate an AI executive summary for this period.'; document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty'; document.getElementById('aiMeta').textContent = ''; }
 
+    if (d.aiSummary) {
+      document.getElementById('aiText').textContent = d.aiSummary;
+      document.getElementById('aiText').className = 'ai-banner-text';
+      document.getElementById('aiMeta').textContent = 'Generated ' + (d.aiSummaryDate||'') + ' · ' + portNames[currentPortfolio];
+    } else {
+      document.getElementById('aiText').textContent = 'Click "Refresh" to generate an AI executive summary for this period.';
+      document.getElementById('aiText').className = 'ai-banner-text ai-banner-empty';
+      document.getElementById('aiMeta').textContent = '';
+    }
+
+    // Calculate derived metrics
     const occ = d.occupied && d.total_units ? ((d.occupied/d.total_units)*100).toFixed(1) : d.occupancy_rate;
     const stabOcc = d.stabilized_units && d.occupied ? ((d.occupied/d.stabilized_units)*100).toFixed(1) : null;
     const woRate = d.wo_completed && d.wo_in ? ((d.wo_completed/d.wo_in)*100).toFixed(1) : d.wo_completion_rate;
@@ -362,58 +371,78 @@
     const leaseConv = d.leased && d.applications ? ((d.leased/d.applications)*100).toFixed(1) : null;
     const occC = occ>=95?'g':occ>=85?'y':'r';
     const woC = woRate>=90?'g':woRate>=70?'y':'r';
-    const moC = d.moveout<=5?'g':d.moveout<=8?'y':'r';
+    const moC = (d.moveout!=null && d.moveout<=5)?'g':(d.moveout!=null && d.moveout<=8)?'y':'r';
     const daysC = d.avg_days_lease<=20?'g':d.avg_days_lease<=25?'y':'r';
     const collC = d.collection_rate>=98?'g':d.collection_rate>=90?'y':'r';
     const delqC = d.delinquencies>5?'r':d.delinquencies>2?'y':'g';
+    const stabC = stabOcc>=95?'g':stabOcc>=85?'y':stabOcc?'r':'';
 
-    document.getElementById('dash').innerHTML = `
-      <div class="section-hdr"><div class="section-title">🏠 Occupancy</div><div class="section-line"></div></div>
-      <div class="kpi-grid-4">
-        ${kc('b','Total Units',d.total_units,'Current portfolio size')}
-        ${kc(occC,'Occupancy Rate — Total',occ?occ+'%':null,d.stabilized_units?d.stabilized_units+' stabilized units':null,'≥ 95%',occ?[occC]:null)}
-        ${kc(stabOcc>=95?'g':stabOcc>=85?'y':stabOcc?'r':'','Occupancy — Stabilized',stabOcc?stabOcc+'%':null,d.occupied?d.occupied+' occupied':null,'≥ 95%',stabOcc?[stabOcc>=95?'g':stabOcc>=85?'y':'r']:null)}
-        ${kc(moC,'Move Outs',d.moveout??null,'Move Ins: '+(d.movein??'—')+'  |  Net: '+(d.movein&&d.moveout!=null?'+'+(d.movein-d.moveout):'—'),'< 5/period',d.moveout!=null?[moC]:null)}
-      </div>
-      <div class="kpi-grid-4">
-        ${kc(d.vacant_unrented>12?'r':d.vacant_unrented>5?'y':'g','Vacant Unrented',d.vacant_unrented??null,'Vacant Rented: '+(d.vacant_rented??'—'))}
-        ${kc('go','Notice Given',d.notice_unrented??null,'Notice Rented: '+(d.notice_rented??'—'))}
-        ${kc('b','Total Occupied',d.occupied??null)}
-        ${kc('b','Inbound Calls',d.inbound_calls??null)}
-      </div>
+    // Build HTML using string concatenation only - no template literals
+    let html = '';
 
-      <div class="section-hdr"><div class="section-title">🎯 Leasing Funnel</div><div class="section-line"></div></div>
-      <div class="funnel-wrap">
-        <div class="funnel-steps">
-          <div class="f-step"><div class="f-num">${d.leads??'—'}</div><div class="f-label">Leads</div></div>
-          <div class="f-step"><div class="f-num">${d.showings??'—'}</div><div class="f-label">Showings</div>' + (showConv ? '<div class="f-conv" style="color:' + (showConv>=40?'var(--green)':'var(--yellow)') + '">' + showConv + '%</div>' : '') + '</div>
-          <div class="f-step"><div class="f-num">${d.applications??'—'}</div><div class="f-label">Applications</div>' + (appConv ? '<div class="f-conv" style="color:' + (appConv>=50?'var(--green)':'var(--yellow)') + '">' + appConv + '%</div>' : '') + '</div>
-          <div class="f-step"><div class="f-num">${d.leased??'—'}</div><div class="f-label">Leased</div>' + (leaseConv ? '<div class="f-conv" style="color:' + (leaseConv>=50?'var(--green)':'var(--yellow)') + '">' + leaseConv + '%</div>' : '') + '</div>
-          <div class="f-step"><div class="f-num">${d.movein??'—'}</div><div class="f-label">Move Ins</div></div>
-          <div class="f-step"><div class="f-num" style="color:${daysC==='g'?'var(--green)':daysC==='y'?'var(--yellow)':'var(--red)'}">${d.avg_days_lease!=null?d.avg_days_lease+'d':'—'}</div><div class="f-label">Avg Days to Lease</div><div class="f-conv" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>
-        </div>
-      </div>
+    // OCCUPANCY
+    html += '<div class="section-hdr"><div class="section-title">🏠 Occupancy</div><div class="section-line"></div></div>';
+    html += '<div class="kpi-grid-4">';
+    html += kc('b','Total Units',d.total_units,'Current portfolio size');
+    html += kc(occC,'Occupancy Rate — Total',occ?occ+'%':null,d.stabilized_units?d.stabilized_units+' stabilized units':null,'≥ 95%',occ?[occC]:null);
+    html += kc(stabC,'Occupancy — Stabilized',stabOcc?stabOcc+'%':null,d.occupied?d.occupied+' occupied':null,'≥ 95%',stabOcc?[stabC]:null);
+    html += kc(moC,'Move Outs',d.moveout!=null?d.moveout:null,'Move Ins: '+(d.movein!=null?d.movein:'—')+'  |  Net: '+(d.movein!=null&&d.moveout!=null?'+' + (d.movein-d.moveout):'—'),'< 5/period',d.moveout!=null?[moC]:null);
+    html += '</div>';
+    html += '<div class="kpi-grid-4">';
+    html += kc(d.vacant_unrented>12?'r':d.vacant_unrented>5?'y':'g','Vacant Unrented',d.vacant_unrented!=null?d.vacant_unrented:null,'Vacant Rented: '+(d.vacant_rented!=null?d.vacant_rented:'—'));
+    html += kc('go','Notice Given',d.notice_unrented!=null?d.notice_unrented:null,'Notice Rented: '+(d.notice_rented!=null?d.notice_rented:'—'));
+    html += kc('b','Total Occupied',d.occupied!=null?d.occupied:null);
+    html += kc('b','Inbound Calls',d.inbound_calls!=null?d.inbound_calls:null);
+    html += '</div>';
 
-      <div class="section-hdr"><div class="section-title">🔧 Maintenance</div><div class="section-line"></div></div>
-      <div class="kpi-grid-4">
-        ${kc('b','Incoming Work Orders',d.wo_in??null)}
-        ${kc(woC,'WO Completion Rate',woRate?woRate+'%':null,(d.wo_completed??'—')+' of '+(d.wo_in??'—')+' completed','≥ 90%',woRate?[woC]:null)}
-        ${kc('go','Unit Turns Completed',d.turns_done??null,'In Progress: '+(d.turns_prog??'—'))}
-        ${kc(d.wo_cancel>10?'y':'','WO Canceled',d.wo_cancel??null)}
-      </div>
+    // LEASING FUNNEL
+    html += '<div class="section-hdr"><div class="section-title">🎯 Leasing Funnel</div><div class="section-line"></div></div>';
+    html += '<div class="funnel-wrap"><div class="funnel-steps">';
+    html += '<div class="f-step"><div class="f-num">' + (d.leads!=null?d.leads:'—') + '</div><div class="f-label">Leads</div></div>';
+    html += '<div class="f-step"><div class="f-num">' + (d.showings!=null?d.showings:'—') + '</div><div class="f-label">Showings</div>';
+    if (showConv) html += '<div class="f-conv" style="color:' + (showConv>=40?'var(--green)':'var(--yellow)') + '">' + showConv + '%</div>';
+    html += '</div>';
+    html += '<div class="f-step"><div class="f-num">' + (d.applications!=null?d.applications:'—') + '</div><div class="f-label">Applications</div>';
+    if (appConv) html += '<div class="f-conv" style="color:' + (appConv>=50?'var(--green)':'var(--yellow)') + '">' + appConv + '%</div>';
+    html += '</div>';
+    html += '<div class="f-step"><div class="f-num">' + (d.leased!=null?d.leased:'—') + '</div><div class="f-label">Leased</div>';
+    if (leaseConv) html += '<div class="f-conv" style="color:' + (leaseConv>=50?'var(--green)':'var(--yellow)') + '">' + leaseConv + '%</div>';
+    html += '</div>';
+    html += '<div class="f-step"><div class="f-num">' + (d.movein!=null?d.movein:'—') + '</div><div class="f-label">Move Ins</div></div>';
+    html += '<div class="f-step"><div class="f-num" style="color:' + (daysC==='g'?'var(--green)':daysC==='y'?'var(--yellow)':'var(--red)') + '">' + (d.avg_days_lease!=null?d.avg_days_lease+'d':'—') + '</div><div class="f-label">Avg Days to Lease</div><div class="f-conv" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>';
+    html += '</div></div>';
 
-      <div class="section-hdr"><div class="section-title">👥 Tenant Relations</div><div class="section-line"></div></div>
-      <div class="kpi-grid-4">
-        ${kc(delqC,'Delinquencies',d.delinquencies??null,d.delinquencies_amt?'$'+Number(d.delinquencies_amt).toLocaleString():null)}
-        ${kc(d.evictions>0?'r':'g','Evictions in Progress',d.evictions??null)}
-        ${kc('g','Renewals',d.renewals??null)}
-        ${kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',d.collection_rate?[collC]:null)}
-      </div>
+    // MAINTENANCE
+    html += '<div class="section-hdr"><div class="section-title">🔧 Maintenance</div><div class="section-line"></div></div>';
+    html += '<div class="kpi-grid-4">';
+    html += kc('b','Incoming Work Orders',d.wo_in!=null?d.wo_in:null);
+    html += kc(woC,'WO Completion Rate',woRate?woRate+'%':null,(d.wo_completed!=null?d.wo_completed:'—')+' of '+(d.wo_in!=null?d.wo_in:'—')+' completed','≥ 90%',woRate?[woC]:null);
+    html += kc('go','Unit Turns Completed',d.turns_done!=null?d.turns_done:null,'In Progress: '+(d.turns_prog!=null?d.turns_prog:'—'));
+    html += kc(d.wo_cancel>10?'y':'','WO Canceled',d.wo_cancel!=null?d.wo_cancel:null);
+    html += '</div>';
 
-      ' + (d.noi||d.total_income ? '<div class="section-hdr"><div class="section-title">💰 Financials</div><div class="section-line"></div></div><div class="kpi-grid-4">' + kc('g','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null) + kc('b','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null) + kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%') + kc('go','NOI Margin',d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null) + '</div>' : '') + '
-    `;
+    // TENANT RELATIONS
+    html += '<div class="section-hdr"><div class="section-title">👥 Tenant Relations</div><div class="section-line"></div></div>';
+    html += '<div class="kpi-grid-4">';
+    html += kc(delqC,'Delinquencies',d.delinquencies!=null?d.delinquencies:null,d.delinquencies_amt?'$'+Number(d.delinquencies_amt).toLocaleString():null);
+    html += kc(d.evictions>0?'r':'g','Evictions in Progress',d.evictions!=null?d.evictions:null);
+    html += kc('g','Renewals',d.renewals!=null?d.renewals:null);
+    html += kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',d.collection_rate?[collC]:null);
+    html += '</div>';
+
+    // FINANCIALS (if available)
+    if (d.noi || d.total_income) {
+      html += '<div class="section-hdr"><div class="section-title">💰 Financials</div><div class="section-line"></div></div>';
+      html += '<div class="kpi-grid-4">';
+      html += kc('g','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null);
+      html += kc('b','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null);
+      html += kc(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%');
+      html += kc('go','NOI Margin',d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null);
+      html += '</div>';
+    }
+
+    document.getElementById('dash').innerHTML = html;
   }
-
   // MODAL
   window.openModal = () => { if (currentPortfolio!=='all') document.getElementById('mPortfolio').value = currentPortfolio; document.getElementById('uploadModal').classList.add('open'); };
   window.closeModal = () => document.getElementById('uploadModal').classList.remove('open');
