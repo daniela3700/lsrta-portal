@@ -448,7 +448,7 @@
       setProgress(Math.round(5 + (i / selectedFiles.length) * 40), 'Reading files...', 'Reading: ' + selectedFiles[i].name);
       try {
         const content = await readFile(selectedFiles[i]);
-        const truncated = content.length > 6000 ? content.substring(0, 6000) + '\n...[truncated]' : content;
+        const truncated = content.length > 3000 ? content.substring(0, 3000) + '\n...[truncated]' : content;
         fileContents.push({ name: selectedFiles[i].name, content: truncated });
         setFileStatus(i, 'done', 'Ready');
       } catch(e) {
@@ -562,6 +562,8 @@ ${filesSection}`;
 
     } catch(e) {
       setProgress(0, 'Error', 'Analysis failed: ' + e.message);
+      document.getElementById('analysisBody').textContent = 'Error: ' + e.message + '\n\nIf this says Failed to fetch, the request may be too large. Try uploading fewer files or smaller files.';
+      document.getElementById('resultCard').style.display = 'block';
     }
 
     btn.disabled = false;
