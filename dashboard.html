@@ -184,8 +184,9 @@
     <div class="top-row">
       <div class="view-toggle">
         <span class="view-label">View:</span>
-        <button class="view-btn active" onclick="switchView('weekly',this)">Weekly</button>
-        <button class="view-btn" onclick="switchView('monthly',this)">Monthly</button>
+        <button class="view-btn active" onclick="switchView('weekly',this)" id="vbWeekly">Weekly</button>
+        <button class="view-btn" onclick="switchView('monthly',this)" id="vbMonthly">Monthly</button>
+        <button class="view-btn" onclick="switchView('trends',this)" id="vbTrends">📈 Trends</button>
       </div>
       <button class="btn-upload-kpi" onclick="openModal()">📤 Upload Appfolio Reports</button>
     </div>
@@ -292,7 +293,17 @@
 
   window.signOut = async () => { await fbSignOut(auth); window.location.href = 'index.html'; };
   window.switchPortfolio = (p, btn) => { currentPortfolio = p; currentPeriod = null; document.querySelectorAll('.port-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('dashTitle').textContent = portNames[p] + ' Dashboard'; render(); };
-  window.switchView = (v, btn) => { currentView = v; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); };
+  window.switchView = (v, btn) => {
+    currentView = v;
+    document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if (v === 'trends') {
+      document.getElementById('periodSel').style.display = 'none';
+      renderTrends();
+    } else {
+      render();
+    }
+  };
   window.selectPeriod = p => { currentPeriod = p; render(); };
 
   function getPeriods() {
@@ -334,7 +345,11 @@
     }
     if (!currentPeriod || !periods.includes(currentPeriod)) currentPeriod = periods[0];
     document.getElementById('periodSel').style.display = 'flex';
-    document.getElementById('periodChips').innerHTML = periods.map(p => `<button class="period-chip ${p===currentPeriod?'active':''}" onclick="selectPeriod('${p}')">${p.replace(/_/g,' ')}</button>`).join('');
+    document.getElementById('periodChips').innerHTML = periods.map(p => `
+      <div style="display:inline-flex;align-items:center;gap:4px;margin-right:4px;">
+        <button class="period-chip ${p===currentPeriod?'active':''}" onclick="selectPeriod('${p}')">${p.replace(/_/g,' ')}</button>
+        <button onclick="deletePeriod('${p}')" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:11px;padding:2px 4px;border-radius:2px;" title="Delete this period">✕</button>
+      </div>`).join('');
     const d = getMerged(currentPeriod);
     if (!d) { document.getElementById('dash').innerHTML = '<div style="padding:24px;color:var(--gray);text-align:center;">No data for this period.</div>'; return; }
     document.getElementById('dashSub').textContent = currentPeriod.replace(/_/g,' ') + ' · ' + (currentView==='weekly'?'Weekly':'Monthly');
@@ -492,6 +507,179 @@ ${filesSection}`;
       setP(0,'Error','Failed: '+e.message);
       btn.disabled=false; btn.textContent='🧠 Extract KPIs with AI';
     }
+  };
+
+  // DELETE PERIOD
+  window.deletePeriod = async function(period) {
+    if (!confirm('Delete period "' + period.replace(/_/g,' ') + '"? This cannot be undone.')) return;
+    const ports = currentPortfolio === 'all' ? Object.keys(allData) : [currentPortfolio];
+    const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    for (const p of ports) {
+      if (allData[p] && allData[p][period]) {
+        await remove(ref(db, 'kpis/' + p + '/' + period));
+      }
+    }
+    currentPeriod = null;
+    alert('Period deleted!');
+  };
+
+  // TRENDS VIEW
+  function renderTrends() {
+    const ports = currentPortfolio === 'all' ? Object.keys(allData) : [currentPortfolio];
+    const allPeriods = new Set();
+    ports.forEach(p => { if (allData[p]) Object.keys(allData[p]).forEach(k => allPeriods.add(k)); });
+    const periods = Array.from(allPeriods).sort();
+
+    if (periods.length < 2) {
+      document.getElementById('dash').innerHTML = '<div class="empty-dash"><div class="empty-dash-icon">📈</div><div class="empty-dash-title">Need at least 2 periods</div><div class="empty-dash-text">Upload data for multiple weeks or months to see trends.</div></div>';
+      return;
+    }
+
+    // Build trend data
+    const trendKPIs = [
+      { key: 'occupancy_rate', label: 'Occupancy Rate', format: v => v ? v.toFixed(1)+'%' : '—', target: 95, higher: true },
+      { key: 'vacant_unrented', label: 'Vacant Unrented', format: v => v ?? '—', target: 5, higher: false },
+      { key: 'leads', label: 'Leads', format: v => v ?? '—', higher: true },
+      { key: 'showings', label: 'Showings', format: v => v ?? '—', higher: true },
+      { key: 'leased', label: 'Leased', format: v => v ?? '—', higher: true },
+      { key: 'movein', label: 'Move Ins', format: v => v ?? '—', higher: true },
+      { key: 'moveout', label: 'Move Outs', format: v => v ?? '—', target: 5, higher: false },
+      { key: 'avg_days_lease', label: 'Avg Days to Lease', format: v => v ? v+'d' : '—', target: 20, higher: false },
+      { key: 'wo_completion_rate', label: 'WO Completion', format: v => v ? v.toFixed(1)+'%' : '—', target: 90, higher: true },
+      { key: 'delinquencies', label: 'Delinquencies', format: v => v ?? '—', higher: false },
+      { key: 'renewals', label: 'Renewals', format: v => v ?? '—', higher: true },
+      { key: 'noi', label: 'NOI', format: v => v ? '$'+Number(v).toLocaleString() : '—', higher: true },
+    ];
+
+    function getMergedForPeriod(period) {
+      const m = {};
+      ports.forEach(p => {
+        if (allData[p] && allData[p][period]) {
+          const d = allData[p][period];
+          Object.keys(d).forEach(k => { if (typeof d[k] === 'number') m[k] = (m[k]||0) + d[k]; else if (!m[k]) m[k] = d[k]; });
+        }
+      });
+      // Calculate derived metrics
+      if (m.occupied && m.total_units && !m.occupancy_rate) m.occupancy_rate = (m.occupied/m.total_units)*100;
+      if (m.wo_completed && m.wo_in && !m.wo_completion_rate) m.wo_completion_rate = (m.wo_completed/m.wo_in)*100;
+      return m;
+    }
+
+    function trendArrow(vals) {
+      const valid = vals.filter(v => v !== null && v !== undefined);
+      if (valid.length < 2) return '';
+      const last = valid[valid.length-1];
+      const prev = valid[valid.length-2];
+      if (last > prev) return '<span style="color:var(--green)">↑</span>';
+      if (last < prev) return '<span style="color:var(--red)">↓</span>';
+      return '<span style="color:var(--gray)">→</span>';
+    }
+
+    function cellColor(kpi, val) {
+      if (val === null || val === undefined) return '';
+      if (!kpi.target) return '';
+      if (kpi.higher) return val >= kpi.target ? 'style="color:var(--green)"' : val >= kpi.target*0.9 ? 'style="color:var(--yellow)"' : 'style="color:var(--red)"';
+      else return val <= kpi.target ? 'style="color:var(--green)"' : val <= kpi.target*1.2 ? 'style="color:var(--yellow)"' : 'style="color:var(--red)"';
+    }
+
+    const periodData = periods.map(p => getMergedForPeriod(p));
+    const displayPeriods = periods.slice(-12); // show last 12 periods
+
+    let tableHTML = `
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;background:var(--white);border-radius:4px;border:1px solid rgba(15,31,61,0.07);">
+        <thead>
+          <tr style="background:#fafbfc;">
+            <th style="padding:10px 16px;text-align:left;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);white-space:nowrap;position:sticky;left:0;background:#fafbfc;">KPI</th>
+            ${displayPeriods.map(p => `<th style="padding:10px 14px;text-align:center;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);white-space:nowrap;">${p.replace(/_/g,' ')}</th>`).join('')}
+            <th style="padding:10px 14px;text-align:center;font-size:10px;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);">Trend</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    trendKPIs.forEach((kpi, i) => {
+      const vals = periods.map(p => {
+        const d = getMergedForPeriod(p);
+        return d[kpi.key] !== undefined ? d[kpi.key] : null;
+      });
+      const displayVals = vals.slice(-12);
+      const hasData = displayVals.some(v => v !== null);
+      if (!hasData) return;
+      const bg = i % 2 === 0 ? '' : 'background:rgba(15,31,61,0.015);';
+      tableHTML += `<tr style="${bg}">
+        <td style="padding:10px 16px;font-size:12px;color:var(--navy);font-weight:500;white-space:nowrap;position:sticky;left:0;background:${i%2===0?'var(--white)':'rgba(15,31,61,0.015)'};">${kpi.label}</td>
+        ${displayVals.map((v,j) => `<td style="padding:10px 14px;text-align:center;font-size:13px;font-family:'Cormorant Garamond',serif;${bg}" ${cellColor(kpi, v)}>${kpi.format(v)}</td>`).join('')}
+        <td style="padding:10px 14px;text-align:center;font-size:16px;">${trendArrow(displayVals)}</td>
+      </tr>`;
+    });
+
+    tableHTML += `</tbody></table></div>`;
+
+    // AI Trend Analysis button
+    const aiSection = `
+      <div style="margin-top:20px;background:var(--white);border-radius:4px;border:1px solid rgba(15,31,61,0.07);overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(15,31,61,0.06);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--navy);">✨ AI Trend Analysis</div>
+          <button class="btn-upload-kpi" onclick="genTrendAnalysis()" id="trendBtn">Generate Analysis</button>
+        </div>
+        <div id="trendAnalysis" style="padding:24px;font-size:13px;color:var(--gray);font-style:italic;">Click "Generate Analysis" to have Claude identify meaningful trends, patterns, and insights across all periods.</div>
+      </div>`;
+
+    document.getElementById('dash').innerHTML = tableHTML + aiSection;
+  }
+
+  window.genTrendAnalysis = async function() {
+    const btn = document.getElementById('trendBtn');
+    btn.textContent = 'Analyzing...';
+    btn.disabled = true;
+    document.getElementById('trendAnalysis').textContent = 'Claude is analyzing trends across all periods...';
+    document.getElementById('trendAnalysis').style.fontStyle = 'italic';
+    document.getElementById('trendAnalysis').style.color = 'var(--gray)';
+
+    const ports = currentPortfolio === 'all' ? Object.keys(allData) : [currentPortfolio];
+    const allPeriods = new Set();
+    ports.forEach(p => { if (allData[p]) Object.keys(allData[p]).forEach(k => allPeriods.add(k)); });
+    const periods = Array.from(allPeriods).sort();
+
+    // Build summary of all period data
+    const summaryLines = periods.map(period => {
+      const m = {};
+      ports.forEach(p => {
+        if (allData[p] && allData[p][period]) {
+          const d = allData[p][period];
+          Object.keys(d).forEach(k => { if (typeof d[k] === 'number') m[k] = (m[k]||0) + d[k]; });
+        }
+      });
+      const occ = m.occupied && m.total_units ? ((m.occupied/m.total_units)*100).toFixed(1) : (m.occupancy_rate||'N/A');
+      const wo = m.wo_completed && m.wo_in ? ((m.wo_completed/m.wo_in)*100).toFixed(1) : (m.wo_completion_rate||'N/A');
+      return period.replace(/_/g,' ') + ': Occupancy=' + occ + '%, Leads=' + (m.leads||'N/A') + ', Leased=' + (m.leased||'N/A') + ', MoveIns=' + (m.movein||'N/A') + ', MoveOuts=' + (m.moveout||'N/A') + ', VacantUnrented=' + (m.vacant_unrented||'N/A') + ', WOCompletion=' + wo + '%, Delinquencies=' + (m.delinquencies||'N/A') + ', Renewals=' + (m.renewals||'N/A') + ', NOI=' + (m.noi?'$'+m.noi:'N/A');
+    }).join('
+');
+
+    const prompt = `You are a property management analyst. Analyze these KPI trends for ${portNames[currentPortfolio]} and write a professional narrative analysis.
+
+Identify: (1) positive trends worth highlighting, (2) negative trends requiring attention, (3) seasonal patterns if visible, (4) any KPIs that are consistently below target, (5) one forward-looking recommendation.
+
+Write in plain paragraphs with section labels in ALL CAPS. No markdown. No bullet points for main sections. Be specific with numbers. Keep it under 300 words.
+
+Data:
+${summaryLines}`;
+
+    try {
+      const res = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model:'claude-opus-4-6', max_tokens:500, system:'Write concise trend analyses for property management. Plain text only, no markdown.', messages:[{role:'user',content:prompt}] })
+      });
+      if (!res.ok) throw new Error('API error');
+      const resp = await res.json();
+      document.getElementById('trendAnalysis').textContent = resp.content[0].text.trim();
+      document.getElementById('trendAnalysis').style.fontStyle = 'normal';
+      document.getElementById('trendAnalysis').style.color = 'var(--navy)';
+    } catch(e) {
+      document.getElementById('trendAnalysis').textContent = 'Analysis failed: ' + e.message;
+    }
+    btn.textContent = 'Refresh Analysis';
+    btn.disabled = false;
   };
 
   window.genSummary = async function() {
