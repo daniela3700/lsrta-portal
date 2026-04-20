@@ -454,10 +454,11 @@
     const filesSection = fileContents.map((f,i)=>'--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content).join('\n\n');
     const viewType = period.toLowerCase().includes('week')?'weekly':'monthly';
 
-    const prompt = `Extract KPI data from these Appfolio property management reports. Return ONLY a valid JSON object with these exact keys (use null if not found in the files):
-{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}
-Rules: Return ONLY the JSON. No text before or after. No markdown. No backticks. Use null for missing values. Do NOT calculate or estimate — only use numbers explicitly in the files.
-Files:\n${filesSection}`;
+    const prompt = `{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}
+
+Fill in the above JSON with values extracted from the files below. Replace null with the actual number where found. Return ONLY the completed JSON object — no other text, no explanation, no markdown.
+
+${filesSection}`;
 
     try {
       const res = await fetch('https://lsrta-api.daniela-e0c.workers.dev', {
@@ -466,7 +467,11 @@ Files:\n${filesSection}`;
       });
       if (!res.ok) throw new Error('API error '+res.status);
       const resp = await res.json();
-      let extracted = JSON.parse(resp.content[0].text.trim().replace(/```json|```/g,''));
+      let rawText = resp.content[0].text.trim();
+      // Extract just the JSON object even if Claude added extra text
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found in response');
+      let extracted = JSON.parse(jsonMatch[0]);
       extracted.viewType = viewType;
       extracted.uploadedBy = currentUser.displayName||currentUser.email;
       extracted.uploadedAt = Date.now();
