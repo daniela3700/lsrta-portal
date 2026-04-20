@@ -3,35 +3,546 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Test</title>
+  <title>Dashboard — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--navy:#0f1f3d;--navy-mid:#1a3260;--gold:#c9a84c;--white:#ffffff;--gray:#8a8fa3;--green:#27ae60;--yellow:#f39c12;--red:#e74c3c;--blue:#2980b9;--sw:240px;}
+    body{font-family:'DM Sans',sans-serif;background:#f4f6fa;color:var(--navy);min-height:100vh;display:flex;}
+    .sidebar{width:var(--sw);min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;border-right:1px solid rgba(201,168,76,0.15);}
+    .sb{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.07);}
+    .sb-eye{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+    .sb-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#fff;line-height:1.1;}
+    .sb-name span{color:var(--gold);}
+    .sb-sub{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+    .snav{flex:1;padding:16px 0;overflow-y:auto;}
+    .snl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:12px 24px 6px;}
+    .ni{display:flex;align-items:center;gap:12px;padding:10px 24px;font-size:13px;color:rgba(255,255,255,0.55);cursor:pointer;text-decoration:none;transition:all .2s;border-left:3px solid transparent;}
+    .ni:hover{color:#fff;background:rgba(255,255,255,0.05);}
+    .ni.active{color:#fff;background:rgba(201,168,76,0.1);border-left-color:var(--gold);}
+    .ni-ic{font-size:16px;width:20px;text-align:center;}
+    .sfoot{padding:16px 24px;border-top:1px solid rgba(255,255,255,0.07);}
+    .uinfo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .uav{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--navy);flex-shrink:0;}
+    .uname{font-size:13px;color:#fff;}
+    .urole{font-size:10px;color:rgba(255,255,255,0.35);}
+    .btn-so{width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:2px;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+    .btn-so:hover{border-color:var(--gold);color:var(--gold);}
+    .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+    .topbar{background:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(15,31,61,0.08);position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:12px;}
+    .tb-left{display:flex;flex-direction:column;}
+    .tb-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--navy);}
+    .tb-sub{font-size:11px;color:var(--gray);margin-top:1px;}
+    .ptoggle{display:flex;gap:6px;flex-wrap:wrap;}
+    .pb{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(15,31,61,0.15);background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--gray);cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .pb:hover{border-color:var(--navy);color:var(--navy);}
+    .pb.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .content{padding:24px 28px;flex:1;}
+    .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .vtoggle{display:flex;gap:6px;align-items:center;}
+    .vl{font-size:11px;color:var(--gray);}
+    .vb{padding:5px 14px;border-radius:2px;border:1px solid rgba(15,31,61,0.12);background:#fff;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gray);cursor:pointer;transition:all .2s;}
+    .vb.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .btn-gold{padding:7px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;}
+    .btn-gold:hover{background:#b8963e;}
+    .btn-navy{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+    .btn-navy:hover{background:var(--navy-mid);}
+    .btn-navy:disabled{opacity:.5;cursor:not-allowed;}
+    .aib{background:linear-gradient(135deg,var(--navy) 0%,#1a3260 100%);border-radius:4px;padding:20px 24px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-start;}
+    .aib-ic{font-size:24px;flex-shrink:0;margin-top:2px;}
+    .aib-c{flex:1;}
+    .aib-lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+    .aib-txt{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7;}
+    .aib-empty{font-style:italic;color:rgba(255,255,255,0.4);}
+    .aib-meta{font-size:10px;color:rgba(255,255,255,0.35);margin-top:8px;}
+    .aib-btn{padding:6px 12px;background:rgba(201,168,76,0.2);border:1px solid rgba(201,168,76,0.3);border-radius:2px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;align-self:flex-start;}
+    .prow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+    .plbl{font-size:11px;color:var(--gray);}
+    .pchip{padding:4px 10px;border-radius:20px;border:1px solid rgba(15,31,61,0.12);background:#fff;font-size:11px;color:var(--gray);cursor:pointer;transition:all .2s;}
+    .pchip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .delbtn{background:none;border:none;cursor:pointer;color:var(--gray);font-size:11px;padding:2px 4px;}
+    .delbtn:hover{color:var(--red);}
+    .shdr{display:flex;align-items:center;gap:10px;margin:24px 0 14px;}
+    .stitle{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);white-space:nowrap;}
+    .sline{flex:1;height:1px;background:rgba(15,31,61,0.08);}
+    .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+    .kc{background:#fff;border-radius:4px;padding:16px 18px;border:1px solid rgba(15,31,61,0.07);position:relative;overflow:hidden;}
+    .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(15,31,61,0.07);}
+    .kc.cg::before{background:var(--green);}
+    .kc.cy::before{background:var(--yellow);}
+    .kc.cr::before{background:var(--red);}
+    .kc.cb::before{background:var(--blue);}
+    .kc.cgo::before{background:var(--gold);}
+    .kc-l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:8px;line-height:1.4;}
+    .kc-v{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--navy);line-height:1;margin-bottom:4px;}
+    .kc-s{font-size:11px;color:var(--gray);margin-top:3px;}
+    .kc-t{font-size:10px;color:rgba(138,143,163,0.7);margin-top:3px;}
+    .bdg{display:inline-flex;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;margin-top:6px;}
+    .bdg.bg-g{background:rgba(39,174,96,0.1);color:var(--green);}
+    .bdg.bg-y{background:rgba(243,156,18,0.1);color:var(--yellow);}
+    .bdg.bg-r{background:rgba(231,76,60,0.1);color:var(--red);}
+    .funnel{background:#fff;border-radius:4px;border:1px solid rgba(15,31,61,0.07);padding:20px 24px;margin-bottom:14px;}
+    .fsteps{display:flex;align-items:stretch;}
+    .fs{flex:1;text-align:center;padding:12px 8px;position:relative;}
+    .fs::after{content:'›';position:absolute;right:-4px;top:40%;font-size:20px;color:rgba(15,31,61,0.2);}
+    .fs:last-child::after{display:none;}
+    .fs-n{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--navy);line-height:1;}
+    .fs-l{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;}
+    .fs-c{font-size:11px;margin-top:3px;font-weight:500;}
+    .empty{text-align:center;padding:60px 24px;}
+    .empty-ic{font-size:48px;margin-bottom:16px;}
+    .empty-t{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navy);margin-bottom:8px;}
+    .empty-s{font-size:13px;color:var(--gray);line-height:1.6;max-width:400px;margin:0 auto 20px;}
+    .ttable{width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;margin-bottom:20px;}
+    .ttable th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);background:#fafbfc;white-space:nowrap;}
+    .ttable td{padding:10px 14px;font-size:13px;color:var(--navy);border-bottom:1px solid rgba(15,31,61,0.05);text-align:center;}
+    .ttable td:first-child{text-align:left;font-weight:500;white-space:nowrap;}
+    .ttable tr:last-child td{border-bottom:none;}
+    .ttable tr:nth-child(even) td{background:rgba(15,31,61,0.015);}
+    .tu{color:var(--green);}
+    .td2{color:var(--red);}
+    .tf{color:var(--gray);}
+    .abox{background:#fff;border-radius:4px;border:1px solid rgba(15,31,61,0.07);overflow:hidden;margin-bottom:20px;}
+    .abox-h{padding:16px 20px;border-bottom:1px solid rgba(15,31,61,0.06);display:flex;align-items:center;justify-content:space-between;}
+    .abox-t{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);}
+    .abox-b{padding:24px;font-size:13px;line-height:1.7;color:var(--navy);white-space:pre-wrap;}
+    .mbg{position:fixed;inset:0;background:rgba(15,31,61,0.6);z-index:200;display:none;align-items:center;justify-content:center;}
+    .mbg.open{display:flex;}
+    .modal{background:#fff;border-radius:4px;width:92%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+    .mhdr{padding:20px 24px;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;align-items:center;justify-content:space-between;}
+    .mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--navy);}
+    .mx{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);}
+    .mbody{padding:24px;}
+    .mrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    .mf label{display:block;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:6px;}
+    .mf input,.mf select{width:100%;padding:9px 12px;border:1px solid rgba(15,31,61,0.12);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--navy);outline:none;}
+    .mf input:focus,.mf select:focus{border-color:var(--gold);}
+    .dz{border:2px dashed rgba(15,31,61,0.15);border-radius:4px;padding:28px 16px;text-align:center;cursor:pointer;background:#fafbfc;margin:16px 0;transition:all .2s;}
+    .dz:hover{border-color:var(--gold);}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+    .chip{display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(15,31,61,0.05);border:1px solid rgba(15,31,61,0.1);border-radius:20px;font-size:11px;color:var(--navy);}
+    .chip-x{background:none;border:none;cursor:pointer;color:var(--gray);font-size:12px;}
+    .pwrap{display:none;margin-bottom:16px;}
+    .ptop{font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;}
+    .pbg{height:4px;background:rgba(15,31,61,0.07);border-radius:2px;}
+    .pfill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;}
+    .pstat{font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;}
+    #screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .4s;}
+    .ring{width:40px;height:40px;border:3px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    .rt{font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-align:center;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:800px){.sidebar{display:none;}.main{margin-left:0;}.g4{grid-template-columns:repeat(2,1fr);}}
+  </style>
 </head>
 <body>
-  <h1 id="status">Loading...</h1>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
-      authDomain: "lsrta-portal.firebaseapp.com",
-      databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
-      projectId: "lsrta-portal",
-      storageBucket: "lsrta-portal.firebasestorage.app",
-      messagingSenderId: "29459242340",
-      appId: "1:29459242340:web:a15cc3ada8fad299816e71"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        document.getElementById('status').textContent = 'Not logged in - redirecting...';
-        window.location.href = 'index.html';
-      } else {
-        document.getElementById('status').textContent = 'Hello ' + user.displayName + '! Dashboard works!';
-      }
-    });
-  </script>
+<div id="screen"><div><div class="ring"></div><div class="rt">Loading dashboard...</div></div></div>
+
+<nav class="sidebar">
+  <div class="sb">
+    <div class="sb-eye">Internal Portal</div>
+    <div class="sb-name">Legacy<br><span>Signature</span></div>
+    <div class="sb-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="snav">
+    <div class="snl">Main</div>
+    <a class="ni active" href="dashboard.html"><span class="ni-ic">🏠</span> Dashboard</a>
+    <a class="ni" href="reports.html"><span class="ni-ic">📊</span> Reports</a>
+    <a class="ni" href="bulk.html"><span class="ni-ic">📦</span> Bulk Analysis</a>
+    <a class="ni" href="compare.html"><span class="ni-ic">🔄</span> Compare</a>
+    <a class="ni" href="rentroll.html"><span class="ni-ic">📋</span> Rent Roll</a>
+    <div class="snl">Team</div>
+    <a class="ni" href="chat.html"><span class="ni-ic">💬</span> Team Chat</a>
+    <div class="snl">Admin</div>
+    <a class="ni" href="admin.html"><span class="ni-ic">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sfoot">
+    <div class="uinfo">
+      <div class="uav" id="uInit">?</div>
+      <div><div class="uname" id="uName">Loading...</div><div class="urole">Team Member</div></div>
+    </div>
+    <button class="btn-so" onclick="doSignOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="dashTitle">Portfolio Dashboard</div>
+      <div class="tb-sub" id="dashSub">Select a portfolio and upload reports to populate</div>
+    </div>
+    <div class="ptoggle">
+      <button class="pb active" onclick="setPort('all',this)">All Portfolios</button>
+      <button class="pb" onclick="setPort('nc_gladysh',this)">NC Gladysh Capital</button>
+      <button class="pb" onclick="setPort('sc_platinum',this)">SC Platinum Estates</button>
+      <button class="pb" onclick="setPort('tx_acorn',this)">TX Acorn Ridge</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="toprow">
+      <div class="vtoggle">
+        <span class="vl">View:</span>
+        <button class="vb active" onclick="setView('weekly',this)">Weekly</button>
+        <button class="vb" onclick="setView('monthly',this)">Monthly</button>
+        <button class="vb" onclick="setView('trends',this)">📈 Trends</button>
+      </div>
+      <button class="btn-gold" onclick="openModal()">📤 Upload Appfolio Reports</button>
+    </div>
+    <div class="aib">
+      <div class="aib-ic">✨</div>
+      <div class="aib-c">
+        <div class="aib-lbl">AI Executive Summary</div>
+        <div class="aib-txt aib-empty" id="aiTxt">Upload Appfolio reports to generate an AI executive summary.</div>
+        <div class="aib-meta" id="aiMeta"></div>
+      </div>
+      <button class="aib-btn" id="aiBtn" onclick="genSummary()" style="display:none;">↻ Refresh</button>
+    </div>
+    <div id="prow" style="display:none;" class="prow">
+      <span class="plbl">Period:</span>
+      <div id="pchips"></div>
+    </div>
+    <div id="dash">
+      <div class="empty"><div class="empty-ic">📊</div><div class="empty-t">No data yet</div><div class="empty-s">Upload your Appfolio exports and Claude will automatically extract all KPIs.</div><button class="btn-navy" onclick="openModal()">📤 Upload Reports Now</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle">Upload Appfolio Reports</div><button class="mx" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="mf"><label>Portfolio</label><select id="mPort"><option value="nc_gladysh">NC Gladysh Capital</option><option value="sc_platinum">SC Platinum Estates</option><option value="tx_acorn">TX Acorn Ridge</option></select></div>
+        <div class="mf"><label>Period (e.g. Week 15 or April 2026)</label><input type="text" id="mPer" placeholder="e.g. April 2026"/></div>
+      </div>
+      <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div style="font-size:13px;font-weight:500;color:var(--navy);margin-bottom:4px;">Drop Appfolio exports here</div>
+        <div style="font-size:11px;color:var(--gray);">Occupancy · Leasing · Work Orders · Cash Flow · Rent Roll</div>
+      </div>
+      <input type="file" id="fi" multiple accept=".csv,.xlsx,.xls,.pdf,.docx,.txt" style="display:none;"/>
+      <div class="chips" id="chips"></div>
+      <div class="pwrap" id="pw">
+        <div class="ptop"><span id="pl">Reading...</span><span id="pp">0%</span></div>
+        <div class="pbg"><div class="pfill" id="pf"></div></div>
+        <div class="pstat" id="ps"></div>
+      </div>
+      <button class="btn-navy" id="exBtn" onclick="extractKPIs()" style="width:100%;">🧠 Extract KPIs with AI</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({apiKey:"AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",authDomain:"lsrta-portal.firebaseapp.com",databaseURL:"https://lsrta-portal-default-rtdb.firebaseio.com",projectId:"lsrta-portal",storageBucket:"lsrta-portal.firebasestorage.app",messagingSenderId:"29459242340",appId:"1:29459242340:web:a15cc3ada8fad299816e71"});
+const auth = getAuth(app);
+const db = getDatabase(app);
+const N = {all:'All Portfolios',nc_gladysh:'NC Gladysh Capital',sc_platinum:'SC Platinum Estates',tx_acorn:'TX Acorn Ridge'};
+let CU=null,CP='all',CV='weekly',CK=null,CD={},MF=[];
+
+onAuthStateChanged(auth, function(u) {
+  if (!u) { window.location.href='index.html'; return; }
+  CU=u;
+  var n=u.displayName||u.email;
+  document.getElementById('uName').textContent=n;
+  document.getElementById('uInit').textContent=n.split(' ').map(function(x){return x[0];}).join('').toUpperCase().slice(0,2);
+  var s=document.getElementById('screen');
+  s.style.opacity='0';
+  setTimeout(function(){s.style.display='none';},400);
+  onValue(ref(db,'kpis'),function(snap){CD=snap.exists()?snap.val():{};draw();});
+});
+
+window.doSignOut=function(){signOut(auth).then(function(){window.location.href='index.html';});};
+window.setPort=function(p,btn){CP=p;CK=null;document.querySelectorAll('.pb').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');document.getElementById('dashTitle').textContent=N[p]+' Dashboard';draw();};
+window.setView=function(v,btn){CV=v;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');if(v==='trends'){document.getElementById('prow').style.display='none';drawTrends();}else{draw();}};
+window.selPeriod=function(p){CK=p;draw();};
+
+function getPorts(){return CP==='all'?Object.keys(CD):[CP];}
+
+function getPeriods(){
+  var s=new Set();
+  getPorts().forEach(function(p){if(CD[p])Object.keys(CD[p]).forEach(function(k){var vt=CD[p][k].viewType;if(!vt||vt===CV)s.add(k);});});
+  return Array.from(s).sort().reverse();
+}
+
+function getMerged(p){
+  var m={};
+  getPorts().forEach(function(port){if(CD[port]&&CD[port][p]){var d=CD[port][p];Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});}});
+  if(m.occupied&&m.total_units&&!m.occupancy_rate)m.occupancy_rate=(m.occupied/m.total_units)*100;
+  if(m.wo_completed&&m.wo_in&&!m.wo_completion_rate)m.wo_completion_rate=(m.wo_completed/m.wo_in)*100;
+  return Object.keys(m).length>0?m:null;
+}
+
+function mkCard(col,lbl,val,sub,tgt,st){
+  var h='<div class="kc '+col+'"><div class="kc-l">'+lbl+'</div><div class="kc-v">'+(val!==null&&val!==undefined?val:'—')+'</div>';
+  if(sub)h+='<div class="kc-s">'+sub+'</div>';
+  if(tgt)h+='<div class="kc-t">Target: '+tgt+'</div>';
+  if(st){var c=st==='g'?'bg-g':st==='y'?'bg-y':'bg-r';var t=st==='g'?'✅ On Target':st==='y'?'⚠️ Watch':'🔴 Below Target';h+='<div class="bdg '+c+'">'+t+'</div>';}
+  return h+'</div>';
+}
+
+function mkSec(ic,t){return '<div class="shdr"><div class="stitle">'+ic+' '+t+'</div><div class="sline"></div></div>';}
+
+function draw(){
+  var periods=getPeriods();
+  if(periods.length===0){
+    document.getElementById('prow').style.display='none';
+    document.getElementById('aiBtn').style.display='none';
+    document.getElementById('aiTxt').textContent='Upload Appfolio reports to generate an AI executive summary.';
+    document.getElementById('aiTxt').className='aib-txt aib-empty';
+    document.getElementById('aiMeta').textContent='';
+    document.getElementById('dash').innerHTML='<div class="empty"><div class="empty-ic">📊</div><div class="empty-t">No data yet for '+N[CP]+'</div><div class="empty-s">Upload your Appfolio exports and Claude will automatically extract all KPIs.</div><button class="btn-navy" onclick="openModal()">📤 Upload Reports Now</button></div>';
+    return;
+  }
+  if(!CK||!periods.includes(CK))CK=periods[0];
+  document.getElementById('prow').style.display='flex';
+  var chips='';
+  periods.forEach(function(p){
+    chips+='<div style="display:inline-flex;align-items:center;gap:3px;margin-right:4px;">';
+    chips+='<button class="pchip '+(p===CK?'active':'')+'" onclick="selPeriod(\''+p+'\')">'+p.replace(/_/g,' ')+'</button>';
+    chips+='<button class="delbtn" onclick="delP(\''+p+'\')" title="Delete">✕</button>';
+    chips+='</div>';
+  });
+  document.getElementById('pchips').innerHTML=chips;
+  var d=getMerged(CK);
+  if(!d){document.getElementById('dash').innerHTML='<div style="padding:24px;color:var(--gray);text-align:center;">No data for this period.</div>';return;}
+  document.getElementById('dashSub').textContent=CK.replace(/_/g,' ')+' · '+(CV==='weekly'?'Weekly':'Monthly');
+  document.getElementById('aiBtn').style.display='block';
+  if(d.aiSummary){document.getElementById('aiTxt').textContent=d.aiSummary;document.getElementById('aiTxt').className='aib-txt';document.getElementById('aiMeta').textContent='Generated '+(d.aiSummaryDate||'')+' · '+N[CP];}
+  else{document.getElementById('aiTxt').textContent='Click Refresh to generate an AI executive summary.';document.getElementById('aiTxt').className='aib-txt aib-empty';document.getElementById('aiMeta').textContent='';}
+
+  var occ=d.occupancy_rate?parseFloat(d.occupancy_rate).toFixed(1):null;
+  var stab=d.stabilized_units&&d.occupied?((d.occupied/d.stabilized_units)*100).toFixed(1):null;
+  var wo=d.wo_completion_rate?parseFloat(d.wo_completion_rate).toFixed(1):null;
+  var sc=d.showings&&d.leads?((d.showings/d.leads)*100).toFixed(1):null;
+  var ac=d.applications&&d.showings?((d.applications/d.showings)*100).toFixed(1):null;
+  var lc=d.leased&&d.applications?((d.leased/d.applications)*100).toFixed(1):null;
+  var occC=occ?(occ>=95?'cg':occ>=85?'cy':'cr'):'';
+  var occS=occ?(occ>=95?'g':occ>=85?'y':'r'):null;
+  var stabC=stab?(stab>=95?'cg':stab>=85?'cy':'cr'):'';
+  var stabS=stab?(stab>=95?'g':stab>=85?'y':'r'):null;
+  var woC=wo?(wo>=90?'cg':wo>=70?'cy':'cr'):'';
+  var woS=wo?(wo>=90?'g':wo>=70?'y':'r'):null;
+  var moC=d.moveout!=null?(d.moveout<=5?'cg':d.moveout<=8?'cy':'cr'):'';
+  var moS=d.moveout!=null?(d.moveout<=5?'g':d.moveout<=8?'y':'r'):null;
+  var collC=d.collection_rate?(d.collection_rate>=98?'cg':d.collection_rate>=90?'cy':'cr'):'';
+  var collS=d.collection_rate?(d.collection_rate>=98?'g':d.collection_rate>=90?'y':'r'):null;
+  var dqC=d.delinquencies!=null?(d.delinquencies<=2?'cg':d.delinquencies<=5?'cy':'cr'):'';
+  var evC=d.evictions!=null?(d.evictions===0?'cg':'cr'):'';
+  var nm=d.movein!=null&&d.moveout!=null?'+'+(d.movein-d.moveout):'—';
+
+  var h='';
+  h+=mkSec('🏠','Occupancy');
+  h+='<div class="g4">';
+  h+=mkCard('cb','Total Units',d.total_units!=null?d.total_units:null,'Current portfolio size');
+  h+=mkCard(occC,'Occupancy Rate — Total',occ?occ+'%':null,d.total_units?d.total_units+' total units':null,'≥ 95%',occS);
+  h+=mkCard(stabC,'Occupancy — Stabilized',stab?stab+'%':null,d.stabilized_units?d.stabilized_units+' stabilized':null,'≥ 95%',stabS);
+  h+=mkCard(moC,'Move Outs',d.moveout!=null?d.moveout:null,'Move Ins: '+(d.movein!=null?d.movein:'—')+'  |  Net: '+nm,'< 5/period',moS);
+  h+='</div><div class="g4">';
+  h+=mkCard(d.vacant_unrented>12?'cr':d.vacant_unrented>5?'cy':'cg','Vacant Unrented',d.vacant_unrented!=null?d.vacant_unrented:null,'Vacant Rented: '+(d.vacant_rented!=null?d.vacant_rented:'—'));
+  h+=mkCard('cgo','Notice Given',d.notice_unrented!=null?d.notice_unrented:null,'Notice Rented: '+(d.notice_rented!=null?d.notice_rented:'—'));
+  h+=mkCard('cb','Total Occupied',d.occupied!=null?d.occupied:null);
+  h+=mkCard('cb','Inbound Calls',d.inbound_calls!=null?d.inbound_calls:null);
+  h+='</div>';
+
+  h+=mkSec('🎯','Leasing Funnel');
+  h+='<div class="funnel"><div class="fsteps">';
+  h+='<div class="fs"><div class="fs-n">'+(d.leads!=null?d.leads:'—')+'</div><div class="fs-l">Leads</div></div>';
+  h+='<div class="fs"><div class="fs-n">'+(d.showings!=null?d.showings:'—')+'</div><div class="fs-l">Showings</div>';
+  if(sc)h+='<div class="fs-c" style="color:'+(sc>=40?'var(--green)':'var(--yellow)')+'">'+sc+'%</div>';
+  h+='</div><div class="fs"><div class="fs-n">'+(d.applications!=null?d.applications:'—')+'</div><div class="fs-l">Applications</div>';
+  if(ac)h+='<div class="fs-c" style="color:'+(ac>=50?'var(--green)':'var(--yellow)')+'">'+ac+'%</div>';
+  h+='</div><div class="fs"><div class="fs-n">'+(d.leased!=null?d.leased:'—')+'</div><div class="fs-l">Leased</div>';
+  if(lc)h+='<div class="fs-c" style="color:'+(lc>=50?'var(--green)':'var(--yellow)')+'">'+lc+'%</div>';
+  h+='</div><div class="fs"><div class="fs-n">'+(d.movein!=null?d.movein:'—')+'</div><div class="fs-l">Move Ins</div></div>';
+  var dc=d.avg_days_lease!=null?(d.avg_days_lease<=20?'var(--green)':d.avg_days_lease<=25?'var(--yellow)':'var(--red)'):'var(--navy)';
+  h+='<div class="fs"><div class="fs-n" style="color:'+dc+'">'+(d.avg_days_lease!=null?d.avg_days_lease+'d':'—')+'</div><div class="fs-l">Avg Days to Lease</div><div class="fs-c" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>';
+  h+='</div></div>';
+
+  h+=mkSec('🔧','Maintenance');
+  h+='<div class="g4">';
+  h+=mkCard('cb','Incoming Work Orders',d.wo_in!=null?d.wo_in:null);
+  h+=mkCard(woC,'WO Completion Rate',wo?wo+'%':null,(d.wo_completed!=null?d.wo_completed:'—')+' of '+(d.wo_in!=null?d.wo_in:'—')+' completed','≥ 90%',woS);
+  h+=mkCard('cgo','Unit Turns Completed',d.turns_done!=null?d.turns_done:null,'In Progress: '+(d.turns_prog!=null?d.turns_prog:'—'));
+  h+=mkCard('','WO Canceled',d.wo_cancel!=null?d.wo_cancel:null);
+  h+='</div>';
+
+  h+=mkSec('👥','Tenant Relations');
+  h+='<div class="g4">';
+  h+=mkCard(dqC,'Delinquencies',d.delinquencies!=null?d.delinquencies:null,d.delinquencies_amt?'$'+Number(d.delinquencies_amt).toLocaleString():null);
+  h+=mkCard(evC,'Evictions in Progress',d.evictions!=null?d.evictions:null);
+  h+=mkCard('cg','Renewals',d.renewals!=null?d.renewals:null);
+  h+=mkCard(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',collS);
+  h+='</div>';
+
+  if(d.noi||d.total_income){
+    h+=mkSec('💰','Financials');
+    h+='<div class="g4">';
+    h+=mkCard('cg','Net Operating Income',d.noi?'$'+Number(d.noi).toLocaleString():null);
+    h+=mkCard('cb','Total Operating Income',d.total_income?'$'+Number(d.total_income).toLocaleString():null);
+    h+=mkCard(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',collS);
+    var mg=d.noi&&d.total_income?((d.noi/d.total_income)*100).toFixed(1)+'%':null;
+    h+=mkCard('cgo','NOI Margin',mg);
+    h+='</div>';
+  }
+
+  document.getElementById('dash').innerHTML=h;
+}
+
+function drawTrends(){
+  var ap=new Set();
+  getPorts().forEach(function(p){if(CD[p])Object.keys(CD[p]).forEach(function(k){ap.add(k);});});
+  var periods=Array.from(ap).sort();
+  if(periods.length<2){document.getElementById('dash').innerHTML='<div class="empty"><div class="empty-ic">📈</div><div class="empty-t">Need at least 2 periods</div><div class="empty-s">Upload data for multiple weeks or months to see trends.</div></div>';return;}
+  var kpis=[
+    {key:'occupancy_rate',lbl:'Occupancy Rate',fmt:function(v){return v?parseFloat(v).toFixed(1)+'%':'—';},tgt:95,hi:true},
+    {key:'vacant_unrented',lbl:'Vacant Unrented',fmt:function(v){return v!=null?v:'—';},tgt:5,hi:false},
+    {key:'leads',lbl:'Leads',fmt:function(v){return v!=null?v:'—';},hi:true},
+    {key:'showings',lbl:'Showings',fmt:function(v){return v!=null?v:'—';},hi:true},
+    {key:'leased',lbl:'Leased',fmt:function(v){return v!=null?v:'—';},hi:true},
+    {key:'movein',lbl:'Move Ins',fmt:function(v){return v!=null?v:'—';},hi:true},
+    {key:'moveout',lbl:'Move Outs',fmt:function(v){return v!=null?v:'—';},tgt:5,hi:false},
+    {key:'avg_days_lease',lbl:'Avg Days to Lease',fmt:function(v){return v!=null?v+'d':'—';},tgt:20,hi:false},
+    {key:'wo_completion_rate',lbl:'WO Completion',fmt:function(v){return v?parseFloat(v).toFixed(1)+'%':'—';},tgt:90,hi:true},
+    {key:'delinquencies',lbl:'Delinquencies',fmt:function(v){return v!=null?v:'—';},hi:false},
+    {key:'renewals',lbl:'Renewals',fmt:function(v){return v!=null?v:'—';},hi:true},
+    {key:'noi',lbl:'NOI',fmt:function(v){return v?'$'+Number(v).toLocaleString():'—';},hi:true}
+  ];
+  function mg(p){var m={};getPorts().forEach(function(port){if(CD[port]&&CD[port][p]){var d=CD[port][p];Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});}});if(m.occupied&&m.total_units&&!m.occupancy_rate)m.occupancy_rate=(m.occupied/m.total_units)*100;if(m.wo_completed&&m.wo_in&&!m.wo_completion_rate)m.wo_completion_rate=(m.wo_completed/m.wo_in)*100;return m;}
+  function cs(kpi,val){if(val===null||val===undefined||!kpi.tgt)return '';if(kpi.hi)return val>=kpi.tgt?'color:var(--green)':val>=kpi.tgt*0.9?'color:var(--yellow)':'color:var(--red)';return val<=kpi.tgt?'color:var(--green)':val<=kpi.tgt*1.2?'color:var(--yellow)':'color:var(--red)';}
+  function arr(vals){var v=vals.filter(function(x){return x!=null;});if(v.length<2)return '<span class="tf">→</span>';return v[v.length-1]>v[v.length-2]?'<span class="tu">↑</span>':v[v.length-1]<v[v.length-2]?'<span class="td2">↓</span>':'<span class="tf">→</span>';}
+  var disp=periods.slice(-10);
+  var h='<div style="overflow-x:auto;"><table class="ttable"><thead><tr><th>KPI</th>';
+  disp.forEach(function(p){h+='<th>'+p.replace(/_/g,' ')+'</th>';});
+  h+='<th>Trend</th></tr></thead><tbody>';
+  kpis.forEach(function(kpi){
+    var vals=periods.map(function(p){var m=mg(p);return m[kpi.key]!=null?m[kpi.key]:null;});
+    var dv=vals.slice(-10);
+    if(dv.every(function(v){return v===null;}))return;
+    h+='<tr><td>'+kpi.lbl+'</td>';
+    dv.forEach(function(v){var st=cs(kpi,v);h+='<td'+(st?' style="'+st+'"':'')+'>'+kpi.fmt(v)+'</td>';});
+    h+='<td>'+arr(dv)+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="abox"><div class="abox-h"><div class="abox-t">✨ AI Trend Analysis</div><button class="btn-gold" onclick="genTrends()" id="tBtn">Generate Analysis</button></div><div class="abox-b" id="tBody" style="color:var(--gray);font-style:italic;">Click Generate Analysis to have Claude identify meaningful trends across all periods.</div></div>';
+  document.getElementById('dash').innerHTML=h;
+}
+
+window.delP=async function(p){
+  if(!confirm('Delete "'+p.replace(/_/g,' ')+'"? Cannot be undone.'))return;
+  var ports=getPorts();
+  for(var i=0;i<ports.length;i++){if(CD[ports[i]]&&CD[ports[i]][p])await remove(ref(db,'kpis/'+ports[i]+'/'+p));}
+};
+
+window.genSummary=async function(){
+  var d=getMerged(CK);if(!d)return;
+  document.getElementById('aiTxt').textContent='Generating summary...';
+  document.getElementById('aiTxt').className='aib-txt aib-empty';
+  var occ=d.occupancy_rate?parseFloat(d.occupancy_rate).toFixed(1):'N/A';
+  var wo=d.wo_completion_rate?parseFloat(d.wo_completion_rate).toFixed(1):'N/A';
+  var prompt='Write a 3-4 sentence executive summary for a property management CEO. Be direct. Mention what is performing well, what needs attention, and one forward-looking point. No bullet points. Plain paragraph only.\nPortfolio: '+N[CP]+' | Period: '+CK.replace(/_/g,' ')+'\nOccupancy: '+occ+'% (target 95%) | Units: '+(d.total_units||'N/A')+' | Vacant Unrented: '+(d.vacant_unrented!=null?d.vacant_unrented:'N/A')+'\nLeads: '+(d.leads||'N/A')+' | Showings: '+(d.showings||'N/A')+' | Leased: '+(d.leased||'N/A')+'\nMove Ins: '+(d.movein!=null?d.movein:'N/A')+' | Move Outs: '+(d.moveout!=null?d.moveout:'N/A')+' | Avg Days to Lease: '+(d.avg_days_lease||'N/A')+'\nWO Completion: '+wo+'% | Delinquencies: '+(d.delinquencies!=null?d.delinquencies:'N/A')+' | Evictions: '+(d.evictions!=null?d.evictions:'N/A')+' | Renewals: '+(d.renewals!=null?d.renewals:'N/A')+' | NOI: '+(d.noi?'$'+d.noi:'N/A');
+  try{
+    var res=await fetch('https://lsrta-api.daniela-e0c.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:300,system:'Write concise executive summaries. Plain text only.',messages:[{role:'user',content:prompt}]})});
+    if(!res.ok)throw new Error('API error');
+    var resp=await res.json();
+    var sum=resp.content[0].text.trim();
+    var key=CK.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
+    var ports=getPorts();
+    for(var i=0;i<ports.length;i++){if(CD[ports[i]]&&CD[ports[i]][key]){await set(ref(db,'kpis/'+ports[i]+'/'+key+'/aiSummary'),sum);await set(ref(db,'kpis/'+ports[i]+'/'+key+'/aiSummaryDate'),new Date().toLocaleDateString());}}
+    document.getElementById('aiTxt').textContent=sum;
+    document.getElementById('aiTxt').className='aib-txt';
+    document.getElementById('aiMeta').textContent='Generated '+new Date().toLocaleDateString()+' · '+N[CP];
+  }catch(e){document.getElementById('aiTxt').textContent='Could not generate summary. Please try again.';}
+};
+
+window.genTrends=async function(){
+  var btn=document.getElementById('tBtn');
+  btn.textContent='Analyzing...';btn.disabled=true;
+  document.getElementById('tBody').textContent='Claude is analyzing trends...';
+  document.getElementById('tBody').style.fontStyle='italic';
+  document.getElementById('tBody').style.color='var(--gray)';
+  var ap=new Set();
+  getPorts().forEach(function(p){if(CD[p])Object.keys(CD[p]).forEach(function(k){ap.add(k);});});
+  var periods=Array.from(ap).sort();
+  function mg(p){var m={};getPorts().forEach(function(port){if(CD[port]&&CD[port][p]){var d=CD[port][p];Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});}});if(m.occupied&&m.total_units&&!m.occupancy_rate)m.occupancy_rate=(m.occupied/m.total_units)*100;if(m.wo_completed&&m.wo_in&&!m.wo_completion_rate)m.wo_completion_rate=(m.wo_completed/m.wo_in)*100;return m;}
+  var lines=periods.map(function(p){var m=mg(p);return p.replace(/_/g,' ')+': Occ='+(m.occupancy_rate?parseFloat(m.occupancy_rate).toFixed(1)+'%':'N/A')+', Leads='+(m.leads||'N/A')+', Leased='+(m.leased||'N/A')+', MoveIns='+(m.movein!=null?m.movein:'N/A')+', MoveOuts='+(m.moveout!=null?m.moveout:'N/A')+', VacantUnrented='+(m.vacant_unrented!=null?m.vacant_unrented:'N/A')+', WOCompletion='+(m.wo_completion_rate?parseFloat(m.wo_completion_rate).toFixed(1)+'%':'N/A')+', Delinquencies='+(m.delinquencies!=null?m.delinquencies:'N/A')+', Renewals='+(m.renewals!=null?m.renewals:'N/A');}).join('\n');
+  var prompt='You are a property management analyst. Analyze these KPI trends for '+N[CP]+' and write a professional narrative. Identify: positive trends, negative trends, seasonal patterns, KPIs consistently below target, and one recommendation. Write in plain paragraphs with ALL CAPS section labels. No markdown. Under 300 words.\n\n'+lines;
+  try{
+    var res=await fetch('https://lsrta-api.daniela-e0c.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:500,system:'Write concise trend analyses. Plain text only, no markdown.',messages:[{role:'user',content:prompt}]})});
+    if(!res.ok)throw new Error('API error');
+    var resp=await res.json();
+    document.getElementById('tBody').textContent=resp.content[0].text.trim();
+    document.getElementById('tBody').style.fontStyle='normal';
+    document.getElementById('tBody').style.color='var(--navy)';
+  }catch(e){document.getElementById('tBody').textContent='Analysis failed: '+e.message;}
+  btn.textContent='Refresh Analysis';btn.disabled=false;
+};
+
+window.openModal=function(){if(CP!=='all')document.getElementById('mPort').value=CP;document.getElementById('modal').classList.add('open');};
+window.closeModal=function(){document.getElementById('modal').classList.remove('open');};
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();});
+
+var dz=document.getElementById('dz');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--gold)';});
+dz.addEventListener('dragleave',function(){dz.style.borderColor='';});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='';addF(Array.from(e.dataTransfer.files));});
+document.getElementById('fi').addEventListener('change',function(e){addF(Array.from(e.target.files));});
+
+function addF(files){files.forEach(function(f){if(!MF.find(function(x){return x.name===f.name;}))MF.push(f);});renderC();}
+function renderC(){document.getElementById('chips').innerHTML=MF.map(function(f,i){return '<div class="chip">📄 '+f.name+' <button class="chip-x" onclick="rmF('+i+')">✕</button></div>';}).join('');}
+window.rmF=function(i){MF.splice(i,1);renderC();};
+
+function sp(pct,lbl,st){document.getElementById('pf').style.width=pct+'%';document.getElementById('pp').textContent=pct+'%';document.getElementById('pl').textContent=lbl;document.getElementById('ps').textContent=st;}
+
+window.extractKPIs=async function(){
+  if(MF.length===0)return alert('Please select at least one file.');
+  var port=document.getElementById('mPort').value;
+  var per=document.getElementById('mPer').value.trim();
+  if(!per)return alert('Please enter the period.');
+  var btn=document.getElementById('exBtn');
+  btn.disabled=true;btn.textContent='Extracting...';
+  document.getElementById('pw').style.display='block';
+  sp(10,'Reading files...','Loading your Appfolio exports...');
+  var fc=[];
+  for(var i=0;i<MF.length;i++){
+    sp(Math.round(10+(i/MF.length)*30),'Reading...','Reading: '+MF[i].name);
+    try{var t=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(MF[i]);});fc.push({name:MF[i].name,content:t.length>4000?t.substring(0,4000):t});}
+    catch(e){fc.push({name:MF[i].name,content:'[File: '+MF[i].name+']'});}
+  }
+  sp(50,'Sending to AI...','Claude is extracting KPIs...');
+  var fs=fc.map(function(f,i){return '--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content;}).join('\n\n');
+  var vt=per.toLowerCase().includes('week')?'weekly':'monthly';
+  var prompt='{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}\n\nFill in the above JSON with values from the files below. Return ONLY the completed JSON. No other text.\n\n'+fs;
+  try{
+    var res=await fetch('https://lsrta-api.daniela-e0c.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:800,system:'Return only valid JSON with no extra text.',messages:[{role:'user',content:prompt}]})});
+    if(!res.ok)throw new Error('API error '+res.status);
+    var resp=await res.json();
+    var raw=resp.content[0].text.trim();
+    var match=raw.match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('No JSON in response');
+    var ex=JSON.parse(match[0]);
+    ex.viewType=vt;ex.uploadedBy=CU.displayName||CU.email;ex.uploadedAt=Date.now();
+    sp(80,'Saving...','Saving to Firebase...');
+    var key=per.replace(/\s+/g,'_').replace(/[.#$[\]]/g,'');
+    await set(ref(db,'kpis/'+port+'/'+key),ex);
+    sp(100,'Done!','KPIs saved!');
+    setTimeout(function(){
+      closeModal();MF=[];renderC();
+      document.getElementById('mPer').value='';
+      document.getElementById('pw').style.display='none';
+      btn.disabled=false;btn.textContent='🧠 Extract KPIs with AI';
+      var pb=document.querySelector('[onclick="setPort(\''+port+'\',this)"]');
+      if(pb)setPort(port,pb);
+      CK=key;
+    },1200);
+  }catch(e){
+    sp(0,'Error','Failed: '+e.message);
+    btn.disabled=false;btn.textContent='🧠 Extract KPIs with AI';
+  }
+};
+</script>
 </body>
 </html>
