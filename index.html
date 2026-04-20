@@ -184,30 +184,31 @@
           <span class="btn-text">Sign In</span>
           <span class="btn-spinner"><span class="spinner-ring"></span></span>
         </button>
-        <div class="divider"><div class="divider-line"></div><div class="divider-text">or</div><div class="divider-line"></div></div>
-        <button class="btn-secondary" onclick="showSignUp()">Create Account</button>
+        <div style="text-align:center; margin-top:16px;">
+          <a onclick="showForgotPassword()" style="font-size:12px; color:var(--gray); cursor:pointer; text-decoration:underline; text-underline-offset:3px;">Forgot your password?</a>
+        </div>
       </div>
-      <div id="signUpForm" style="display:none;">
-        <div class="field"><label>Full Name</label><input type="text" id="suName" placeholder="Your full name"/></div>
-        <div class="field"><label>Email Address</label><input type="email" id="suEmail" placeholder="you@legacysignature.com"/></div>
-        <div class="field"><label>Password</label><input type="password" id="suPassword" placeholder="Min. 6 characters"/></div>
-        <button class="btn-primary" id="signUpBtn" onclick="handleSignUp()">
-          <span class="btn-text">Create Account</span>
+      <div id="forgotForm" style="display:none;">
+        <div class="field"><label>Email Address</label><input type="email" id="resetEmail" placeholder="you@legacysignature.com"/></div>
+        <div id="resetSuccess" style="display:none; background:rgba(39,174,96,0.08); border:1px solid rgba(39,174,96,0.2); border-radius:2px; color:#27ae60; font-size:12px; padding:10px 14px; margin-bottom:14px;"></div>
+        <button class="btn-primary" id="resetBtn" onclick="handleReset()">
+          <span class="btn-text">Send Reset Email</span>
           <span class="btn-spinner"><span class="spinner-ring"></span></span>
         </button>
-        <div class="divider"><div class="divider-line"></div><div class="divider-text">or</div><div class="divider-line"></div></div>
-        <button class="btn-secondary" onclick="showSignIn()">Back to Sign In</button>
+        <div style="text-align:center; margin-top:16px;">
+          <a onclick="showSignIn()" style="font-size:12px; color:var(--gray); cursor:pointer; text-decoration:underline; text-underline-offset:3px;">Back to Sign In</a>
+        </div>
       </div>
     </div>
     <div class="mode-toggle">
-      <span id="modeText">Don't have an account? <a onclick="showSignUp()">Create one</a></span>
+      <span style="font-size:12px; color:var(--gray);">This portal is invite-only. Contact your administrator for access.</span>
     </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged }
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
@@ -230,19 +231,20 @@
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch (e) { setLoading(btn, false); showError(friendlyError(e.code)); }
   };
-  window.handleSignUp = async function() {
-    const name = document.getElementById('suName').value.trim();
-    const email = document.getElementById('suEmail').value.trim();
-    const password = document.getElementById('suPassword').value;
-    const btn = document.getElementById('signUpBtn');
-    if (!name || !email || !password) return showError('Please fill in all fields.');
-    if (password.length < 6) return showError('Password must be at least 6 characters.');
+  window.handleReset = async function() {
+    const email = document.getElementById('resetEmail').value.trim();
+    const btn = document.getElementById('resetBtn');
+    if (!email) return showError('Please enter your email address.');
     setLoading(btn, true); clearError();
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: name });
+      await sendPasswordResetEmail(auth, email);
+      const s = document.getElementById('resetSuccess');
+      s.textContent = 'Password reset email sent to ' + email + '. Check your inbox!';
+      s.style.display = 'block';
+      document.getElementById('resetEmail').value = '';
     }
-    catch (e) { setLoading(btn, false); showError(friendlyError(e.code)); }
+    catch (e) { showError(e.code === 'auth/user-not-found' ? 'No account found with that email.' : 'Failed to send reset email. Try again.'); }
+    setLoading(btn, false);
   };
   function friendlyError(code) {
     const map = {
@@ -261,27 +263,24 @@
   function clearError() { document.getElementById('errorMsg').classList.remove('visible'); }
 </script>
 <script>
-  function showSignUp() {
+  function showForgotPassword() {
     document.getElementById('signInForm').style.display = 'none';
-    document.getElementById('signUpForm').style.display = 'block';
-    document.getElementById('formTitle').textContent = 'Create account';
-    document.getElementById('formSubtitle').textContent = 'Join the Legacy Signature portal';
-    document.getElementById('modeText').innerHTML = 'Already have an account? <a onclick="showSignIn()">Sign in</a>';
+    document.getElementById('forgotForm').style.display = 'block';
+    document.getElementById('formTitle').textContent = 'Reset Password';
+    document.getElementById('formSubtitle').textContent = 'Enter your email and we will send a reset link';
     document.getElementById('errorMsg').classList.remove('visible');
   }
   function showSignIn() {
     document.getElementById('signInForm').style.display = 'block';
-    document.getElementById('signUpForm').style.display = 'none';
+    document.getElementById('forgotForm').style.display = 'none';
     document.getElementById('formTitle').textContent = 'Welcome back';
     document.getElementById('formSubtitle').textContent = 'Sign in to access your portal';
-    document.getElementById('modeText').innerHTML = "Don't have an account? <a onclick=\"showSignUp()\">Create one</a>";
     document.getElementById('errorMsg').classList.remove('visible');
+    const s = document.getElementById('resetSuccess');
+    if (s) s.style.display = 'none';
   }
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      if (document.getElementById('signUpForm').style.display !== 'none') handleSignUp();
-      else handleSignIn();
-    }
+    if (e.key === 'Enter') handleSignIn();
   });
 </script>
 </body>
