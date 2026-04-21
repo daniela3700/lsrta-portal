@@ -667,7 +667,7 @@ window.saveKPIs=async function(){
     document.getElementById('exBtn').style.display='block';
     btn.textContent='Save';btn.disabled=false;
     closeModal();
-    var pb=document.querySelector('[onclick="setPort(\''+savedPort+'\',this)"]');
+    var pb=null; document.querySelectorAll('.pb').forEach(function(b){ if(b.onclick && b.onclick.toString().indexOf(sp)>-1) pb=b; }); if(pb) setPort(sp,pb);
     if(pb)setPort(savedPort,pb);
     CK=savedKey;
   }catch(e){
@@ -811,7 +811,7 @@ window.saveSyncedKPIs = async function(){
     await set(ref(db,'kpis/'+SYNC_PENDING.port+'/'+SYNC_PENDING.key),SYNC_PENDING.data);
     var sp=SYNC_PENDING.port; var sk=SYNC_PENDING.key;
     SYNC_PENDING=null; closeSyncModal();
-    var pb=document.querySelector('[onclick="setPort(\'' + sp + '\',this)"]');
+    var pb=null; document.querySelectorAll('.pb').forEach(function(b){ if(b.onclick && b.onclick.toString().indexOf(sp)>-1) pb=b; }); if(pb) setPort(sp,pb);
     if(pb) setPort(sp,pb);
     CK=sk;
     btn.textContent='Save to Dashboard'; btn.disabled=false;
