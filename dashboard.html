@@ -811,7 +811,7 @@ window.saveSyncedKPIs = async function(){
     await set(ref(db,'kpis/'+SYNC_PENDING.port+'/'+SYNC_PENDING.key),SYNC_PENDING.data);
     var sp=SYNC_PENDING.port; var sk=SYNC_PENDING.key;
     SYNC_PENDING=null; closeSyncModal();
-    var pb=document.querySelector('[onclick="setPort(''+sp+'',this)"]');
+    var pb=document.querySelector('[onclick="setPort(\'' + sp + '\',this)"]');
     if(pb) setPort(sp,pb);
     CK=sk;
     btn.textContent='Save to Dashboard'; btn.disabled=false;
