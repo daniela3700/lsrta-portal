@@ -683,6 +683,149 @@ window.cancelConfirm=function(){
   document.getElementById('pw').style.display='none';
 };
 
+
+
+// ── APPFOLIO SYNC ─────────────────────────────
+
+var SYNC_PENDING = null;
+
+window.syncAppfolio = function(){
+  var today = new Date();
+  document.getElementById('sWeekDate').value = today.toISOString().split('T')[0];
+  document.getElementById('sMonthDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  if(CP!=='all') document.getElementById('sPort').value = CP;
+  document.getElementById('syncModal').classList.add('open');
+};
+
+window.closeSyncModal = function(){
+  document.getElementById('syncModal').classList.remove('open');
+  document.getElementById('syncProgress').style.display='none';
+  document.getElementById('syncConfirm').style.display='none';
+  document.getElementById('doSyncBtn').style.display='block';
+  SYNC_PENDING=null;
+};
+
+document.getElementById('svtW').addEventListener('change',function(){
+  document.getElementById('sWeekWrap').style.display='block';
+  document.getElementById('sMonthWrap').style.display='none';
+});
+document.getElementById('svtM').addEventListener('change',function(){
+  document.getElementById('sWeekWrap').style.display='none';
+  document.getElementById('sMonthWrap').style.display='block';
+});
+
+function getSyncPeriodInfo(){
+  var isWeekly = document.getElementById('svtW').checked;
+  if(isWeekly){
+    var d = new Date(document.getElementById('sWeekDate').value+'T12:00:00');
+    var weekStart = new Date(d);
+    weekStart.setDate(d.getDate()-6);
+    var from = weekStart.toISOString().split('T')[0];
+    var to = d.toISOString().split('T')[0];
+    var month = d.toLocaleString('default',{month:'long'});
+    var label = 'Week of '+month+' '+d.getDate()+', '+d.getFullYear();
+    var key = 'W_'+d.getFullYear()+'_'+String(d.getMonth()+1).padStart(2,'0')+'_'+String(d.getDate()).padStart(2,'0');
+    return {label:label,key:key,type:'weekly',from:from,to:to,ts:d.getTime()};
+  } else {
+    var val = document.getElementById('sMonthDate').value;
+    var parts = val.split('-');
+    var d2 = new Date(parseInt(parts[0]),parseInt(parts[1])-1,1);
+    var lastDay = new Date(parseInt(parts[0]),parseInt(parts[1]),0);
+    var to2 = val+'-'+String(lastDay.getDate()).padStart(2,'0');
+    var label2 = d2.toLocaleString('default',{month:'long'})+' '+d2.getFullYear();
+    var key2 = 'M_'+parts[0]+'_'+parts[1];
+    return {label:label2,key:key2,type:'monthly',from:val+'-01',to:to2,ts:d2.getTime()};
+  }
+}
+
+function setSP(pct,lbl,st){
+  document.getElementById('spFill').style.width=pct+'%';
+  document.getElementById('spPct').textContent=pct+'%';
+  document.getElementById('spLbl').textContent=lbl;
+  document.getElementById('spStatus').textContent=st;
+}
+
+window.doSync = async function(){
+  var port = document.getElementById('sPort').value;
+  var pi = getSyncPeriodInfo();
+  var btn = document.getElementById('doSyncBtn');
+  btn.disabled=true; btn.textContent='Syncing...';
+  document.getElementById('syncProgress').style.display='block';
+  setSP(20,'Connecting to Appfolio...','Pulling '+pi.label+' data...');
+  try{
+    var res = await fetch('https://lsrta-api.daniela-e0c.workers.dev/appfolio-sync',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({portfolio:port,from_date:pi.from,to_date:pi.to,type:pi.type})
+    });
+    setSP(70,'Processing...','Extracting KPIs...');
+    if(!res.ok){ var err=await res.json(); throw new Error(err.error||'Sync failed'); }
+    var data = await res.json();
+    if(!data.success) throw new Error(data.error||'Sync error');
+    var kpis = data.kpis;
+    kpis.viewType=pi.type; kpis.periodLabel=pi.label; kpis.periodTs=pi.ts;
+    kpis.uploadedBy=CU.displayName||CU.email; kpis.uploadedAt=Date.now();
+    kpis.sourceFiles=['Appfolio API'];
+    setSP(90,'Review...','Please review the synced data...');
+    SYNC_PENDING={port:port,key:pi.key,label:pi.label,data:kpis,reportStatus:data.reportStatus};
+    showSyncConfirm(kpis,pi.label,port,pi.key,data.reportStatus,data.rawCounts);
+    btn.disabled=false; btn.textContent='Pull from Appfolio';
+  }catch(e){
+    setSP(0,'Error','Sync failed: '+e.message);
+    btn.disabled=false; btn.textContent='Pull from Appfolio';
+  }
+};
+
+function showSyncConfirm(kpis,label,port,key,reportStatus,rawCounts){
+  document.getElementById('syncConfirmLbl').textContent=label+' — '+N[port];
+  var kpiShow=[
+    {k:'total_units',l:'Total Units'},{k:'occupied',l:'Occupied'},{k:'occupancy_rate',l:'Occupancy %'},
+    {k:'vacant_unrented',l:'Vacant Unrented'},{k:'leads',l:'Leads'},{k:'showings',l:'Showings'},
+    {k:'applications',l:'Applications'},{k:'leased',l:'Leased'},{k:'movein',l:'Move Ins'},
+    {k:'moveout',l:'Move Outs'},{k:'wo_in',l:'WOs In'},{k:'wo_completed',l:'WOs Done'},
+    {k:'wo_completion_rate',l:'WO Rate %'},{k:'delinquencies',l:'Delinquencies'},{k:'noi',l:'NOI'},{k:'collection_rate',l:'Collection %'}
+  ];
+  var grid='';
+  kpiShow.forEach(function(kpi){
+    var v=kpis[kpi.k]; var has=v!==null&&v!==undefined;
+    var disp=has?(typeof v==='number'&&(kpi.k==='noi'||kpi.k==='total_income')?'$'+Number(v).toLocaleString():typeof v==='number'&&kpi.k.indexOf('rate')>=0?v.toFixed(1)+'%':v):'Not found';
+    grid+='<div style="padding:8px 10px;background:'+(has?'rgba(39,174,96,0.05)':'rgba(15,31,61,0.03)')+';border:1px solid '+(has?'rgba(39,174,96,0.2)':'rgba(15,31,61,0.06)')+';border-radius:3px;">';
+    grid+='<div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'+kpi.l+'</div>';
+    grid+='<div style="font-size:15px;font-family:Cormorant Garamond,serif;color:'+(has?'var(--navy)':'rgba(138,143,163,0.6)')+';">'+disp+'</div></div>';
+  });
+  document.getElementById('syncConfirmGrid').innerHTML=grid;
+  var statusHtml='Reports pulled: ';
+  if(reportStatus){ var sp2=[]; Object.keys(reportStatus).forEach(function(k){ sp2.push((reportStatus[k]==='ok'?'✅':'⚠️')+' '+k.replace(/_/g,' ')); }); statusHtml+=sp2.join(' · '); }
+  if(rawCounts){ statusHtml+=' | Rows: occ='+rawCounts.occupancyRows+', cf='+rawCounts.cashFlowRows+', wo='+rawCounts.workOrderRows; }
+  document.getElementById('syncReportStatus').textContent=statusHtml;
+  document.getElementById('syncConfirm').style.display='block';
+  document.getElementById('doSyncBtn').style.display='none';
+  document.getElementById('syncProgress').style.display='none';
+}
+
+window.saveSyncedKPIs = async function(){
+  if(!SYNC_PENDING)return;
+  var btn=document.getElementById('saveSyncBtn');
+  btn.textContent='Saving...'; btn.disabled=true;
+  try{
+    await set(ref(db,'kpis/'+SYNC_PENDING.port+'/'+SYNC_PENDING.key),SYNC_PENDING.data);
+    var sp=SYNC_PENDING.port; var sk=SYNC_PENDING.key;
+    SYNC_PENDING=null; closeSyncModal();
+    var pb=document.querySelector('[onclick="setPort(''+sp+'',this)"]');
+    if(pb) setPort(sp,pb);
+    CK=sk;
+    btn.textContent='Save to Dashboard'; btn.disabled=false;
+  }catch(e){ alert('Save failed: '+e.message); btn.textContent='Save to Dashboard'; btn.disabled=false; }
+};
+
+window.cancelConfirm=function(){
+  PENDING=null;
+  document.getElementById('confirmPanel').style.display='none';
+  document.getElementById('exBtn').style.display='block';
+  document.getElementById('pw').style.display='none';
+};
+
+document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
 </script>
 
 <!-- SYNC MODAL -->
