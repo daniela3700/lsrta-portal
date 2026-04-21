@@ -808,14 +808,20 @@ window.saveSyncedKPIs = async function(){
   var btn=document.getElementById('saveSyncBtn');
   btn.textContent='Saving...'; btn.disabled=true;
   try{
-    await set(ref(db,'kpis/'+SYNC_PENDING.port+'/'+SYNC_PENDING.key),SYNC_PENDING.data);
     var sp=SYNC_PENDING.port; var sk=SYNC_PENDING.key;
+    var portsToSave = sp==='all' ? ['nc_gladysh','sc_platinum','tx_acorn'] : [sp];
+    for(var i=0;i<portsToSave.length;i++){
+      await set(ref(db,'kpis/'+portsToSave[i]+'/'+sk), SYNC_PENDING.data);
+    }
     SYNC_PENDING=null; closeSyncModal();
-    var pb=null; document.querySelectorAll('.pb').forEach(function(b){ if(b.onclick && b.onclick.toString().indexOf(sp)>-1) pb=b; }); if(pb) setPort(sp,pb);
-    if(pb) setPort(sp,pb);
+    var firstBtn=document.querySelector('.pb');
+    if(firstBtn) setPort(sp==='all'?'all':sp, firstBtn);
     CK=sk;
     btn.textContent='Save to Dashboard'; btn.disabled=false;
-  }catch(e){ alert('Save failed: '+e.message); btn.textContent='Save to Dashboard'; btn.disabled=false; }
+  }catch(e){
+    alert('Save failed: '+e.message);
+    btn.textContent='Save to Dashboard'; btn.disabled=false;
+  }
 };
 
 document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
@@ -833,6 +839,7 @@ document.getElementById('syncModal').addEventListener('click',function(e){ if(e.
         <div class="mf">
           <label>Portfolio</label>
           <select id="sPort">
+            <option value="all">All Portfolios</option>
             <option value="nc_gladysh">NC Gladysh Capital</option>
             <option value="sc_platinum">SC Platinum Estates</option>
             <option value="tx_acorn">TX Acorn Ridge</option>
