@@ -818,13 +818,6 @@ window.saveSyncedKPIs = async function(){
   }catch(e){ alert('Save failed: '+e.message); btn.textContent='Save to Dashboard'; btn.disabled=false; }
 };
 
-window.cancelConfirm=function(){
-  PENDING=null;
-  document.getElementById('confirmPanel').style.display='none';
-  document.getElementById('exBtn').style.display='block';
-  document.getElementById('pw').style.display='none';
-};
-
 document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
 </script>
 
