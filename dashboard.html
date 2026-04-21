@@ -186,7 +186,10 @@
         <button class="vb" onclick="setView('monthly',this)">Monthly</button>
         <button class="vb" onclick="setView('trends',this)">📈 Trends</button>
       </div>
-      <button class="btn-gold" onclick="openModal()">📤 Upload Appfolio Reports</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-gold" onclick="openModal()">📤 Upload Reports</button>
+        <button id="syncBtn" onclick="syncAppfolio()" style="padding:7px 16px;background:var(--navy);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">🔄 Sync Appfolio</button>
+      </div>
     </div>
     <div class="aib">
       <div class="aib-ic">✨</div>
@@ -681,5 +684,63 @@ window.cancelConfirm=function(){
 };
 
 </script>
+
+<!-- SYNC MODAL -->
+<div class="mbg" id="syncModal">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mtitle">🔄 Sync from Appfolio</div>
+      <button class="mx" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="mf">
+          <label>Portfolio</label>
+          <select id="sPort">
+            <option value="nc_gladysh">NC Gladysh Capital</option>
+            <option value="sc_platinum">SC Platinum Estates</option>
+            <option value="tx_acorn">TX Acorn Ridge</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Report Type</label>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly</label>
+          </div>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="mf" id="sWeekWrap">
+          <label>Week Ending Date</label>
+          <input type="date" id="sWeekDate"/>
+          <div style="font-size:10px;color:var(--gray);margin-top:4px;">Pick the last day of the reporting week</div>
+        </div>
+        <div class="mf" id="sMonthWrap" style="display:none;">
+          <label>Month</label>
+          <input type="month" id="sMonthDate"/>
+        </div>
+      </div>
+      <div id="syncProgress" style="display:none;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;"><span id="spLbl">Connecting...</span><span id="spPct">0%</span></div>
+        <div style="height:4px;background:rgba(15,31,61,0.07);border-radius:2px;"><div id="spFill" style="height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;"></div></div>
+        <div style="font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;" id="spStatus"></div>
+      </div>
+      <div id="syncConfirm" style="display:none;margin-bottom:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
+        <div style="padding:12px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Synced KPIs</div>
+          <div style="font-size:11px;color:var(--gray);" id="syncConfirmLbl"></div>
+        </div>
+        <div id="syncConfirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+        <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
+        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
+          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
+          <button onclick="closeSyncModal()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+      <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
