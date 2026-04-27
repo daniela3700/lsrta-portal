@@ -227,16 +227,18 @@
           </div>
         </div>
       </div>
-      <div class="mrow" id="dateRow">
-        <div class="mf" id="weekDateWrap">
-          <label>Week Ending Date</label>
-          <input type="date" id="mWeekDate"/>
-          <div style="font-size:10px;color:var(--gray);margin-top:4px;" id="weekLabel">Pick the last day of the reporting week</div>
+      <div class="mrow">
+        <div class="mf">
+          <label>Period Start Date</label>
+          <input type="date" id="mStartDate"/>
         </div>
-        <div class="mf" id="monthDateWrap" style="display:none;">
-          <label>Month</label>
-          <input type="month" id="mMonthDate"/>
+        <div class="mf">
+          <label>Period End Date</label>
+          <input type="date" id="mEndDate"/>
         </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
+        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
       </div>
       <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
         <div style="font-size:32px;margin-bottom:8px;">📂</div>
@@ -377,47 +379,58 @@ function draw(){
   var nm=d.movein!=null&&d.moveout!=null?'+'+(d.movein-d.moveout):'—';
 
   var h='';
+  // Calculate Adjusted Occupancy = (Occupied + Vacant Rented) / Total Units
+  var adjOcc = (d.occupied!=null && d.vacant_rented!=null && d.total_units) ? (((d.occupied + d.vacant_rented) / d.total_units) * 100).toFixed(1) : null;
+  var adjOccC = adjOcc ? (adjOcc>=95?'cg':adjOcc>=85?'cy':'cr') : '';
+  var adjOccS = adjOcc ? (adjOcc>=95?'g':adjOcc>=85?'y':'r') : null;
+
   h+=mkSec('🏠','Occupancy');
   h+='<div class="g4">';
   h+=mkCard('cb','Total Units',d.total_units!=null?d.total_units:null,'Current portfolio size');
-  h+=mkCard(occC,'Occupancy Rate — Total',occ?occ+'%':null,d.total_units?d.total_units+' total units':null,'≥ 95%',occS);
-  h+=mkCard(stabC,'Occupancy — Stabilized',stab?stab+'%':null,d.stabilized_units?d.stabilized_units+' stabilized':null,'≥ 95%',stabS);
-  h+=mkCard(moC,'Move Outs',d.moveout!=null?d.moveout:null,'Move Ins: '+(d.movein!=null?d.movein:'—')+'  |  Net: '+nm,'< 5/period',moS);
-  h+='</div><div class="g4">';
-  h+=mkCard(d.vacant_unrented>12?'cr':d.vacant_unrented>5?'cy':'cg','Vacant Unrented',d.vacant_unrented!=null?d.vacant_unrented:null,'Vacant Rented: '+(d.vacant_rented!=null?d.vacant_rented:'—'));
-  h+=mkCard('cgo','Notice Given',d.notice_unrented!=null?d.notice_unrented:null,'Notice Rented: '+(d.notice_rented!=null?d.notice_rented:'—'));
-  h+=mkCard('cb','Total Occupied',d.occupied!=null?d.occupied:null);
-  h+=mkCard('cb','Inbound Calls',d.inbound_calls!=null?d.inbound_calls:null);
+  h+=mkCard(occC,'Occupancy Rate',occ?occ+'%':null,'Occupied / Total Units','≥ 95%',occS);
+  h+=mkCard(adjOccC,'Adjusted Occupancy Rate',adjOcc?adjOcc+'%':null,'Occupied + Vacant Rented / Total Units','≥ 95%',adjOccS);
+  h+=mkCard('cb','Occupied Units',d.occupied!=null?d.occupied:null,'Currently occupied');
   h+='</div>';
 
-  h+=mkSec('🎯','Leasing Funnel');
-  h+='<div class="funnel"><div class="fsteps">';
-  h+='<div class="fs"><div class="fs-n">'+(d.leads!=null?d.leads:'—')+'</div><div class="fs-l">Leads</div></div>';
-  h+='<div class="fs"><div class="fs-n">'+(d.showings!=null?d.showings:'—')+'</div><div class="fs-l">Showings</div>';
-  if(sc)h+='<div class="fs-c" style="color:'+(sc>=40?'var(--green)':'var(--yellow)')+'">'+sc+'%</div>';
-  h+='</div><div class="fs"><div class="fs-n">'+(d.applications!=null?d.applications:'—')+'</div><div class="fs-l">Applications</div>';
-  if(ac)h+='<div class="fs-c" style="color:'+(ac>=50?'var(--green)':'var(--yellow)')+'">'+ac+'%</div>';
-  h+='</div><div class="fs"><div class="fs-n">'+(d.leased!=null?d.leased:'—')+'</div><div class="fs-l">Leased</div>';
-  if(lc)h+='<div class="fs-c" style="color:'+(lc>=50?'var(--green)':'var(--yellow)')+'">'+lc+'%</div>';
-  h+='</div><div class="fs"><div class="fs-n">'+(d.movein!=null?d.movein:'—')+'</div><div class="fs-l">Move Ins</div></div>';
-  var dc=d.avg_days_lease!=null?(d.avg_days_lease<=20?'var(--green)':d.avg_days_lease<=25?'var(--yellow)':'var(--red)'):'var(--navy)';
-  h+='<div class="fs"><div class="fs-n" style="color:'+dc+'">'+(d.avg_days_lease!=null?d.avg_days_lease+'d':'—')+'</div><div class="fs-l">Avg Days to Lease</div><div class="fs-c" style="color:var(--gray);font-size:10px;">Target &lt;20d</div></div>';
-  h+='</div></div>';
+  h+=mkSec('🎯','Leasing');
+  h+='<div class="g4">';
+  h+=mkCard('cb','Total Leads',d.leads!=null?d.leads:null);
+  h+=mkCard('cb','Showings',d.showings!=null?d.showings:null,d.leads&&d.showings?((d.showings/d.leads)*100).toFixed(1)+'% of leads':null);
+  h+=mkCard('cb','Applications',d.applications!=null?d.applications:null,d.showings&&d.applications?((d.applications/d.showings)*100).toFixed(1)+'% of showings':null);
+  h+=mkCard('cg','Leased',d.leased!=null?d.leased:null,d.applications&&d.leased?((d.leased/d.applications)*100).toFixed(1)+'% of applications':null);
+  h+='</div><div class="g4">';
+  h+=mkCard(moC,'Move Ins',d.movein!=null?d.movein:null,'Net: '+nm);
+  h+=mkCard(moC,'Move Outs',d.moveout!=null?d.moveout:null,'< 5 per period','< 5/period',moS);
+  h+=mkCard(d.vacant_rented>0?'cg':'cb','Vacant Rented',d.vacant_rented!=null?d.vacant_rented:null,'Signed lease, not yet moved in');
+  h+=mkCard(d.vacant_unrented>12?'cr':d.vacant_unrented>5?'cy':'cg','Vacant Unrented',d.vacant_unrented!=null?d.vacant_unrented:null,'No lease signed');
+  h+='</div><div class="g4">';
+  h+=mkCard('cgo','Notice Rented',d.notice_rented!=null?d.notice_rented:null,'Gave notice, replacement signed');
+  h+=mkCard(d.notice_unrented>5?'cr':d.notice_unrented>2?'cy':'cg','Notice Unrented',d.notice_unrented!=null?d.notice_unrented:null,'Gave notice, no replacement yet');
+  h+=mkCard('','','','');
+  h+=mkCard('','','','');
+  h+='</div>';
+
+
 
   h+=mkSec('🔧','Maintenance');
   h+='<div class="g4">';
   h+=mkCard('cb','Incoming Work Orders',d.wo_in!=null?d.wo_in:null);
-  h+=mkCard(woC,'WO Completion Rate',wo?wo+'%':null,(d.wo_completed!=null?d.wo_completed:'—')+' of '+(d.wo_in!=null?d.wo_in:'—')+' completed','≥ 90%',woS);
-  h+=mkCard('cgo','Unit Turns Completed',d.turns_done!=null?d.turns_done:null,'In Progress: '+(d.turns_prog!=null?d.turns_prog:'—'));
-  h+=mkCard('','WO Canceled',d.wo_cancel!=null?d.wo_cancel:null);
+  h+=mkCard(woC,'WO Completed',wo?d.wo_completed+' ('+wo+'%)':d.wo_completed!=null?d.wo_completed:null,(d.wo_completed!=null?d.wo_completed:'—')+' of '+(d.wo_in!=null?d.wo_in:'—'),'≥ 90%',woS);
+  h+=mkCard(d.wo_cancel>10?'cy':'','WO Canceled',d.wo_cancel!=null?d.wo_cancel:null);
+  h+=mkCard('cgo','Unit Turns In Progress',d.turns_prog!=null?d.turns_prog:null);
+  h+='</div><div class="g4">';
+  h+=mkCard('cg','Unit Turns Completed',d.turns_done!=null?d.turns_done:null);
+  h+=mkCard('','','','');
+  h+=mkCard('','','','');
+  h+=mkCard('','','','');
   h+='</div>';
 
   h+=mkSec('👥','Tenant Relations');
   h+='<div class="g4">';
-  h+=mkCard(dqC,'Delinquencies',d.delinquencies!=null?d.delinquencies:null,d.delinquencies_amt?'$'+Number(d.delinquencies_amt).toLocaleString():null);
+  h+=mkCard(dqC,'Delinquencies (count)',d.delinquencies!=null?d.delinquencies:null,null,null,d.delinquencies!=null?[dqC]:null);
+  h+=mkCard(dqC,'Delinquencies ($)',d.delinquencies_amt!=null?'$'+Number(d.delinquencies_amt).toLocaleString():null);
   h+=mkCard(evC,'Evictions in Progress',d.evictions!=null?d.evictions:null);
   h+=mkCard('cg','Renewals',d.renewals!=null?d.renewals:null);
-  h+=mkCard(collC,'Collection Rate',d.collection_rate?d.collection_rate+'%':null,null,'≥ 98%',collS);
   h+='</div>';
 
   if(d.noi||d.total_income){
@@ -537,35 +550,21 @@ window.closeModal=function(){
   document.getElementById('exBtn').style.display='block';
 };
 
-// Radio button toggle
-document.getElementById('vtW').addEventListener('change',function(){
-  document.getElementById('weekDateWrap').style.display='block';
-  document.getElementById('monthDateWrap').style.display='none';
-});
-document.getElementById('vtM').addEventListener('change',function(){
-  document.getElementById('weekDateWrap').style.display='none';
-  document.getElementById('monthDateWrap').style.display='block';
-});
+// Radio buttons just change the label type — no date pickers to toggle
 
 // Generate period key and label from date
 function getPeriodInfo(){
-  var isWeekly=document.getElementById('vtW').checked;
-  if(isWeekly){
-    var d=new Date(document.getElementById('mWeekDate').value+'T12:00:00');
-    var month=d.toLocaleString('default',{month:'long'});
-    var day=d.getDate();
-    var year=d.getFullYear();
-    var label='Week of '+month+' '+day+', '+year;
-    var key='W_'+d.getFullYear()+'_'+String(d.getMonth()+1).padStart(2,'0')+'_'+String(d.getDate()).padStart(2,'0');
-    return {label:label,key:key,type:'weekly',ts:d.getTime()};
-  } else {
-    var val=document.getElementById('mMonthDate').value;
-    var parts=val.split('-');
-    var d2=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1);
-    var label2=d2.toLocaleString('default',{month:'long'})+' '+d2.getFullYear();
-    var key2='M_'+parts[0]+'_'+parts[1];
-    return {label:label2,key:key2,type:'monthly',ts:d2.getTime()};
-  }
+  var from = document.getElementById('mStartDate').value;
+  var to = document.getElementById('mEndDate').value;
+  if(!from || !to) { alert('Please select start and end dates.'); return null; }
+  var isWeekly = document.getElementById('vtW').checked;
+  var fromD = new Date(from+'T12:00:00');
+  var toD = new Date(to+'T12:00:00');
+  var fromFmt = fromD.toLocaleString('default',{month:'short'})+' '+fromD.getDate();
+  var toFmt = toD.toLocaleString('default',{month:'short'})+' '+toD.getDate()+', '+toD.getFullYear();
+  var label = fromFmt+' - '+toFmt;
+  var key = (isWeekly?'W':'M')+'_'+from.replace(/-/g,'')+'_'+to.replace(/-/g,'');
+  return {label:label, key:key, type:isWeekly?'weekly':'monthly', from:from, to:to, ts:fromD.getTime()};
 }
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();});
 
@@ -599,7 +598,7 @@ window.extractKPIs=async function(){
   }
   sp(50,'Sending to AI...','Claude is extracting KPIs...');
   var fs=fc.map(function(f,i){return '--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content;}).join('\n\n');
-  var tmpl='{"total_units":null,"occupied":null,"stabilized_units":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"avg_days_lease":null,"inbound_calls":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}';
+  var tmpl='{"total_units":null,"occupied":null,"occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"collection_rate":null,"wo_completion_rate":null}';
   var prompt=tmpl+'\n\nFill in the above JSON with values from the files below. Return ONLY the completed JSON. No other text.\n\n'+fs;
   try{
     var res=await fetch('https://lsrta-api.daniela-e0c.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:800,system:'Return only valid JSON with no extra text.',messages:[{role:'user',content:prompt}]})});
@@ -691,8 +690,11 @@ var SYNC_PENDING = null;
 
 window.syncAppfolio = function(){
   var today = new Date();
-  document.getElementById('sWeekDate').value = today.toISOString().split('T')[0];
-  document.getElementById('sMonthDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  var todayStr = today.toISOString().split('T')[0];
+  var weekStart = new Date(today);
+  weekStart.setDate(today.getDate()-6);
+  document.getElementById('sStartDate').value = weekStart.toISOString().split('T')[0];
+  document.getElementById('sEndDate').value = todayStr;
   if(CP!=='all') document.getElementById('sPort').value = CP;
   document.getElementById('syncModal').classList.add('open');
 };
@@ -705,37 +707,20 @@ window.closeSyncModal = function(){
   SYNC_PENDING=null;
 };
 
-document.getElementById('svtW').addEventListener('change',function(){
-  document.getElementById('sWeekWrap').style.display='block';
-  document.getElementById('sMonthWrap').style.display='none';
-});
-document.getElementById('svtM').addEventListener('change',function(){
-  document.getElementById('sWeekWrap').style.display='none';
-  document.getElementById('sMonthWrap').style.display='block';
-});
+// Radio buttons just change type label
 
 function getSyncPeriodInfo(){
+  var from = document.getElementById('sStartDate').value;
+  var to = document.getElementById('sEndDate').value;
+  if(!from || !to) { alert('Please select start and end dates.'); return null; }
   var isWeekly = document.getElementById('svtW').checked;
-  if(isWeekly){
-    var d = new Date(document.getElementById('sWeekDate').value+'T12:00:00');
-    var weekStart = new Date(d);
-    weekStart.setDate(d.getDate()-6);
-    var from = weekStart.toISOString().split('T')[0];
-    var to = d.toISOString().split('T')[0];
-    var month = d.toLocaleString('default',{month:'long'});
-    var label = 'Week of '+month+' '+d.getDate()+', '+d.getFullYear();
-    var key = 'W_'+d.getFullYear()+'_'+String(d.getMonth()+1).padStart(2,'0')+'_'+String(d.getDate()).padStart(2,'0');
-    return {label:label,key:key,type:'weekly',from:from,to:to,ts:d.getTime()};
-  } else {
-    var val = document.getElementById('sMonthDate').value;
-    var parts = val.split('-');
-    var d2 = new Date(parseInt(parts[0]),parseInt(parts[1])-1,1);
-    var lastDay = new Date(parseInt(parts[0]),parseInt(parts[1]),0);
-    var to2 = val+'-'+String(lastDay.getDate()).padStart(2,'0');
-    var label2 = d2.toLocaleString('default',{month:'long'})+' '+d2.getFullYear();
-    var key2 = 'M_'+parts[0]+'_'+parts[1];
-    return {label:label2,key:key2,type:'monthly',from:val+'-01',to:to2,ts:d2.getTime()};
-  }
+  var fromD = new Date(from+'T12:00:00');
+  var toD = new Date(to+'T12:00:00');
+  var fromFmt = fromD.toLocaleString('default',{month:'short'})+' '+fromD.getDate();
+  var toFmt = toD.toLocaleString('default',{month:'short'})+' '+toD.getDate()+', '+toD.getFullYear();
+  var label = fromFmt+' - '+toFmt;
+  var key = (isWeekly?'W':'M')+'_'+from.replace(/-/g,'')+'_'+to.replace(/-/g,'');
+  return {label:label, key:key, type:isWeekly?'weekly':'monthly', from:from, to:to, ts:fromD.getTime()};
 }
 
 function setSP(pct,lbl,st){
@@ -854,15 +839,17 @@ document.getElementById('syncModal').addEventListener('click',function(e){ if(e.
         </div>
       </div>
       <div class="mrow">
-        <div class="mf" id="sWeekWrap">
-          <label>Week Ending Date</label>
-          <input type="date" id="sWeekDate"/>
-          <div style="font-size:10px;color:var(--gray);margin-top:4px;">Pick the last day of the reporting week</div>
+        <div class="mf">
+          <label>Period Start Date</label>
+          <input type="date" id="sStartDate"/>
         </div>
-        <div class="mf" id="sMonthWrap" style="display:none;">
-          <label>Month</label>
-          <input type="month" id="sMonthDate"/>
+        <div class="mf">
+          <label>Period End Date</label>
+          <input type="date" id="sEndDate"/>
         </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
+        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
       </div>
       <div id="syncProgress" style="display:none;margin-bottom:16px;">
         <div style="font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;"><span id="spLbl">Connecting...</span><span id="spPct">0%</span></div>
