@@ -394,10 +394,11 @@ function draw(){
 
   h+=mkSec('🎯','Leasing');
   h+='<div class="g4">';
-  h+=mkCard('cb','Total Leads',d.leads!=null?d.leads:null);
+  var lScope = d.leasing_data_scope==='all_portfolios' && CP!=='all' ? ' ⚠️ All Portfolios' : '';
+  h+=mkCard('cb','Total Leads',d.leads!=null?d.leads:null,lScope?'Covers all portfolios':null);
   h+=mkCard('cb','Showings',d.showings!=null?d.showings:null,d.leads&&d.showings?((d.showings/d.leads)*100).toFixed(1)+'% of leads':null);
-  h+=mkCard('cb','Applications',d.applications!=null?d.applications:null,d.showings&&d.applications?((d.applications/d.showings)*100).toFixed(1)+'% of showings':null);
-  h+=mkCard('cg','Leased',d.leased!=null?d.leased:null,d.applications&&d.leased?((d.leased/d.applications)*100).toFixed(1)+'% of applications':null);
+  h+=mkCard('cb','Applications',d.applications!=null?d.applications:null,(lScope?'⚠️ All Portfolios — ':(d.showings&&d.applications?((d.applications/d.showings)*100).toFixed(1)+'% of showings':null)));
+  h+=mkCard('cg','Leased',d.leased!=null?d.leased:null,lScope?'⚠️ All Portfolios':d.applications&&d.leased?((d.leased/d.applications)*100).toFixed(1)+'% of applications':null);
   h+='</div><div class="g4">';
   h+=mkCard(moC,'Move Ins',d.movein!=null?d.movein:null,'Net: '+nm);
   h+=mkCard(moC,'Move Outs',d.moveout!=null?d.moveout:null,'< 5 per period','< 5/period',moS);
@@ -675,6 +676,16 @@ window.saveKPIs=async function(){
   }
 };
 
+window.skipLeasingAndClose=function(){
+  if(window.LAST_SAVED){
+    var sp=window.LAST_SAVED.port; var sk=window.LAST_SAVED.key;
+    closeSyncModal();
+    var pb=document.querySelector('.pb');
+    if(pb) setPort(sp==='all'?'all':sp, pb);
+    CK=sk; SYNC_PENDING=null; window.LAST_SAVED=null;
+  } else { closeSyncModal(); }
+};
+
 window.cancelConfirm=function(){
   PENDING=null;
   document.getElementById('confirmPanel').style.display='none';
@@ -798,14 +809,81 @@ window.saveSyncedKPIs = async function(){
     for(var i=0;i<portsToSave.length;i++){
       await set(ref(db,'kpis/'+portsToSave[i]+'/'+sk), SYNC_PENDING.data);
     }
-    SYNC_PENDING=null; closeSyncModal();
-    var firstBtn=document.querySelector('.pb');
-    if(firstBtn) setPort(sp==='all'?'all':sp, firstBtn);
-    CK=sk;
-    btn.textContent='Save to Dashboard'; btn.disabled=false;
+    // Show leasing upload section instead of closing
+    document.getElementById('saveSyncBtn').textContent = '✅ Saved!';
+    document.getElementById('saveSyncBtn').disabled = true;
+    document.getElementById('leasingUploadSection').style.display = 'block';
+    // Store saved info for leasing upload
+    window.LAST_SAVED = { ports: portsToSave, key: sk, port: sp };
   }catch(e){
     alert('Save failed: '+e.message);
     btn.textContent='Save to Dashboard'; btn.disabled=false;
+  }
+};
+
+window.uploadLeasingData = async function(){
+  var fileIn = document.getElementById('leasingFileIn');
+  var status = document.getElementById('leasingUploadStatus');
+  if(!fileIn.files[0]) { status.textContent = 'Please select a CSV file first.'; return; }
+  if(!window.LAST_SAVED) { status.textContent = 'Please save the sync data first.'; return; }
+
+  status.textContent = 'Reading file...';
+  try{
+    var text = await new Promise(function(res,rej){
+      var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.onerror=rej; r.readAsText(fileIn.files[0]);
+    });
+
+    status.textContent = 'Extracting leasing data...';
+
+    // Parse CSV — find Total row
+    var lines = text.split(/\r?\n/).filter(function(l){return l.trim();});
+    var headers = lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'');});
+    var kpis = { leads: null, applications: null, leased: null, movein: null, moveout: null };
+
+    for(var i=1; i<lines.length; i++){
+      var vals = lines[i].split(',').map(function(v){return v.trim().replace(/"/g,'');});
+      var row = {};
+      headers.forEach(function(h,j){ row[h] = vals[j] || ''; });
+      var unitType = (row['Unit Type'] || row['unit_type'] || '').toLowerCase();
+      // Use Total row or last row
+      if(unitType === 'total' || i === lines.length-1){
+        kpis.leads        = parseInt(row['Inquiries Received']    || row['inquiries_received']    || 0) || null;
+        kpis.applications = parseInt(row['Applications Received'] || row['applications_received'] || 0) || null;
+        kpis.leased       = parseInt(row['Leased']                || row['leased']                || 0) || null;
+        kpis.movein       = parseInt(row['Move Ins']              || row['move_ins']              || 0) || null;
+        kpis.moveout      = parseInt(row['Move Outs']             || row['move_outs']             || 0) || null;
+        if(unitType === 'total') break;
+      }
+    }
+
+    // Save leasing data to Firebase for each portfolio
+    var saves = window.LAST_SAVED.ports.map(async function(port){
+      var updates = {};
+      if(kpis.leads!=null)        updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/leads']        = kpis.leads;
+      if(kpis.applications!=null) updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/applications'] = kpis.applications;
+      if(kpis.leased!=null)       updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/leased']       = kpis.leased;
+      // Only update move ins/outs if not already set by tickler
+      return Promise.all(Object.entries(updates).map(function(e){ return set(ref(db, e[0]), e[1]); }));
+    });
+    await Promise.all(saves);
+
+    status.textContent = 'Leasing data added — Leads: '+(kpis.leads||0)+', Apps: '+(kpis.applications||0)+', Leased: '+(kpis.leased||0);
+    status.style.color = 'var(--green)';
+
+    // Now close and navigate to dashboard
+    setTimeout(function(){
+      closeSyncModal();
+      var pb = null; document.querySelectorAll('.pb').forEach(function(b){ if(b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf(window.LAST_SAVED.port)>-1) pb=b; });
+      if(!pb) pb = document.querySelector('.pb');
+      if(pb) setPort(window.LAST_SAVED.port, pb);
+      CK = window.LAST_SAVED.key;
+      window.LAST_SAVED = null;
+      SYNC_PENDING = null;
+    }, 2000);
+
+  }catch(e){
+    status.textContent = 'Upload failed: '+e.message;
+    status.style.color = 'var(--red)';
   }
 };
 
@@ -865,7 +943,17 @@ document.getElementById('syncModal').addEventListener('click',function(e){ if(e.
         <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
         <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
           <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
-          <button onclick="closeSyncModal()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
+          <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
+        </div>
+        <!-- LEASING UPLOAD SECTION -->
+        <div id="leasingUploadSection" style="display:none;border-top:1px solid rgba(15,31,61,0.06);padding:16px;">
+          <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;"/>
+            <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
+          </div>
+          <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
         </div>
       </div>
       <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
