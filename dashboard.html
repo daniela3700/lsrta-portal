@@ -309,7 +309,7 @@ window.setPort=function(p,btn){CP=p;CK=null;document.querySelectorAll('.pb').for
 window.setView=function(v,btn){CV=v;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');if(v==='trends'){document.getElementById('prow').style.display='none';drawTrends();}else{draw();}};
 window.selPeriod=function(p){CK=p;draw();};
 
-function getPorts(){return CP==='all'?Object.keys(CD):[CP];}
+function getPorts(){return CP==='all'?Object.keys(CD).filter(function(k){return k!=='all_portfolios';}):[CP];}
 
 function getPeriods(){
   var s=new Set();
@@ -571,6 +571,8 @@ window.closeModal=function(){
 };
 
 // Radio buttons just change the label type — no date pickers to toggle
+document.getElementById('vtW') && document.getElementById('vtW').addEventListener('change',function(){});
+document.getElementById('vtM') && document.getElementById('vtM').addEventListener('change',function(){});
 
 // Generate period key and label from date
 function getPeriodInfo(){
