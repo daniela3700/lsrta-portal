@@ -267,6 +267,16 @@
           <button onclick="cancelConfirm()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
         </div>
       </div>
+    <!-- LEASING UPLOAD SECTION — shown after save -->
+    <div id="leasingUploadSection" style="display:none;margin:0 24px 24px;padding:16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;min-width:200px;"/>
+        <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
+        <button onclick="skipLeasingAndClose()" style="padding:8px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;">Skip</button>
+      </div>
+      <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
     </div>
   </div>
 </div>
@@ -945,16 +955,7 @@ document.getElementById('syncModal').addEventListener('click',function(e){ if(e.
           <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
           <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
         </div>
-        <!-- LEASING UPLOAD SECTION -->
-        <div id="leasingUploadSection" style="display:none;border-top:1px solid rgba(15,31,61,0.06);padding:16px;">
-          <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
-          <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;"/>
-            <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
-          </div>
-          <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
-        </div>
+
       </div>
       <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
     </div>
