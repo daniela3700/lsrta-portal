@@ -324,7 +324,16 @@ function getPeriods(){
 
 function getMerged(p){
   var m={};
-  getPorts().forEach(function(port){if(CD[port]&&CD[port][p]){var d=CD[port][p];Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});}});
+  // Check all_portfolios key first when viewing All
+  if(CP==='all' && CD['all_portfolios'] && CD['all_portfolios'][p]){
+    var d=CD['all_portfolios'][p];
+    Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});
+  }
+  // Then add individual portfolio data
+  getPorts().forEach(function(port){
+    if(port==='all_portfolios') return;
+    if(CD[port]&&CD[port][p]){var d=CD[port][p];Object.keys(d).forEach(function(k){if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k];else if(!m[k])m[k]=d[k];});}
+  });
   if(m.occupied&&m.total_units&&!m.occupancy_rate)m.occupancy_rate=(m.occupied/m.total_units)*100;
   if(m.wo_completed&&m.wo_in&&!m.wo_completion_rate)m.wo_completion_rate=(m.wo_completed/m.wo_in)*100;
   return Object.keys(m).length>0?m:null;
@@ -690,8 +699,8 @@ window.skipLeasingAndClose=function(){
   if(window.LAST_SAVED){
     var sp=window.LAST_SAVED.port; var sk=window.LAST_SAVED.key;
     closeSyncModal();
-    var pb=document.querySelector('.pb');
-    if(pb) setPort(sp==='all'?'all':sp, pb);
+    var firstBtn=document.querySelector('.pb');
+    if(firstBtn) setPort(sp==='all'?'all':sp, firstBtn);
     CK=sk; SYNC_PENDING=null; window.LAST_SAVED=null;
   } else { closeSyncModal(); }
 };
@@ -815,7 +824,9 @@ window.saveSyncedKPIs = async function(){
   btn.textContent='Saving...'; btn.disabled=true;
   try{
     var sp=SYNC_PENDING.port; var sk=SYNC_PENDING.key;
-    var portsToSave = sp==='all' ? ['nc_gladysh','sc_platinum','tx_acorn'] : [sp];
+    // Only save to the selected portfolio — never save all-portfolio data to individual portfolios
+    // as it will triple-count when viewing All Portfolios
+    var portsToSave = sp==='all' ? ['all_portfolios'] : [sp];
     for(var i=0;i<portsToSave.length;i++){
       await set(ref(db,'kpis/'+portsToSave[i]+'/'+sk), SYNC_PENDING.data);
     }
