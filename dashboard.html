@@ -189,6 +189,20 @@
       <div style="display:flex;gap:8px;">
         <button class="btn-gold" onclick="openModal()">📤 Upload Reports</button>
         <button id="appfolioSyncBtn" style="padding:7px 16px;background:var(--navy);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">🔄 Sync Appfolio</button>
+<script>
+document.getElementById('appfolioSyncBtn').onclick = function() {
+  var sm = document.getElementById('syncModal');
+  if (!sm) { alert('Sync modal missing'); return; }
+  var today = new Date();
+  var weekStart = new Date(today);
+  weekStart.setDate(today.getDate()-6);
+  var sd = document.getElementById('sStartDate');
+  var ed = document.getElementById('sEndDate');
+  if(sd) sd.value = weekStart.toISOString().split('T')[0];
+  if(ed) ed.value = today.toISOString().split('T')[0];
+  sm.classList.add('open');
+};
+</script>
       </div>
     </div>
     <div class="aib">
