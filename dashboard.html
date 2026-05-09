@@ -672,6 +672,7 @@ window.extractKPIs=async function(){
   if(MF.length===0)return alert('Please select at least one file.');
   var port=document.getElementById('mPort').value;
   var pi=getPeriodInfo();
+  if(!pi) return; // dates not filled in
   var btn=document.getElementById('exBtn');
   btn.disabled=true;btn.textContent='Extracting...';
   document.getElementById('pw').style.display='block';
@@ -832,6 +833,7 @@ function setSP(pct,lbl,st){
 window.doSync = async function(){
   var port = document.getElementById('sPort').value;
   var pi = getSyncPeriodInfo();
+  if(!pi) return; // dates not filled in
   var btn = document.getElementById('doSyncBtn');
   btn.disabled=true; btn.textContent='Syncing...';
   document.getElementById('syncProgress').style.display='block';
