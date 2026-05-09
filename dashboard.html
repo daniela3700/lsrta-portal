@@ -637,8 +637,8 @@ window.closeModal=function(){
 };
 
 // Radio buttons just change the label type — no date pickers to toggle
-document.getElementById('vtW') && document.getElementById('vtW').addEventListener('change',function(){});
-document.getElementById('vtM') && document.getElementById('vtM').addEventListener('change',function(){});
+try { if(document.getElementById('vtW')) document.getElementById('vtW').addEventListener('change',function(){}); } catch(e){}
+try { if(document.getElementById('vtM')) document.getElementById('vtM').addEventListener('change',function(){}); } catch(e){}
 
 // Generate period key and label from date
 function getPeriodInfo(){
@@ -654,13 +654,17 @@ function getPeriodInfo(){
   var key = (isWeekly?'W':'M')+'_'+from.replace(/-/g,'')+'_'+to.replace(/-/g,'');
   return {label:label, key:key, type:isWeekly?'weekly':'monthly', from:from, to:to, ts:fromD.getTime()};
 }
-document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();});
-
-var dz=document.getElementById('dz');
-dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--gold)';});
-dz.addEventListener('dragleave',function(){dz.style.borderColor='';});
-dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='';addF(Array.from(e.dataTransfer.files));});
-document.getElementById('fi').addEventListener('change',function(e){addF(Array.from(e.target.files));});
+// Safe DOM setup - wrapped so one failure doesn't block others
+try { document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();}); } catch(e){}
+try {
+  var dz=document.getElementById('dz');
+  if(dz) {
+    dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--gold)';});
+    dz.addEventListener('dragleave',function(){dz.style.borderColor='';});
+    dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='';addF(Array.from(e.dataTransfer.files));});
+  }
+} catch(e){}
+try { var fi=document.getElementById('fi'); if(fi) fi.addEventListener('change',function(e){addF(Array.from(e.target.files));}); } catch(e){}
 
 function addF(files){files.forEach(function(f){if(!MF.find(function(x){return x.name===f.name;}))MF.push(f);});renderC();}
 function renderC(){document.getElementById('chips').innerHTML=MF.map(function(f,i){return '<div class="chip">📄 '+f.name+' <button class="chip-x" onclick="rmF('+i+')">✕</button></div>';}).join('');}
@@ -789,14 +793,24 @@ var SYNC_PENDING = null;
 var LAST_SAVED = null;
 
 window.syncAppfolio = function(){
-  var today = new Date();
-  var todayStr = today.toISOString().split('T')[0];
-  var weekStart = new Date(today);
-  weekStart.setDate(today.getDate()-6);
-  document.getElementById('sStartDate').value = weekStart.toISOString().split('T')[0];
-  document.getElementById('sEndDate').value = todayStr;
-  if(CP!=='all') document.getElementById('sPort').value = CP;
-  document.getElementById('syncModal').classList.add('open');
+  console.log('syncAppfolio called');
+  try {
+    var today = new Date();
+    var todayStr = today.toISOString().split('T')[0];
+    var weekStart = new Date(today);
+    weekStart.setDate(today.getDate()-6);
+    var sStart = document.getElementById('sStartDate');
+    var sEnd = document.getElementById('sEndDate');
+    var sModal = document.getElementById('syncModal');
+    console.log('sStartDate:', sStart, 'sEndDate:', sEnd, 'syncModal:', sModal);
+    if(sStart) sStart.value = weekStart.toISOString().split('T')[0];
+    if(sEnd) sEnd.value = todayStr;
+    if(CP!=='all') { var sPort=document.getElementById('sPort'); if(sPort) sPort.value=CP; }
+    if(sModal) sModal.classList.add('open');
+    else console.error('syncModal element not found!');
+  } catch(err) {
+    console.error('syncAppfolio error:', err);
+  }
 };
 
 window.closeSyncModal = function(){
@@ -979,7 +993,7 @@ window.uploadLeasingData = async function(){
   }
 };
 
-document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
+try { document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); }); } catch(e){}
 </script>
 </body>
 </html>
