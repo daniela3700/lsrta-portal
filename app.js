@@ -238,3 +238,9 @@ export async function loadKpis() {
 
   return rows;
 }
+
+window.loginUser = doLogin;
+window.logoutUser = doSignOut;
+window.auth = auth;
+window.db = db;
+window.API_BASE = API_BASE;
