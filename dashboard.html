@@ -877,6 +877,7 @@ window.doSync = async function(){
 };
 
 function showSyncConfirm(kpis,label,port,key,reportStatus,rawCounts){
+  console.log('showSyncConfirm called, SYNC_PENDING:', SYNC_PENDING);
   document.getElementById('syncConfirmLbl').textContent=label+' — '+N[port];
   var kpiShow=[
     {k:'total_units',l:'Total Units'},{k:'occupied',l:'Occupied'},{k:'occupancy_rate',l:'Occupancy %'},
@@ -904,7 +905,8 @@ function showSyncConfirm(kpis,label,port,key,reportStatus,rawCounts){
 }
 
 window.saveSyncedKPIs = async function(){
-  if(!SYNC_PENDING)return;
+  console.log('saveSyncedKPIs called, SYNC_PENDING:', SYNC_PENDING);
+  if(!SYNC_PENDING){ alert('No data to save — please run the sync first.'); return; }
   var btn=document.getElementById('saveSyncBtn');
   btn.textContent='Saving...'; btn.disabled=true;
   try{
