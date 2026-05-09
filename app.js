@@ -21,7 +21,7 @@ import {
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDwjWf-ProLswPM-u84V1fRhpY0xZS9tB8",
+  apiKey: "AIzaSyCjAEOpWBS6k-tApaVY3aldpS1m8OYC3b4",
   authDomain: "lsrta-portal.firebaseapp.com",
   databaseURL: "https://lsrta-portal-default-rtdb.firebaseio.com",
   projectId: "lsrta-portal",
