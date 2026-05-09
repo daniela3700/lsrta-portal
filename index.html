@@ -1,1 +1,102 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LSRTA Login</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head><body class="login-body"><div class="login-shell"><section class="login-left"><div><div class="brand-eye">Internal Portal</div><div class="brand-name">Legacy<br><span>Signature</span></div><div class="brand-sub">Rental Trend Analyzer</div></div><div><p class="muted" style="color:rgba(255,255,255,.65);line-height:1.7">Portfolio KPIs, AppFolio sync, AI report analysis, rent roll review, and team collaboration.</p></div></section><section class="login-right"><div class="title" id="formTitle">Welcome back</div><p class="muted" id="formSub" style="margin-bottom:28px">Sign in to continue.</p><div id="msg" class="error"></div><form id="authForm"><div class="field hidden" id="nameWrap"><label>Name</label><input id="name" autocomplete="name"></div><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" required></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn btn-primary" id="submitBtn" style="width:100%">Sign In</button></form><p class="muted" style="margin-top:18px;text-align:center"><span id="toggleText">Need an account?</span> <a href="#" id="toggle">Create one</a></p></section></div><script type="module">import{auth,doLogin,doSignup,$,show,hide}from'./app.js';import{onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';let signup=false;onAuthStateChanged(auth,u=>{if(u)location.href='dashboard.html'});$('toggle').onclick=e=>{e.preventDefault();signup=!signup;$('nameWrap').classList.toggle('hidden',!signup);$('formTitle').textContent=signup?'Create account':'Welcome back';$('formSub').textContent=signup?'Create your portal login.':'Sign in to continue.';$('submitBtn').textContent=signup?'Create Account':'Sign In';$('toggleText').textContent=signup?'Already have an account?':'Need an account?';$('toggle').textContent=signup?'Sign in':'Create one';hide('msg')};$('authForm').onsubmit=async e=>{e.preventDefault();hide('msg');$('submitBtn').disabled=true;try{if(signup)await doSignup($('name').value.trim(),$('email').value.trim(),$('password').value);else await doLogin($('email').value.trim(),$('password').value);location.href='dashboard.html'}catch(err){show('msg',err.message)}finally{$('submitBtn').disabled=false}};</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LSRTA Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="login-body">
+
+<div class="login-shell">
+
+<section class="login-left">
+<div>
+<div class="brand-eye">Internal Portal</div>
+<div class="brand-name">
+Legacy<br><span>Signature</span>
+</div>
+<div class="brand-sub">Rental Trend Analyzer</div>
+</div>
+
+<div>
+<p class="muted" style="color:rgba(255,255,255,.65);line-height:1.7">
+Portfolio KPIs, AppFolio sync, AI report analysis, rent roll review, and team collaboration.
+</p>
+</div>
+</section>
+
+<section class="login-right">
+
+<div class="title">Welcome back</div>
+<p class="muted" style="margin-bottom:28px">
+Sign in to continue.
+</p>
+
+<div id="msg" class="error"></div>
+
+<form id="authForm">
+
+<div class="field">
+<label>Email</label>
+<input id="email" type="email" autocomplete="email" required>
+</div>
+
+<div class="field">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+</div>
+
+<button class="btn btn-primary" id="submitBtn" style="width:100%">
+Sign In
+</button>
+
+</form>
+
+</section>
+</div>
+
+<script type="module">
+
+import "./app.js";
+
+const form = document.getElementById("authForm");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", async (e) => {
+
+e.preventDefault();
+
+msg.style.display = "none";
+btn.disabled = true;
+
+const email = document.getElementById("email").value.trim();
+const password = document.getElementById("password").value;
+
+try {
+
+await window.loginUser(email, password);
+
+window.location.href = "dashboard.html";
+
+} catch(err) {
+
+msg.style.display = "block";
+msg.textContent = err.message;
+
+} finally {
+
+btn.disabled = false;
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
