@@ -75,8 +75,13 @@ export function money(value) {
 }
 
 export function pct(value) {
-  if (value === null || value === undefined || value === "") return "0%";
-  return `${Number(value).toFixed(1)}%`;
+
+  if (value === null || value === undefined || value === "") {
+    return "0%";
+  }
+
+  return Number(value).toFixed(1) + "%";
+
 }
 
 export async function doLogin(email, password) {
