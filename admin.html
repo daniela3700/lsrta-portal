@@ -339,6 +339,7 @@
 
   let currentUser = null;
   let pendingRemoveUid = null;
+  let pendingRemoveName = null;
   let allMembers = {};
 
   onAuthStateChanged(auth, async user => {
@@ -511,6 +512,7 @@
   // Remove member
   window.promptRemove = (uid, name) => {
     pendingRemoveUid = uid;
+    pendingRemoveName = name;
     document.getElementById('confirmText').textContent =
       `Are you sure you want to remove ${name}? They will be removed from the team list. Note: to fully revoke login access, you must also disable their account in the Firebase console.`;
     document.getElementById('confirmModal').classList.add('open');
@@ -521,7 +523,26 @@
     const btn = document.getElementById('confirmBtn');
     setLoading(btn, true);
     try {
+      // 1. Remove from Firebase Database
       await remove(ref(db, 'members/' + pendingRemoveUid));
+
+      // 2. Delete from Firebase Auth via Worker
+      // This uses Firebase Auth REST API to fully delete the account
+      // so the email can be re-invited fresh
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        await fetch('https://lsrta-api.daniela-e0c.workers.dev/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: pendingRemoveUid, idToken: idToken })
+        });
+      } catch(authErr) {
+        // Auth deletion failed but DB removal succeeded
+        // Show a note so admin knows to manually delete from Firebase Console
+        console.warn('Could not delete from Firebase Auth:', authErr.message);
+        alert('User removed from portal. NOTE: Please also delete ' + (pendingRemoveName||'this user') + ' from Firebase Console > Authentication > Users so they can be re-invited fresh.');
+      }
+
       closeConfirm();
     } catch(e) {
       alert('Remove failed: ' + e.message);
