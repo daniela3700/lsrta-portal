@@ -281,6 +281,70 @@
   </div>
 </div>
 
+
+
+<!-- SYNC MODAL -->
+<div class="mbg" id="syncModal">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mtitle">🔄 Sync from Appfolio</div>
+      <button class="mx" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="mf">
+          <label>Portfolio</label>
+          <select id="sPort">
+            <option value="all">All Portfolios</option>
+            <option value="nc_gladysh">NC Gladysh Capital</option>
+            <option value="sc_platinum">SC Platinum Estates</option>
+            <option value="tx_acorn">TX Acorn Ridge</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Report Type</label>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly</label>
+          </div>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="mf">
+          <label>Period Start Date</label>
+          <input type="date" id="sStartDate"/>
+        </div>
+        <div class="mf">
+          <label>Period End Date</label>
+          <input type="date" id="sEndDate"/>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
+        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
+      </div>
+      <div id="syncProgress" style="display:none;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;"><span id="spLbl">Connecting...</span><span id="spPct">0%</span></div>
+        <div style="height:4px;background:rgba(15,31,61,0.07);border-radius:2px;"><div id="spFill" style="height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;"></div></div>
+        <div style="font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;" id="spStatus"></div>
+      </div>
+      <div id="syncConfirm" style="display:none;margin-bottom:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
+        <div style="padding:12px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Synced KPIs</div>
+          <div style="font-size:11px;color:var(--gray);" id="syncConfirmLbl"></div>
+        </div>
+        <div id="syncConfirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+        <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
+        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
+          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
+          <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
+        </div>
+
+      </div>
+      <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -915,67 +979,5 @@ window.uploadLeasingData = async function(){
 
 document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===document.getElementById('syncModal')) closeSyncModal(); });
 </script>
-
-<!-- SYNC MODAL -->
-<div class="mbg" id="syncModal">
-  <div class="modal">
-    <div class="mhdr">
-      <div class="mtitle">🔄 Sync from Appfolio</div>
-      <button class="mx" onclick="closeSyncModal()">✕</button>
-    </div>
-    <div class="mbody">
-      <div class="mrow">
-        <div class="mf">
-          <label>Portfolio</label>
-          <select id="sPort">
-            <option value="all">All Portfolios</option>
-            <option value="nc_gladysh">NC Gladysh Capital</option>
-            <option value="sc_platinum">SC Platinum Estates</option>
-            <option value="tx_acorn">TX Acorn Ridge</option>
-          </select>
-        </div>
-        <div class="mf">
-          <label>Report Type</label>
-          <div style="display:flex;gap:12px;margin-top:8px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly</label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly</label>
-          </div>
-        </div>
-      </div>
-      <div class="mrow">
-        <div class="mf">
-          <label>Period Start Date</label>
-          <input type="date" id="sStartDate"/>
-        </div>
-        <div class="mf">
-          <label>Period End Date</label>
-          <input type="date" id="sEndDate"/>
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
-        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
-      </div>
-      <div id="syncProgress" style="display:none;margin-bottom:16px;">
-        <div style="font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;"><span id="spLbl">Connecting...</span><span id="spPct">0%</span></div>
-        <div style="height:4px;background:rgba(15,31,61,0.07);border-radius:2px;"><div id="spFill" style="height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;"></div></div>
-        <div style="font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;" id="spStatus"></div>
-      </div>
-      <div id="syncConfirm" style="display:none;margin-bottom:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
-        <div style="padding:12px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Synced KPIs</div>
-          <div style="font-size:11px;color:var(--gray);" id="syncConfirmLbl"></div>
-        </div>
-        <div id="syncConfirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
-        <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
-        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
-          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
-          <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
-        </div>
-
-      </div>
-      <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
