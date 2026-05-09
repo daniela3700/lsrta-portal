@@ -698,12 +698,12 @@ window.saveKPIs=async function(){
 };
 
 window.skipLeasingAndClose=function(){
-  if(window.LAST_SAVED){
-    var sp=window.LAST_SAVED.port; var sk=window.LAST_SAVED.key;
+  if(LAST_SAVED){
+    var sp=LAST_SAVED.port; var sk=LAST_SAVED.key;
     closeSyncModal();
     var firstBtn=document.querySelector('.pb');
     if(firstBtn) setPort(sp==='all'?'all':sp, firstBtn);
-    CK=sk; SYNC_PENDING=null; window.LAST_SAVED=null;
+    CK=sk; SYNC_PENDING=null; LAST_SAVED=null;
   } else { closeSyncModal(); }
 };
 
@@ -719,6 +719,7 @@ window.cancelConfirm=function(){
 // ── APPFOLIO SYNC ─────────────────────────────
 
 var SYNC_PENDING = null;
+var LAST_SAVED = null;
 
 window.syncAppfolio = function(){
   var today = new Date();
@@ -837,7 +838,7 @@ window.saveSyncedKPIs = async function(){
     document.getElementById('saveSyncBtn').disabled = true;
     document.getElementById('leasingUploadSection').style.display = 'block';
     // Store saved info for leasing upload
-    window.LAST_SAVED = { ports: portsToSave, key: sk, port: sp };
+    LAST_SAVED = { ports: portsToSave, key: sk, port: sp };
   }catch(e){
     alert('Save failed: '+e.message);
     btn.textContent='Save to Dashboard'; btn.disabled=false;
@@ -848,7 +849,7 @@ window.uploadLeasingData = async function(){
   var fileIn = document.getElementById('leasingFileIn');
   var status = document.getElementById('leasingUploadStatus');
   if(!fileIn.files[0]) { status.textContent = 'Please select a CSV file first.'; return; }
-  if(!window.LAST_SAVED) { status.textContent = 'Please save the sync data first.'; return; }
+  if(!LAST_SAVED) { status.textContent = 'Please save the sync data first.'; return; }
 
   status.textContent = 'Reading file...';
   try{
@@ -880,11 +881,11 @@ window.uploadLeasingData = async function(){
     }
 
     // Save leasing data to Firebase for each portfolio
-    var saves = window.LAST_SAVED.ports.map(async function(port){
+    var saves = LAST_SAVED.ports.map(async function(port){
       var updates = {};
-      if(kpis.leads!=null)        updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/leads']        = kpis.leads;
-      if(kpis.applications!=null) updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/applications'] = kpis.applications;
-      if(kpis.leased!=null)       updates['kpis/'+port+'/'+window.LAST_SAVED.key+'/leased']       = kpis.leased;
+      if(kpis.leads!=null)        updates['kpis/'+port+'/'+LAST_SAVED.key+'/leads']        = kpis.leads;
+      if(kpis.applications!=null) updates['kpis/'+port+'/'+LAST_SAVED.key+'/applications'] = kpis.applications;
+      if(kpis.leased!=null)       updates['kpis/'+port+'/'+LAST_SAVED.key+'/leased']       = kpis.leased;
       // Only update move ins/outs if not already set by tickler
       return Promise.all(Object.entries(updates).map(function(e){ return set(ref(db, e[0]), e[1]); }));
     });
@@ -896,11 +897,11 @@ window.uploadLeasingData = async function(){
     // Now close and navigate to dashboard
     setTimeout(function(){
       closeSyncModal();
-      var pb = null; document.querySelectorAll('.pb').forEach(function(b){ if(b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf(window.LAST_SAVED.port)>-1) pb=b; });
+      var pb = null; document.querySelectorAll('.pb').forEach(function(b){ if(b.getAttribute('onclick')&&b.getAttribute('onclick').indexOf(LAST_SAVED.port)>-1) pb=b; });
       if(!pb) pb = document.querySelector('.pb');
-      if(pb) setPort(window.LAST_SAVED.port, pb);
-      CK = window.LAST_SAVED.key;
-      window.LAST_SAVED = null;
+      if(pb) setPort(LAST_SAVED.port, pb);
+      CK = LAST_SAVED.key;
+      LAST_SAVED = null;
       SYNC_PENDING = null;
     }, 2000);
 
