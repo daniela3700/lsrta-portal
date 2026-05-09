@@ -1,1 +1,1184 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard — LSRTA</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head><body><script type="module">import{shell,requireLogin,$,api,saveKpis,loadKpis,money,pct,PORTFOLIOS,askAI,show,hide}from'./app.js';document.body.innerHTML=shell('dashboard.html','Portfolio Dashboard','Sync AppFolio or upload reports to populate KPIs');requireLogin(init);let current='all',view='weekly',records=[];function init(){render();load();}function render(){document.getElementById('pageContent').innerHTML=`<div class="toolbar" style="justify-content:space-between;margin-bottom:18px"><div>${Object.entries(PORTFOLIOS).map(([k,v])=>`<button class="chip ${k===current?'active':''}" data-port="${k}">${v}</button>`).join('')}</div><button class="btn btn-gold" id="syncOpen">Sync AppFolio</button></div><div class="card"><div class="card-h"><div><div class="card-t">AI Executive Summary</div><div class="muted">Generated from saved KPI data</div></div><button class="btn btn-outline" id="summaryBtn">Generate</button></div><div class="card-b"><div class="ai-box" id="aiBox">No summary yet.</div></div></div><div id="dash"></div><div class="modal-bg" id="syncModal"><div class="modal"><div class="modal-h"><div class="title" style="font-size:22px">Sync from AppFolio</div><button class="x" id="closeSync">×</button></div><div class="modal-b"><div id="syncErr" class="error"></div><div class="grid grid-2"><div class="field"><label>Portfolio</label><select id="sPort">${Object.entries(PORTFOLIOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="field"><label>Type</label><select id="sType"><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div><div class="field"><label>From Date</label><input type="date" id="sFrom"></div><div class="field"><label>To Date</label><input type="date" id="sTo"></div></div><button class="btn btn-primary" id="runSync" style="width:100%">Run Sync</button><div id="syncResult" style="margin-top:16px"></div></div></div></div>`;document.querySelectorAll('[data-port]').forEach(b=>b.onclick=()=>{current=b.dataset.port;render();draw()});$('syncOpen').onclick=()=>{$('syncModal').classList.add('open');const d=new Date();const to=d.toISOString().slice(0,10);d.setDate(d.getDate()-6);$('sFrom').value=d.toISOString().slice(0,10);$('sTo').value=to;$('sPort').value=current};$('closeSync').onclick=()=>$('syncModal').classList.remove('open');$('runSync').onclick=runSync;$('summaryBtn').onclick=genSummary;}async function load(){records=await loadKpis().catch(()=>[]);draw();}function latest(){return records.find(r=>current==='all'||r.portfolio===current)||null}function draw(){const r=latest();if(!r){$('dash').innerHTML='<div class="empty card">No KPI data yet. Click Sync AppFolio.</div>';return}const k=r.kpis||r;$('dash').innerHTML=`<div class="grid grid-4"><div class="stat"><div class="stat-l">Total Units</div><div class="stat-v">${k.total_units||0}</div></div><div class="stat"><div class="stat-l">Occupancy</div><div class="stat-v">${pct(k.occupancy_rate)}</div></div><div class="stat"><div class="stat-l">Leased</div><div class="stat-v">${k.leased||0}</div></div><div class="stat"><div class="stat-l">NOI</div><div class="stat-v">${money(k.noi)}</div></div></div><div class="card"><div class="card-h"><div class="card-t">Latest Period</div><div class="muted">${r.from_date||''} to ${r.to_date||''}</div></div><div class="card-b"><table><tbody>${Object.entries(k).filter(([a])=>!['syncedAt','syncedFrom','portfolio','from_date','to_date'].includes(a)).map(([a,b])=>`<tr><th>${a.replaceAll('_',' ')}</th><td>${typeof b==='number'?b.toLocaleString():b}</td></tr>`).join('')}</tbody></table></div></div>`;}async function runSync(){hide('syncErr');$('runSync').disabled=true;$('syncResult').innerHTML='<div class="muted">Syncing...</div>';try{const payload={portfolio:$('sPort').value,type:$('sType').value,from_date:$('sFrom').value,to_date:$('sTo').value};const data=await api('/appfolio-sync',payload);await saveKpis({...payload,kpis:data.kpis,reportStatus:data.reportStatus,rawCounts:data.rawCounts});records=await loadKpis();$('syncResult').innerHTML='<div class="success show">Sync saved successfully.</div>';draw();}catch(e){show('syncErr',e.message);$('syncResult').innerHTML='';}finally{$('runSync').disabled=false}}async function genSummary(){const r=latest();if(!r){$('aiBox').textContent='No KPI data available.';return}$('summaryBtn').disabled=true;$('aiBox').textContent='Generating...';try{$('aiBox').textContent=await askAI(`Write an executive property-management summary for this KPI data. Be direct and call out issues, leasing, occupancy, work orders, NOI, and next actions.\n\n${JSON.stringify(r.kpis||r,null,2)}`,1600)}catch(e){$('aiBox').textContent=e.message}finally{$('summaryBtn').disabled=false}}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — LSRTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--navy:#0f1f3d;--navy-mid:#1a3260;--gold:#c9a84c;--white:#ffffff;--gray:#8a8fa3;--green:#27ae60;--yellow:#f39c12;--red:#e74c3c;--blue:#2980b9;--sw:240px;}
+    body{font-family:'DM Sans',sans-serif;background:#f4f6fa;color:var(--navy);min-height:100vh;display:flex;}
+    .sidebar{width:var(--sw);min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;border-right:1px solid rgba(201,168,76,0.15);}
+    .sb{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.07);}
+    .sb-eye{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+    .sb-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#fff;line-height:1.1;}
+    .sb-name span{color:var(--gold);}
+    .sb-sub{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+    .snav{flex:1;padding:16px 0;overflow-y:auto;}
+    .snl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:12px 24px 6px;}
+    .ni{display:flex;align-items:center;gap:12px;padding:10px 24px;font-size:13px;color:rgba(255,255,255,0.55);cursor:pointer;text-decoration:none;transition:all .2s;border-left:3px solid transparent;}
+    .ni:hover{color:#fff;background:rgba(255,255,255,0.05);}
+    .ni.active{color:#fff;background:rgba(201,168,76,0.1);border-left-color:var(--gold);}
+    .ni-ic{font-size:16px;width:20px;text-align:center;}
+    .sfoot{padding:16px 24px;border-top:1px solid rgba(255,255,255,0.07);}
+    .uinfo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .uav{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--navy);flex-shrink:0;}
+    .uname{font-size:13px;color:#fff;}
+    .urole{font-size:10px;color:rgba(255,255,255,0.35);}
+    .btn-so{width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:2px;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+    .btn-so:hover{border-color:var(--gold);color:var(--gold);}
+    .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+    .topbar{background:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(15,31,61,0.08);position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:12px;}
+    .tb-left{display:flex;flex-direction:column;}
+    .tb-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--navy);}
+    .tb-sub{font-size:11px;color:var(--gray);margin-top:1px;}
+    .ptoggle{display:flex;gap:6px;flex-wrap:wrap;}
+    .pb{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(15,31,61,0.15);background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--gray);cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .pb:hover{border-color:var(--navy);color:var(--navy);}
+    .pb.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .content{padding:24px 28px;flex:1;}
+    .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .vtoggle{display:flex;gap:6px;align-items:center;}
+    .vl{font-size:11px;color:var(--gray);}
+    .vb{padding:5px 14px;border-radius:2px;border:1px solid rgba(15,31,61,0.12);background:#fff;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gray);cursor:pointer;transition:all .2s;}
+    .vb.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .btn-gold{padding:7px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;}
+    .btn-gold:hover{background:#b8963e;}
+    .btn-navy{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+    .btn-navy:hover{background:var(--navy-mid);}
+    .btn-navy:disabled{opacity:.5;cursor:not-allowed;}
+    .aib{background:linear-gradient(135deg,var(--navy) 0%,#1a3260 100%);border-radius:4px;padding:20px 24px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-start;}
+    .aib-ic{font-size:24px;flex-shrink:0;margin-top:2px;}
+    .aib-c{flex:1;}
+    .aib-lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+    .aib-txt{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7;}
+    .aib-empty{font-style:italic;color:rgba(255,255,255,0.4);}
+    .aib-meta{font-size:10px;color:rgba(255,255,255,0.35);margin-top:8px;}
+    .aib-btn{padding:6px 12px;background:rgba(201,168,76,0.2);border:1px solid rgba(201,168,76,0.3);border-radius:2px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;align-self:flex-start;}
+    .prow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+    .plbl{font-size:11px;color:var(--gray);}
+    .pchip{padding:4px 10px;border-radius:20px;border:1px solid rgba(15,31,61,0.12);background:#fff;font-size:11px;color:var(--gray);cursor:pointer;transition:all .2s;}
+    .pchip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+    .delbtn{background:none;border:none;cursor:pointer;color:var(--gray);font-size:11px;padding:2px 4px;}
+    .delbtn:hover{color:var(--red);}
+    .shdr{display:flex;align-items:center;gap:10px;margin:24px 0 14px;}
+    .stitle{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);white-space:nowrap;}
+    .sline{flex:1;height:1px;background:rgba(15,31,61,0.08);}
+    .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+    .kc{background:#fff;border-radius:4px;padding:16px 18px;border:1px solid rgba(15,31,61,0.07);position:relative;overflow:hidden;}
+    .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(15,31,61,0.07);}
+    .kc.cg::before{background:var(--green);}
+    .kc.cy::before{background:var(--yellow);}
+    .kc.cr::before{background:var(--red);}
+    .kc.cb::before{background:var(--blue);}
+    .kc.cgo::before{background:var(--gold);}
+    .kc-l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:8px;line-height:1.4;}
+    .kc-v{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--navy);line-height:1;margin-bottom:4px;}
+    .kc-s{font-size:11px;color:var(--gray);margin-top:3px;}
+    .kc-t{font-size:10px;color:rgba(138,143,163,0.7);margin-top:3px;}
+    .bdg{display:inline-flex;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;margin-top:6px;}
+    .bdg.bg-g{background:rgba(39,174,96,0.1);color:var(--green);}
+    .bdg.bg-y{background:rgba(243,156,18,0.1);color:var(--yellow);}
+    .bdg.bg-r{background:rgba(231,76,60,0.1);color:var(--red);}
+    .funnel{background:#fff;border-radius:4px;border:1px solid rgba(15,31,61,0.07);padding:20px 24px;margin-bottom:14px;}
+    .fsteps{display:flex;align-items:stretch;}
+    .fs{flex:1;text-align:center;padding:12px 8px;position:relative;}
+    .fs::after{content:'›';position:absolute;right:-4px;top:40%;font-size:20px;color:rgba(15,31,61,0.2);}
+    .fs:last-child::after{display:none;}
+    .fs-n{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--navy);line-height:1;}
+    .fs-l{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;}
+    .fs-c{font-size:11px;margin-top:3px;font-weight:500;}
+    .empty{text-align:center;padding:60px 24px;}
+    .empty-ic{font-size:48px;margin-bottom:16px;}
+    .empty-t{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navy);margin-bottom:8px;}
+    .empty-s{font-size:13px;color:var(--gray);line-height:1.6;max-width:400px;margin:0 auto 20px;}
+    .ttable{width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;margin-bottom:20px;}
+    .ttable th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);border-bottom:1px solid rgba(15,31,61,0.08);background:#fafbfc;white-space:nowrap;}
+    .ttable td{padding:10px 14px;font-size:13px;color:var(--navy);border-bottom:1px solid rgba(15,31,61,0.05);text-align:center;}
+    .ttable td:first-child{text-align:left;font-weight:500;white-space:nowrap;}
+    .ttable tr:last-child td{border-bottom:none;}
+    .ttable tr:nth-child(even) td{background:rgba(15,31,61,0.015);}
+    .tu{color:var(--green);}
+    .td2{color:var(--red);}
+    .tf{color:var(--gray);}
+    .abox{background:#fff;border-radius:4px;border:1px solid rgba(15,31,61,0.07);overflow:hidden;margin-bottom:20px;}
+    .abox-h{padding:16px 20px;border-bottom:1px solid rgba(15,31,61,0.06);display:flex;align-items:center;justify-content:space-between;}
+    .abox-t{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);}
+    .abox-b{padding:24px;font-size:13px;line-height:1.7;color:var(--navy);white-space:pre-wrap;}
+    .mbg{position:fixed;inset:0;background:rgba(15,31,61,0.6);z-index:200;display:none;align-items:center;justify-content:center;}
+    .mbg.open{display:flex;}
+    .modal{background:#fff;border-radius:4px;width:92%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+    .mhdr{padding:20px 24px;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;align-items:center;justify-content:space-between;}
+    .mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--navy);}
+    .mx{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);}
+    .mbody{padding:24px;}
+    .mrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    .mf label{display:block;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:6px;}
+    .mf input,.mf select{width:100%;padding:9px 12px;border:1px solid rgba(15,31,61,0.12);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--navy);outline:none;}
+    .mf input:focus,.mf select:focus{border-color:var(--gold);}
+    .dz{border:2px dashed rgba(15,31,61,0.15);border-radius:4px;padding:28px 16px;text-align:center;cursor:pointer;background:#fafbfc;margin:16px 0;transition:all .2s;}
+    .dz:hover{border-color:var(--gold);}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+    .chip{display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(15,31,61,0.05);border:1px solid rgba(15,31,61,0.1);border-radius:20px;font-size:11px;color:var(--navy);}
+    .chip-x{background:none;border:none;cursor:pointer;color:var(--gray);font-size:12px;}
+    .pwrap{display:none;margin-bottom:16px;}
+    .ptop{font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;}
+    .pbg{height:4px;background:rgba(15,31,61,0.07);border-radius:2px;}
+    .pfill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;}
+    .pstat{font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;}
+    #screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .4s;}
+    .ring{width:40px;height:40px;border:3px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    .rt{font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-align:center;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:800px){.sidebar{display:none;}.main{margin-left:0;}.g4{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div id="screen"><div><div class="ring"></div><div class="rt">Loading dashboard...</div></div></div>
+
+<nav class="sidebar">
+  <div class="sb">
+    <div class="sb-eye">Internal Portal</div>
+    <div class="sb-name">Legacy<br><span>Signature</span></div>
+    <div class="sb-sub">Rental Trend Analyzer</div>
+  </div>
+  <div class="snav">
+    <div class="snl">Main</div>
+    <a class="ni active" href="dashboard.html"><span class="ni-ic">🏠</span> Dashboard</a>
+    <a class="ni" href="reports.html"><span class="ni-ic">📊</span> Reports</a>
+    <a class="ni" href="bulk.html"><span class="ni-ic">📦</span> Bulk Analysis</a>
+    <a class="ni" href="compare.html"><span class="ni-ic">🔄</span> Compare</a>
+    <a class="ni" href="rentroll.html"><span class="ni-ic">📋</span> Rent Roll</a>
+    <div class="snl">Team</div>
+    <a class="ni" href="chat.html"><span class="ni-ic">💬</span> Team Chat</a>
+    <div class="snl">Admin</div>
+    <a class="ni" href="admin.html"><span class="ni-ic">⚙️</span> Admin Panel</a>
+  </div>
+  <div class="sfoot">
+    <div class="uinfo">
+      <div class="uav" id="uInit">?</div>
+      <div><div class="uname" id="uName">Loading...</div><div class="urole">Team Member</div></div>
+    </div>
+    <button class="btn-so" onclick="doSignOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="dashTitle">Portfolio Dashboard</div>
+      <div class="tb-sub" id="dashSub">Select a portfolio and upload reports to populate</div>
+    </div>
+    <div class="ptoggle">
+      <button class="pb active" onclick="setPort('all',this)">All Portfolios</button>
+      <button class="pb" onclick="setPort('nc_gladysh',this)">NC Gladysh Capital</button>
+      <button class="pb" onclick="setPort('sc_platinum',this)">SC Platinum Estates</button>
+      <button class="pb" onclick="setPort('tx_acorn',this)">TX Acorn Ridge</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="toprow">
+      <div class="vtoggle">
+        <span class="vl">View:</span>
+        <button class="vb active" onclick="setView('weekly',this)">Weekly</button>
+        <button class="vb" onclick="setView('monthly',this)">Monthly</button>
+        <button class="vb" onclick="setView('trends',this)">📈 Trends</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-gold" onclick="openModal()">📤 Upload Reports</button>
+        <button id="syncBtn" onclick="syncAppfolio()" style="padding:7px 16px;background:var(--navy);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">🔄 Sync Appfolio</button>
+      </div>
+    </div>
+    <div class="aib">
+      <div class="aib-ic">✨</div>
+      <div class="aib-c">
+        <div class="aib-lbl">AI Executive Summary</div>
+        <div class="aib-txt aib-empty" id="aiTxt">Upload Appfolio reports to generate an AI executive summary.</div>
+        <div class="aib-meta" id="aiMeta"></div>
+      </div>
+      <button class="aib-btn" id="aiBtn" onclick="genSummary()" style="display:none;">↻ Refresh</button>
+    </div>
+    <div id="prow" style="display:none;" class="prow">
+      <span class="plbl">Period:</span>
+      <div id="pchips"></div>
+    </div>
+    <div id="dash">
+      <div class="empty"><div class="empty-ic">📊</div><div class="empty-t">No data yet</div><div class="empty-s">Upload your Appfolio exports and Claude will automatically extract all KPIs.</div><button class="btn-navy" onclick="openModal()">📤 Upload Reports Now</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle">Upload Appfolio Reports</div><button class="mx" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="mf"><label>Portfolio</label><select id="mPort"><option value="nc_gladysh">NC Gladysh Capital</option><option value="sc_platinum">SC Platinum Estates</option><option value="tx_acorn">TX Acorn Ridge</option></select></div>
+        <div class="mf"><label>Report Type</label>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;">
+              <input type="radio" name="vtype" id="vtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;">
+              <input type="radio" name="vtype" id="vtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="mf">
+          <label>Period Start Date</label>
+          <input type="date" id="mStartDate"/>
+        </div>
+        <div class="mf">
+          <label>Period End Date</label>
+          <input type="date" id="mEndDate"/>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
+        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
+      </div>
+      <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div style="font-size:13px;font-weight:500;color:var(--navy);margin-bottom:4px;">Drop Appfolio exports here</div>
+        <div style="font-size:11px;color:var(--gray);">Occupancy · Leasing · Work Orders · Cash Flow · Rent Roll</div>
+      </div>
+      <input type="file" id="fi" multiple accept=".csv,.txt" style="display:none;"/>
+      <div class="chips" id="chips"></div>
+      <div class="pwrap" id="pw">
+        <div class="ptop"><span id="pl">Reading...</span><span id="pp">0%</span></div>
+        <div class="pbg"><div class="pfill" id="pf"></div></div>
+        <div class="pstat" id="ps"></div>
+      </div>
+      <button class="btn-navy" id="exBtn" onclick="extractKPIs()" style="width:100%;">🧠 Extract KPIs with AI</button>
+
+      <!-- CONFIRMATION PANEL -->
+      <div id="confirmPanel" style="display:none;margin-top:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
+        <div style="padding:14px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Extracted KPIs</div>
+          <div style="font-size:11px;color:var(--gray);" id="confirmPeriodLabel"></div>
+        </div>
+        <div id="confirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+        <div id="dupWarning" style="display:none;margin:0 16px 12px;padding:10px 14px;background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:3px;font-size:12px;color:#b7770d;">⚠️ Data already exists for this period. Saving will overwrite it.</div>
+        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
+          <button class="btn-navy" onclick="saveKPIs()" id="saveBtn" style="flex:1;">💾 Looks Good — Save</button>
+          <button onclick="cancelConfirm()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    <!-- LEASING UPLOAD SECTION — shown after save -->
+    <div id="leasingUploadSection" style="display:none;margin:0 24px 24px;padding:16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;min-width:200px;"/>
+        <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
+        <button onclick="skipLeasingAndClose()" style="padding:8px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;">Skip</button>
+      </div>
+      <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- SYNC MODAL -->
+<div class="mbg" id="syncModal">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mtitle">🔄 Sync from Appfolio</div>
+      <button class="mx" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="mf">
+          <label>Portfolio</label>
+          <select id="sPort">
+            <option value="all">All Portfolios</option>
+            <option value="nc_gladysh">NC Gladysh Capital</option>
+            <option value="sc_platinum">SC Platinum Estates</option>
+            <option value="tx_acorn">TX Acorn Ridge</option>
+          </select>
+        </div>
+        <div class="mf">
+          <label>Report Type</label>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtW" value="weekly" checked style="accent-color:var(--navy);width:14px;height:14px;"/> Weekly</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);cursor:pointer;text-transform:none;letter-spacing:0;"><input type="radio" name="svtype" id="svtM" value="monthly" style="accent-color:var(--navy);width:14px;height:14px;"/> Monthly</label>
+          </div>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="mf">
+          <label>Period Start Date</label>
+          <input type="date" id="sStartDate"/>
+        </div>
+        <div class="mf">
+          <label>Period End Date</label>
+          <input type="date" id="sEndDate"/>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin:-8px 0 16px;">
+        Weekly example: Apr 24 – May 1 &nbsp;|&nbsp; Monthly example: Apr 1 – Apr 30
+      </div>
+      <div id="syncProgress" style="display:none;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:6px;display:flex;justify-content:space-between;"><span id="spLbl">Connecting...</span><span id="spPct">0%</span></div>
+        <div style="height:4px;background:rgba(15,31,61,0.07);border-radius:2px;"><div id="spFill" style="height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;"></div></div>
+        <div style="font-size:12px;color:var(--navy);margin-top:6px;font-style:italic;" id="spStatus"></div>
+      </div>
+      <div id="syncConfirm" style="display:none;margin-bottom:16px;border:1px solid rgba(15,31,61,0.1);border-radius:4px;overflow:hidden;">
+        <div style="padding:12px 16px;background:#f7f9fc;border-bottom:1px solid rgba(15,31,61,0.08);display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--navy);">📋 Review Synced KPIs</div>
+          <div style="font-size:11px;color:var(--gray);" id="syncConfirmLbl"></div>
+        </div>
+        <div id="syncConfirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+        <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
+        <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
+          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
+          <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
+        </div>
+
+      </div>
+      <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }                        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── Config ────────────────────────────────────────────
+const FB = {
+  apiKey:"AIzaSyCjAEOpWBS6k-tApaVY3aldpS1m8OYC3b4",
+  authDomain:"lsrta-portal.firebaseapp.com",
+  databaseURL:"https://lsrta-portal-default-rtdb.firebaseio.com",
+  projectId:"lsrta-portal",
+  storageBucket:"lsrta-portal.firebasestorage.app",
+  messagingSenderId:"29459242340",
+  appId:"1:29459242340:web:ad2a93f4783667ee816e71"
+};
+const WORKER = 'https://lsrta-api.daniela-e0c.workers.dev';
+const N = { all:'All Portfolios', nc_gladysh:'NC Gladysh Capital', sc_platinum:'SC Platinum Estates', tx_acorn:'TX Acorn Ridge' };
+
+const app  = initializeApp(FB);
+const auth = getAuth(app);
+const db   = getDatabase(app);
+
+// ── State ─────────────────────────────────────────────
+let CU=null, CP='all', CV='weekly', CK=null, CD={}, MF=[];
+let PENDING=null, SYNC_PENDING=null, LAST_SAVED=null;
+
+// ── Auth ──────────────────────────────────────────────
+onAuthStateChanged(auth, function(u) {
+  if (!u) { window.location.href='index.html'; return; }
+  CU = u;
+  const n = u.displayName || u.email;
+  document.getElementById('uName').textContent = n;
+  document.getElementById('uInit').textContent =
+    n.split(' ').map(x => x[0]).join('').toUpperCase().slice(0,2);
+  const s = document.getElementById('screen');
+  s.style.opacity = '0';
+  setTimeout(() => s.style.display='none', 400);
+  onValue(ref(db,'kpis'), snap => { CD = snap.exists() ? snap.val() : {}; draw(); });
+});
+
+window.doSignOut = () => signOut(auth).then(() => window.location.href='index.html');
+
+// ── Portfolio / view toggles ──────────────────────────
+window.setPort = function(p, btn) {
+  CP = p; CK = null;
+  document.querySelectorAll('.pb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dashTitle').textContent = N[p] + ' Dashboard';
+  if (CV === 'trends') drawTrends(); else draw();
+};
+
+window.setView = function(v, btn) {
+  CV = v;
+  document.querySelectorAll('.vb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (v === 'trends') { document.getElementById('prow').style.display='none'; drawTrends(); }
+  else draw();
+};
+
+window.selPeriod = p => { CK = p; draw(); };
+
+// ── Data helpers ──────────────────────────────────────
+function getPorts() {
+  return CP === 'all'
+    ? Object.keys(CD).filter(k => k !== 'all_portfolios')
+    : [CP];
+}
+
+function getPeriods() {
+  const s = new Set();
+  getPorts().forEach(p => {
+    if (CD[p]) Object.keys(CD[p]).forEach(k => {
+      const vt = CD[p][k].viewType;
+      if (!vt || vt === CV) s.add(k);
+    });
+  });
+  // Also include all_portfolios periods when viewing All
+  if (CP === 'all' && CD['all_portfolios']) {
+    Object.keys(CD['all_portfolios']).forEach(k => {
+      const vt = CD['all_portfolios'][k].viewType;
+      if (!vt || vt === CV) s.add(k);
+    });
+  }
+  return Array.from(s).sort((a, b) => {
+    const ts = p => {
+      for (const port of ['nc_gladysh','sc_platinum','tx_acorn','all_portfolios']) {
+        if (CD[port]?.[p]?.periodTs) return CD[port][p].periodTs;
+      }
+      return 0;
+    };
+    return ts(b) - ts(a) || (a > b ? -1 : 1);
+  });
+}
+
+function getMerged(p) {
+  const m = {};
+  // Use all_portfolios key when available and viewing all
+  if (CP === 'all' && CD['all_portfolios']?.[p]) {
+    const d = CD['all_portfolios'][p];
+    Object.keys(d).forEach(k => {
+      if (typeof d[k] === 'number') m[k] = (m[k] || 0) + d[k];
+      else if (!m[k]) m[k] = d[k];
+    });
+  }
+  // Sum individual portfolio data
+  getPorts().forEach(port => {
+    if (!CD[port]?.[p]) return;
+    const d = CD[port][p];
+    Object.keys(d).forEach(k => {
+      if (typeof d[k] === 'number') m[k] = (m[k] || 0) + d[k];
+      else if (!m[k]) m[k] = d[k];
+    });
+  });
+  // Recalculate derived rates after summing
+  if (m.occupied && m.total_units && !m.occupancy_rate)
+    m.occupancy_rate = (m.occupied / m.total_units) * 100;
+  if (m.occupied != null && m.vacant_rented != null && m.total_units)
+    m.adjusted_occupancy_rate = ((m.occupied + m.vacant_rented) / m.total_units) * 100;
+  if (m.wo_completed && m.wo_in && !m.wo_completion_rate)
+    m.wo_completion_rate = (m.wo_completed / m.wo_in) * 100;
+  return Object.keys(m).length > 0 ? m : null;
+}
+
+// ── KPI card builder ──────────────────────────────────
+function mkCard(col, lbl, val, sub, tgt, st) {
+  let h = '<div class="kc ' + col + '">'
+        + '<div class="kc-l">' + lbl + '</div>'
+        + '<div class="kc-v">' + (val !== null && val !== undefined ? val : '—') + '</div>';
+  if (sub) h += '<div class="kc-s">' + sub + '</div>';
+  if (tgt) h += '<div class="kc-t">Target: ' + tgt + '</div>';
+  if (st) {
+    const bc = st==='g'?'bg-g':st==='y'?'bg-y':'bg-r';
+    const bt = st==='g'?'✅ On Target':st==='y'?'⚠️ Watch':'🔴 Below Target';
+    h += '<div class="bdg ' + bc + '">' + bt + '</div>';
+  }
+  return h + '</div>';
+}
+function mkSec(ic, t) {
+  return '<div class="shdr"><div class="stitle">' + ic + ' ' + t + '</div>'
+       + '<div class="sline"></div></div>';
+}
+
+// ── Draw dashboard ────────────────────────────────────
+function draw() {
+  const periods = getPeriods();
+  if (!periods.length) {
+    document.getElementById('prow').style.display = 'none';
+    document.getElementById('aiBtn').style.display = 'none';
+    document.getElementById('aiTxt').textContent = 'Upload Appfolio reports or sync to populate the dashboard.';
+    document.getElementById('aiTxt').className = 'aib-txt aib-empty';
+    document.getElementById('aiMeta').textContent = '';
+    document.getElementById('dash').innerHTML =
+      '<div class="empty"><div class="empty-ic">📊</div>'
+      + '<div class="empty-t">No data yet for ' + N[CP] + '</div>'
+      + '<div class="empty-s">Upload your Appfolio exports or use Sync Appfolio to pull live data.</div>'
+      + '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">'
+      + '<button class="btn-navy" onclick="openModal()">📤 Upload Reports</button>'
+      + '<button class="btn-navy" onclick="syncAppfolio()">🔄 Sync Appfolio</button>'
+      + '</div></div>';
+    return;
+  }
+  if (!CK || !periods.includes(CK)) CK = periods[0];
+  document.getElementById('prow').style.display = 'flex';
+
+  // Period chips
+  let chips = '';
+  periods.forEach(p => {
+    chips += '<div style="display:inline-flex;align-items:center;gap:3px;margin-right:4px;">'
+           + '<button class="pchip ' + (p===CK?'active':'') + '" onclick="selPeriod(\'' + p + '\')">'
+           + p.replace(/_/g,' ') + '</button>'
+           + '<button class="delbtn" onclick="delP(\'' + p + '\')" title="Delete">✕</button>'
+           + '</div>';
+  });
+  document.getElementById('pchips').innerHTML = chips;
+
+  const d = getMerged(CK);
+  if (!d) {
+    document.getElementById('dash').innerHTML =
+      '<div style="padding:24px;color:var(--gray);text-align:center;">No data for this period.</div>';
+    return;
+  }
+
+  document.getElementById('dashSub').textContent =
+    CK.replace(/_/g,' ') + ' · ' + (CV==='weekly'?'Weekly':'Monthly');
+  document.getElementById('aiBtn').style.display = 'block';
+  if (d.aiSummary) {
+    document.getElementById('aiTxt').textContent = d.aiSummary;
+    document.getElementById('aiTxt').className = 'aib-txt';
+    document.getElementById('aiMeta').textContent =
+      'Generated ' + (d.aiSummaryDate||'') + ' · ' + N[CP];
+  } else {
+    document.getElementById('aiTxt').textContent = 'Click Refresh to generate an AI executive summary.';
+    document.getElementById('aiTxt').className = 'aib-txt aib-empty';
+    document.getElementById('aiMeta').textContent = '';
+  }
+
+  // Colour helpers
+  const occ    = d.occupancy_rate          != null ? parseFloat(d.occupancy_rate).toFixed(1)          : null;
+  const adjOcc = d.adjusted_occupancy_rate != null ? parseFloat(d.adjusted_occupancy_rate).toFixed(1) : null;
+  const wo     = d.wo_completion_rate      != null ? parseFloat(d.wo_completion_rate).toFixed(1)      : null;
+  const occC  = occ    ? (occ>=95?'cg':occ>=85?'cy':'cr')   : '';
+  const adjC  = adjOcc ? (adjOcc>=95?'cg':adjOcc>=85?'cy':'cr') : '';
+  const woC   = wo     ? (wo>=90?'cg':wo>=70?'cy':'cr')     : '';
+  const occS  = occ    ? (occ>=95?'g':occ>=85?'y':'r')      : null;
+  const adjS  = adjOcc ? (adjOcc>=95?'g':adjOcc>=85?'y':'r') : null;
+  const woS   = wo     ? (wo>=90?'g':wo>=70?'y':'r')        : null;
+  const moC   = d.moveout != null ? (d.moveout<=5?'cg':d.moveout<=8?'cy':'cr') : '';
+  const moS   = d.moveout != null ? (d.moveout<=5?'g':d.moveout<=8?'y':'r')    : null;
+  const dqC   = d.delinquencies != null ? (d.delinquencies<=2?'cg':d.delinquencies<=5?'cy':'cr') : '';
+  const evC   = d.evictions != null ? (d.evictions===0?'cg':'cr') : '';
+  const nm    = d.movein!=null && d.moveout!=null ? '+'+(d.movein-d.moveout) : '—';
+  const lAll  = d.leasing_data_scope==='all_portfolios' && CP!=='all';
+
+  let h = '';
+
+  // 🏠 Occupancy
+  h += mkSec('🏠','Occupancy');
+  h += '<div class="g4">';
+  h += mkCard('cb','Total Units', d.total_units!=null?d.total_units:null, 'Portfolio size');
+  h += mkCard(occC,'Occupancy Rate', occ?occ+'%':null, 'Occupied / Total Units','≥ 95%', occS);
+  h += mkCard(adjC,'Adjusted Occupancy', adjOcc?adjOcc+'%':null, 'Occupied + Vacant Rented / Total','≥ 95%', adjS);
+  h += mkCard('cb','Occupied Units', d.occupied!=null?d.occupied:null, 'Currently occupied');
+  h += '</div>';
+
+  // 🎯 Leasing
+  h += mkSec('🎯','Leasing');
+  h += '<div class="g4">';
+  h += mkCard('cb','Total Leads',    d.leads!=null?d.leads:null, lAll?'⚠️ All Portfolios':null);
+  h += mkCard('cb','Showings',       d.showings!=null?d.showings:null,
+    d.leads&&d.showings ? ((d.showings/d.leads)*100).toFixed(1)+'% of leads' : null);
+  h += mkCard('cb','Applications',   d.applications!=null?d.applications:null, lAll?'⚠️ All Portfolios':null);
+  h += mkCard('cg','Leased',         d.leased!=null?d.leased:null, lAll?'⚠️ All Portfolios':null);
+  h += '</div><div class="g4">';
+  h += mkCard(moC,'Move Ins',        d.movein!=null?d.movein:null, 'Net: '+nm);
+  h += mkCard(moC,'Move Outs',       d.moveout!=null?d.moveout:null, '< 5 per period','< 5/period', moS);
+  h += mkCard(d.vacant_rented>0?'cg':'cb','Vacant Rented', d.vacant_rented!=null?d.vacant_rented:null, 'Signed, not moved in yet');
+  h += mkCard(d.vacant_unrented>12?'cr':d.vacant_unrented>5?'cy':'cg','Vacant Unrented', d.vacant_unrented!=null?d.vacant_unrented:null, 'No lease signed');
+  h += '</div><div class="g4">';
+  h += mkCard('cgo','Notice Rented',   d.notice_rented!=null?d.notice_rented:null, 'Gave notice, replacement signed');
+  h += mkCard(d.notice_unrented>5?'cr':d.notice_unrented>2?'cy':'cg','Notice Unrented', d.notice_unrented!=null?d.notice_unrented:null, 'Gave notice, no replacement');
+  h += mkCard('','','',''); h += mkCard('','','','');
+  h += '</div>';
+
+  // 🔧 Maintenance
+  h += mkSec('🔧','Maintenance');
+  h += '<div class="g4">';
+  h += mkCard('cb','Incoming WOs',       d.wo_in!=null?d.wo_in:null);
+  h += mkCard(woC,'WO Completed',
+    wo ? (d.wo_completed + ' (' + wo + '%)') : (d.wo_completed!=null?d.wo_completed:null),
+    (d.wo_completed!=null?d.wo_completed:'—')+' of '+(d.wo_in!=null?d.wo_in:'—'),
+    '≥ 90%', woS);
+  h += mkCard(d.wo_cancel>10?'cy':'','WO Canceled', d.wo_cancel!=null?d.wo_cancel:null);
+  h += mkCard('cgo','Turns In Progress', d.turns_prog!=null?d.turns_prog:null);
+  h += '</div><div class="g4">';
+  h += mkCard('cg','Turns Completed',    d.turns_done!=null?d.turns_done:null);
+  h += mkCard('','','',''); h += mkCard('','','',''); h += mkCard('','','','');
+  h += '</div>';
+
+  // 👥 Tenant Relations
+  h += mkSec('👥','Tenant Relations');
+  h += '<div class="g4">';
+  h += mkCard(dqC,'Delinquencies',    d.delinquencies!=null?d.delinquencies:null, null, null, dqC?dqC[1]:null);
+  h += mkCard(dqC,'Delinquencies ($)', d.delinquencies_amt!=null?'$'+Number(d.delinquencies_amt).toLocaleString():null);
+  h += mkCard(evC,'Evictions',        d.evictions!=null?d.evictions:null);
+  h += mkCard('cg','Renewals',        d.renewals!=null?d.renewals:null);
+  h += '</div>';
+
+  // 💰 Financials (only shown when data exists)
+  if (d.noi != null || d.total_income != null || d.gpr != null) {
+    h += mkSec('💰','Financials');
+    h += '<div class="g4">';
+    h += mkCard('cg','NOI', d.noi!=null?'$'+Number(d.noi).toLocaleString():null);
+    h += mkCard('cb','Total Income', d.total_income!=null?'$'+Number(d.total_income).toLocaleString():null);
+    h += mkCard(d.collection_rate?(d.collection_rate>=98?'cg':d.collection_rate>=90?'cy':'cr'):'',
+      'Collection Rate', d.collection_rate!=null?d.collection_rate+'%':null, null,'≥ 98%',
+      d.collection_rate?(d.collection_rate>=98?'g':d.collection_rate>=90?'y':'r'):null);
+    h += mkCard('cgo','Financial Occupancy', d.financial_occupancy!=null?d.financial_occupancy.toFixed(1)+'%':null);
+    h += '</div>';
+  }
+
+  document.getElementById('dash').innerHTML = h;
+}
+
+// ── Delete period ─────────────────────────────────────
+window.delP = async function(p) {
+  if (!confirm('Delete "' + p.replace(/_/g,' ') + '"? This cannot be undone.')) return;
+  const ports = [...getPorts(), 'all_portfolios'];
+  for (const port of ports) {
+    if (CD[port]?.[p]) await remove(ref(db,'kpis/'+port+'/'+p));
+  }
+};
+
+// ── AI Summary ────────────────────────────────────────
+window.genSummary = async function() {
+  const d = getMerged(CK);
+  if (!d) return;
+  document.getElementById('aiTxt').textContent = 'Generating...';
+  document.getElementById('aiTxt').className = 'aib-txt aib-empty';
+  const occ = d.occupancy_rate ? parseFloat(d.occupancy_rate).toFixed(1) : 'N/A';
+  const wo  = d.wo_completion_rate ? parseFloat(d.wo_completion_rate).toFixed(1) : 'N/A';
+  const prompt =
+    'Write a 3-4 sentence CEO-level executive summary for a property management company. '
+  + 'Be direct. Mention what is performing well, what needs attention, and one forward-looking point. '
+  + 'Plain paragraph only, no bullet points, no markdown.\n\n'
+  + 'Portfolio: ' + N[CP] + ' | Period: ' + CK.replace(/_/g,' ') + '\n'
+  + 'Occupancy: ' + occ + '% (target 95%) | Units: ' + (d.total_units||'N/A')
+  + ' | Vacant Unrented: ' + (d.vacant_unrented!=null?d.vacant_unrented:'N/A') + '\n'
+  + 'Adjusted Occ: ' + (d.adjusted_occupancy_rate?parseFloat(d.adjusted_occupancy_rate).toFixed(1)+'%':'N/A') + '\n'
+  + 'Leads: '+(d.leads||'N/A')+' | Showings: '+(d.showings||'N/A')
+  + ' | Applications: '+(d.applications||'N/A')+' | Leased: '+(d.leased||'N/A') + '\n'
+  + 'Move Ins: '+(d.movein!=null?d.movein:'N/A')+' | Move Outs: '+(d.moveout!=null?d.moveout:'N/A') + '\n'
+  + 'WO Completion: '+wo+'% | Delinquencies: '+(d.delinquencies!=null?d.delinquencies:'N/A')
+  + ' ($'+(d.delinquencies_amt!=null?Number(d.delinquencies_amt).toLocaleString():'N/A')+')\n'
+  + 'NOI: '+(d.noi?'$'+Number(d.noi).toLocaleString():'N/A')
+  + ' | Total Income: '+(d.total_income?'$'+Number(d.total_income).toLocaleString():'N/A');
+  try {
+    const res  = await fetch(WORKER, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:'claude-opus-4-6', max_tokens:300,
+        system:'Write concise CEO-level property management executive summaries. Plain text only.',
+        messages:[{role:'user',content:prompt}] })
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const resp = await res.json();
+    const sum  = resp.content[0].text.trim();
+    const date = new Date().toLocaleDateString();
+    for (const port of getPorts()) {
+      if (CD[port]?.[CK]) {
+        await set(ref(db,'kpis/'+port+'/'+CK+'/aiSummary'), sum);
+        await set(ref(db,'kpis/'+port+'/'+CK+'/aiSummaryDate'), date);
+      }
+    }
+    document.getElementById('aiTxt').textContent = sum;
+    document.getElementById('aiTxt').className = 'aib-txt';
+    document.getElementById('aiMeta').textContent = 'Generated ' + date + ' · ' + N[CP];
+  } catch(e) {
+    document.getElementById('aiTxt').textContent = 'Could not generate summary. Please try again.';
+  }
+};
+
+// ── Trends view ───────────────────────────────────────
+function drawTrends() {
+  const allP = new Set();
+  getPorts().forEach(p => { if(CD[p]) Object.keys(CD[p]).forEach(k => allP.add(k)); });
+  const periods = Array.from(allP).sort();
+  if (periods.length < 2) {
+    document.getElementById('dash').innerHTML =
+      '<div class="empty"><div class="empty-ic">📈</div>'
+      + '<div class="empty-t">Need at least 2 periods to show trends</div>'
+      + '<div class="empty-s">Upload or sync data for multiple weeks.</div></div>';
+    return;
+  }
+  const kpiDefs = [
+    {k:'occupancy_rate',l:'Occupancy %',fmt:v=>v!=null?parseFloat(v).toFixed(1)+'%':'—',tgt:95,hi:true},
+    {k:'adjusted_occupancy_rate',l:'Adj. Occupancy %',fmt:v=>v!=null?parseFloat(v).toFixed(1)+'%':'—',tgt:95,hi:true},
+    {k:'vacant_unrented',l:'Vacant Unrented',fmt:v=>v!=null?v:'—',tgt:5,hi:false},
+    {k:'leads',l:'Leads',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'showings',l:'Showings',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'applications',l:'Applications',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'leased',l:'Leased',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'movein',l:'Move Ins',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'moveout',l:'Move Outs',fmt:v=>v!=null?v:'—',tgt:5,hi:false},
+    {k:'wo_completion_rate',l:'WO Completion %',fmt:v=>v!=null?parseFloat(v).toFixed(1)+'%':'—',tgt:90,hi:true},
+    {k:'delinquencies',l:'Delinquencies',fmt:v=>v!=null?v:'—',hi:false},
+    {k:'renewals',l:'Renewals',fmt:v=>v!=null?v:'—',hi:true},
+    {k:'noi',l:'NOI',fmt:v=>v!=null?'$'+Number(v).toLocaleString():'—',hi:true},
+  ];
+  function mg(p) {
+    const m = {};
+    getPorts().forEach(port => {
+      if (!CD[port]?.[p]) return;
+      const d = CD[port][p];
+      Object.keys(d).forEach(k => { if(typeof d[k]==='number') m[k]=(m[k]||0)+d[k]; else if(!m[k]) m[k]=d[k]; });
+    });
+    if (m.occupied && m.total_units && !m.occupancy_rate)
+      m.occupancy_rate = (m.occupied/m.total_units)*100;
+    if (m.wo_completed && m.wo_in && !m.wo_completion_rate)
+      m.wo_completion_rate = (m.wo_completed/m.wo_in)*100;
+    return m;
+  }
+  function clr(kpi, val) {
+    if (val==null || !kpi.tgt) return '';
+    return kpi.hi
+      ? (val>=kpi.tgt?'color:var(--green)':val>=kpi.tgt*0.9?'color:var(--yellow)':'color:var(--red)')
+      : (val<=kpi.tgt?'color:var(--green)':val<=kpi.tgt*1.2?'color:var(--yellow)':'color:var(--red)');
+  }
+  function trend(vals) {
+    const v = vals.filter(x => x!=null);
+    if (v.length < 2) return '<span class="tf">→</span>';
+    return v[v.length-1]>v[v.length-2]
+      ? '<span class="tu">↑</span>'
+      : v[v.length-1]<v[v.length-2]
+        ? '<span class="td2">↓</span>'
+        : '<span class="tf">→</span>';
+  }
+  const disp = periods.slice(-10);
+  let h = '<div style="overflow-x:auto;"><table class="ttable"><thead><tr><th>KPI</th>';
+  disp.forEach(p => h += '<th>'+p.replace(/_/g,' ')+'</th>');
+  h += '<th>Trend</th></tr></thead><tbody>';
+  kpiDefs.forEach(kpi => {
+    const vals = periods.map(p => { const m=mg(p); return m[kpi.k]!=null?m[kpi.k]:null; });
+    const dv = vals.slice(-10);
+    if (dv.every(v => v===null)) return;
+    h += '<tr><td>'+kpi.l+'</td>';
+    dv.forEach(v => { const st=clr(kpi,v); h+='<td'+(st?' style="'+st+'"':'')+'>'+kpi.fmt(v)+'</td>'; });
+    h += '<td>'+trend(dv)+'</td></tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div class="abox"><div class="abox-h">'
+     + '<div class="abox-t">✨ AI Trend Analysis</div>'
+     + '<button class="btn-gold" onclick="genTrends()" id="tBtn">Generate Analysis</button>'
+     + '</div><div class="abox-b" id="tBody" style="color:var(--gray);font-style:italic;">'
+     + 'Click Generate Analysis to have Claude identify meaningful trends.</div></div>';
+  document.getElementById('dash').innerHTML = h;
+}
+
+window.genTrends = async function() {
+  const btn = document.getElementById('tBtn');
+  const body = document.getElementById('tBody');
+  btn.textContent='Analyzing...'; btn.disabled=true;
+  body.textContent='Claude is analyzing trends...';
+  body.style.fontStyle='italic'; body.style.color='var(--gray)';
+  const allP = new Set();
+  getPorts().forEach(p => { if(CD[p]) Object.keys(CD[p]).forEach(k => allP.add(k)); });
+  const periods = Array.from(allP).sort();
+  function mg(p) {
+    const m={};
+    getPorts().forEach(port => {
+      if(!CD[port]?.[p]) return;
+      const d=CD[port][p];
+      Object.keys(d).forEach(k => { if(typeof d[k]==='number')m[k]=(m[k]||0)+d[k]; else if(!m[k])m[k]=d[k]; });
+    });
+    if(m.occupied&&m.total_units&&!m.occupancy_rate)m.occupancy_rate=(m.occupied/m.total_units)*100;
+    if(m.wo_completed&&m.wo_in&&!m.wo_completion_rate)m.wo_completion_rate=(m.wo_completed/m.wo_in)*100;
+    return m;
+  }
+  const lines = periods.map(p => {
+    const m = mg(p);
+    return p.replace(/_/g,' ')+': Occ='+(m.occupancy_rate?parseFloat(m.occupancy_rate).toFixed(1)+'%':'N/A')
+      +', Leads='+(m.leads||'N/A')+', Leased='+(m.leased||'N/A')
+      +', MoveIns='+(m.movein!=null?m.movein:'N/A')+', MoveOuts='+(m.moveout!=null?m.moveout:'N/A')
+      +', VacantUnrented='+(m.vacant_unrented!=null?m.vacant_unrented:'N/A')
+      +', WOCompletion='+(m.wo_completion_rate?parseFloat(m.wo_completion_rate).toFixed(1)+'%':'N/A')
+      +', Delinquencies='+(m.delinquencies!=null?m.delinquencies:'N/A');
+  }).join('\n');
+  const prompt = 'You are a property management analyst. Analyze these KPI trends for '+N[CP]
+    +' and write a professional narrative. Identify positive trends, negative trends, '
+    +'KPIs consistently below target, and one recommendation. '
+    +'Write in plain paragraphs with ALL CAPS section labels. No markdown. Under 300 words.\n\n'+lines;
+  try {
+    const res = await fetch(WORKER, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:'claude-opus-4-6', max_tokens:500,
+        system:'Write concise trend analyses. Plain text only, no markdown.',
+        messages:[{role:'user',content:prompt}] })
+    });
+    if (!res.ok) throw new Error('API error');
+    const resp = await res.json();
+    body.textContent = resp.content[0].text.trim();
+    body.style.fontStyle='normal'; body.style.color='var(--navy)';
+  } catch(e) { body.textContent='Analysis failed: '+e.message; }
+  btn.textContent='Refresh Analysis'; btn.disabled=false;
+};
+
+// ── Upload modal ──────────────────────────────────────
+window.openModal = function() {
+  if (CP !== 'all') document.getElementById('mPort').value = CP;
+  const today     = new Date();
+  const weekStart = new Date(today); weekStart.setDate(today.getDate()-6);
+  document.getElementById('mStartDate').value = weekStart.toISOString().split('T')[0];
+  document.getElementById('mEndDate').value   = today.toISOString().split('T')[0];
+  document.getElementById('modal').classList.add('open');
+};
+window.closeModal = function() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('confirmPanel').style.display = 'none';
+  document.getElementById('exBtn').style.display = 'block';
+  document.getElementById('pw').style.display = 'none';
+};
+document.getElementById('modal').addEventListener('click',
+  e => { if (e.target === document.getElementById('modal')) closeModal(); });
+
+// File handling
+const dz = document.getElementById('dz');
+if (dz) {
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.style.borderColor='var(--gold)'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor=''; });
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.style.borderColor=''; addF(Array.from(e.dataTransfer.files)); });
+}
+const fi = document.getElementById('fi');
+if (fi) fi.addEventListener('change', e => addF(Array.from(e.target.files)));
+
+function addF(files) {
+  files.forEach(f => { if (!MF.find(x => x.name===f.name)) MF.push(f); });
+  renderC();
+}
+function renderC() {
+  document.getElementById('chips').innerHTML = MF.map((f,i) =>
+    '<div class="chip">📄 ' + f.name +
+    ' <button class="chip-x" onclick="rmF('+i+')">✕</button></div>').join('');
+}
+window.rmF = i => { MF.splice(i,1); renderC(); };
+
+// Progress bar helper
+function setP(pct, lbl, st) {
+  document.getElementById('pf').style.width  = pct+'%';
+  document.getElementById('pp').textContent  = pct+'%';
+  document.getElementById('pl').textContent  = lbl;
+  document.getElementById('ps').textContent  = st;
+}
+
+function getPeriodInfo() {
+  const from = document.getElementById('mStartDate').value;
+  const to   = document.getElementById('mEndDate').value;
+  if (!from || !to) { alert('Please select start and end dates.'); return null; }
+  const isWeekly = document.getElementById('vtW').checked;
+  const fromD    = new Date(from+'T12:00:00');
+  const toD      = new Date(to+'T12:00:00');
+  const fmtDate  = d => d.toLocaleString('default',{month:'short'})+' '+d.getDate();
+  const label    = fmtDate(fromD)+' - '+fmtDate(toD)+', '+toD.getFullYear();
+  const key      = (isWeekly?'W':'M')+'_'+from.replace(/-/g,'')+'_'+to.replace(/-/g,'');
+  return { label, key, type:isWeekly?'weekly':'monthly', from, to, ts:fromD.getTime() };
+}
+
+window.extractKPIs = async function() {
+  if (!MF.length) return alert('Please select at least one file.');
+  const port = document.getElementById('mPort').value;
+  const pi   = getPeriodInfo();
+  if (!pi) return;
+  const btn  = document.getElementById('exBtn');
+  btn.disabled=true; btn.textContent='Extracting...';
+  document.getElementById('pw').style.display = 'block';
+  setP(10,'Reading files...','Loading your Appfolio exports...');
+  const fc = [];
+  for (let i=0; i<MF.length; i++) {
+    setP(Math.round(10+(i/MF.length)*30), 'Reading...', 'Reading: '+MF[i].name);
+    try {
+      const t = await new Promise((res,rej) => {
+        const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(MF[i]);
+      });
+      fc.push({ name:MF[i].name, content:t.length>4000?t.slice(0,4000)+'...[truncated]':t });
+    } catch(e) {
+      fc.push({ name:MF[i].name, content:'[Could not read file: '+MF[i].name+']' });
+    }
+  }
+  setP(50,'Sending to Claude...','Extracting KPIs with AI...');
+  const tmpl = '{"total_units":null,"occupied":null,"occupancy_rate":null,"adjusted_occupancy_rate":null,"vacant_rented":null,"vacant_unrented":null,"notice_rented":null,"notice_unrented":null,"leads":null,"showings":null,"applications":null,"leased":null,"movein":null,"moveout":null,"wo_in":null,"wo_completed":null,"wo_cancel":null,"turns_prog":null,"turns_done":null,"delinquencies":null,"delinquencies_amt":null,"evictions":null,"renewals":null,"noi":null,"total_income":null,"rent_income":null,"collection_rate":null,"wo_completion_rate":null,"gpr":null,"financial_occupancy":null}';
+  const fs   = fc.map((f,i) => '--- FILE '+(i+1)+': '+f.name+' ---\n'+f.content).join('\n\n');
+  const prompt = tmpl+'\n\nFill in the above JSON with values extracted from the Appfolio report files below. '
+    +'Return ONLY the completed JSON object. No other text, no explanation, no markdown backticks.\n\n'+fs;
+  try {
+    const res  = await fetch(WORKER, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ model:'claude-opus-4-6', max_tokens:1000,
+        system:'You are a data extraction assistant. Return only valid JSON with no extra text.',
+        messages:[{role:'user',content:prompt}] })
+    });
+    if (!res.ok) throw new Error('API error '+res.status);
+    const resp = await res.json();
+    const raw  = resp.content[0].text.trim();
+    const jm   = raw.match(/\{[\s\S]*\}/);
+    if (!jm) throw new Error('No JSON in Claude response');
+    const ex   = JSON.parse(jm[0]);
+    ex.viewType=pi.type; ex.periodLabel=pi.label; ex.periodTs=pi.ts;
+    ex.uploadedBy=CU.displayName||CU.email; ex.uploadedAt=Date.now();
+    ex.sourceFiles=MF.map(f=>f.name);
+    setP(90,'Review...','Please review the extracted KPIs...');
+    PENDING = { port, key:pi.key, label:pi.label, data:ex };
+    showConfirm(ex, pi.label, port, pi.key);
+    btn.disabled=false; btn.textContent='🧠 Extract KPIs with AI';
+  } catch(e) {
+    setP(0,'Error','Failed: '+e.message);
+    btn.disabled=false; btn.textContent='🧠 Extract KPIs with AI';
+  }
+};
+
+function showConfirm(ex, label, port, key) {
+  document.getElementById('confirmPeriodLabel').textContent = label+' — '+N[port];
+  document.getElementById('dupWarning').style.display = (CD[port]?.[key]) ? 'block' : 'none';
+  const kpiShow=[
+    {k:'total_units',l:'Total Units'},{k:'occupied',l:'Occupied'},
+    {k:'occupancy_rate',l:'Occupancy %'},{k:'adjusted_occupancy_rate',l:'Adj. Occupancy %'},
+    {k:'vacant_unrented',l:'Vacant Unrented'},{k:'leads',l:'Leads'},
+    {k:'showings',l:'Showings'},{k:'applications',l:'Applications'},
+    {k:'leased',l:'Leased'},{k:'movein',l:'Move Ins'},{k:'moveout',l:'Move Outs'},
+    {k:'wo_in',l:'WOs In'},{k:'wo_completed',l:'WOs Done'},
+    {k:'wo_completion_rate',l:'WO Rate %'},{k:'delinquencies',l:'Delinquencies'},
+    {k:'noi',l:'NOI'}
+  ];
+  const grid = kpiShow.map(kpi => {
+    const v   = ex[kpi.k];
+    const has = v !== null && v !== undefined;
+    const disp = has
+      ? (typeof v==='number' && (kpi.k==='noi'||kpi.k==='total_income')
+          ? '$'+Number(v).toLocaleString()
+          : typeof v==='number' && kpi.k.includes('rate')
+            ? v.toFixed(1)+'%'
+            : v)
+      : 'Not found';
+    return '<div style="padding:8px 10px;background:'+(has?'rgba(39,174,96,0.05)':'rgba(15,31,61,0.03)')
+      +';border:1px solid '+(has?'rgba(39,174,96,0.2)':'rgba(15,31,61,0.06)')+';border-radius:3px;">'
+      +'<div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'+kpi.l+'</div>'
+      +'<div style="font-size:15px;font-family:Cormorant Garamond,serif;color:'+(has?'var(--navy)':'rgba(138,143,163,0.6)')+';">'+disp+'</div></div>';
+  }).join('');
+  document.getElementById('confirmGrid').innerHTML = grid;
+  document.getElementById('confirmPanel').style.display = 'block';
+  document.getElementById('exBtn').style.display = 'none';
+  document.getElementById('pw').style.display = 'none';
+}
+
+window.saveKPIs = async function() {
+  if (!PENDING) return;
+  const btn = document.getElementById('saveBtn');
+  btn.textContent='Saving...'; btn.disabled=true;
+  try {
+    await set(ref(db,'kpis/'+PENDING.port+'/'+PENDING.key), PENDING.data);
+    const sp=PENDING.port, sk=PENDING.key;
+    PENDING=null; MF=[]; renderC();
+    document.getElementById('confirmPanel').style.display='none';
+    document.getElementById('exBtn').style.display='block';
+    btn.textContent='Save'; btn.disabled=false;
+    closeModal();
+    let pb=null;
+    document.querySelectorAll('.pb').forEach(b => {
+      if (b.getAttribute('onclick')?.includes(sp)) pb=b;
+    });
+    if (pb) setPort(sp, pb); else CK=sk;
+  } catch(e) {
+    alert('Save failed: '+e.message);
+    btn.textContent='Save'; btn.disabled=false;
+  }
+};
+
+window.cancelConfirm = function() {
+  PENDING=null;
+  document.getElementById('confirmPanel').style.display='none';
+  document.getElementById('exBtn').style.display='block';
+  document.getElementById('pw').style.display='none';
+};
+
+// ── Sync modal ────────────────────────────────────────
+window.syncAppfolio = function() {
+  const today     = new Date();
+  const weekStart = new Date(today); weekStart.setDate(today.getDate()-6);
+  document.getElementById('sStartDate').value = weekStart.toISOString().split('T')[0];
+  document.getElementById('sEndDate').value   = today.toISOString().split('T')[0];
+  const sPort = document.getElementById('sPort');
+  if (CP !== 'all' && sPort) sPort.value = CP;
+  document.getElementById('syncModal').classList.add('open');
+};
+
+window.closeSyncModal = function() {
+  document.getElementById('syncModal').classList.remove('open');
+  document.getElementById('syncProgress').style.display  = 'none';
+  document.getElementById('syncConfirm').style.display   = 'none';
+  document.getElementById('doSyncBtn').style.display     = 'block';
+  document.getElementById('leasingUploadSection').style.display = 'none';
+  SYNC_PENDING=null;
+};
+
+document.getElementById('syncModal').addEventListener('click',
+  e => { if (e.target === document.getElementById('syncModal')) closeSyncModal(); });
+
+function getSyncPeriodInfo() {
+  const from = document.getElementById('sStartDate').value;
+  const to   = document.getElementById('sEndDate').value;
+  if (!from || !to) { alert('Please select start and end dates.'); return null; }
+  const isWeekly = document.getElementById('svtW').checked;
+  const fromD    = new Date(from+'T12:00:00');
+  const toD      = new Date(to+'T12:00:00');
+  const fmtDate  = d => d.toLocaleString('default',{month:'short'})+' '+d.getDate();
+  const label    = fmtDate(fromD)+' - '+fmtDate(toD)+', '+toD.getFullYear();
+  const key      = (isWeekly?'W':'M')+'_'+from.replace(/-/g,'')+'_'+to.replace(/-/g,'');
+  return { label, key, type:isWeekly?'weekly':'monthly', from, to, ts:fromD.getTime() };
+}
+
+function setSP(pct, lbl, st) {
+  document.getElementById('spFill').style.width = pct+'%';
+  document.getElementById('spPct').textContent  = pct+'%';
+  document.getElementById('spLbl').textContent  = lbl;
+  document.getElementById('spStatus').textContent = st;
+}
+
+window.doSync = async function() {
+  const port = document.getElementById('sPort').value;
+  const pi   = getSyncPeriodInfo();
+  if (!pi) return;
+  const btn  = document.getElementById('doSyncBtn');
+  btn.disabled=true; btn.textContent='Syncing...';
+  document.getElementById('syncProgress').style.display = 'block';
+  setSP(20,'Connecting to Appfolio...','Pulling '+pi.label+' data...');
+  try {
+    const res = await fetch(WORKER+'/appfolio-sync', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ portfolio:port, from_date:pi.from, to_date:pi.to, type:pi.type })
+    });
+    setSP(70,'Processing...','Extracting KPIs...');
+    if (!res.ok) { const err=await res.json(); throw new Error(err.error||'Sync failed'); }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error||'Sync returned no data');
+    const kpis = { ...data.kpis,
+      viewType:pi.type, periodLabel:pi.label, periodTs:pi.ts,
+      uploadedBy:CU.displayName||CU.email, uploadedAt:Date.now(),
+      sourceFiles:['Appfolio API']
+    };
+    setSP(90,'Review...','Please confirm before saving...');
+    SYNC_PENDING = { port, key:pi.key, label:pi.label, data:kpis, reportStatus:data.reportStatus };
+    showSyncConfirm(kpis, pi.label, port, pi.key, data.reportStatus, data.rawCounts);
+    btn.disabled=false; btn.textContent='Pull from Appfolio';
+  } catch(e) {
+    setSP(0,'Error','Sync failed: '+e.message);
+    btn.disabled=false; btn.textContent='Pull from Appfolio';
+  }
+};
+
+function showSyncConfirm(kpis, label, port, key, reportStatus, rawCounts) {
+  document.getElementById('syncConfirmLbl').textContent = label+' — '+N[port];
+  const kpiShow=[
+    {k:'total_units',l:'Total Units'},{k:'occupied',l:'Occupied'},
+    {k:'occupancy_rate',l:'Occupancy %'},{k:'adjusted_occupancy_rate',l:'Adj. Occupancy %'},
+    {k:'vacant_unrented',l:'Vacant Unrented'},{k:'showings',l:'Showings'},
+    {k:'leads',l:'Leads'},{k:'applications',l:'Applications'},
+    {k:'leased',l:'Leased'},{k:'movein',l:'Move Ins'},{k:'moveout',l:'Move Outs'},
+    {k:'wo_in',l:'WOs In'},{k:'wo_completed',l:'WOs Done'},
+    {k:'wo_completion_rate',l:'WO Rate %'},{k:'delinquencies_amt',l:'Delinquencies $'},
+    {k:'noi',l:'NOI'}
+  ];
+  const grid = kpiShow.map(kpi => {
+    const v   = kpis[kpi.k];
+    const has = v !== null && v !== undefined;
+    const disp = has
+      ? (typeof v==='number' && (kpi.k==='noi'||kpi.k.includes('income')||kpi.k.includes('amt'))
+          ? '$'+Number(v).toLocaleString()
+          : typeof v==='number' && kpi.k.includes('rate')
+            ? v.toFixed(1)+'%'
+            : v)
+      : 'Not found';
+    return '<div style="padding:8px 10px;background:'+(has?'rgba(39,174,96,0.05)':'rgba(15,31,61,0.03)')
+      +';border:1px solid '+(has?'rgba(39,174,96,0.2)':'rgba(15,31,61,0.06)')+';border-radius:3px;">'
+      +'<div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'+kpi.l+'</div>'
+      +'<div style="font-size:15px;font-family:Cormorant Garamond,serif;color:'+(has?'var(--navy)':'rgba(138,143,163,0.6)')+';">'+disp+'</div></div>';
+  }).join('');
+  document.getElementById('syncConfirmGrid').innerHTML = grid;
+  let statusHtml = 'Reports pulled: ';
+  if (reportStatus) {
+    statusHtml += Object.keys(reportStatus)
+      .map(k => (reportStatus[k]==='ok'?'✅':'⚠️')+' '+k.replace(/_/g,' '))
+      .join(' · ');
+  }
+  if (rawCounts) {
+    statusHtml += ' | Rows: occ='+rawCounts.occupancyRows
+      +', showings='+rawCounts.showingsRows
+      +', tickler='+rawCounts.ticklerRows
+      +', wo='+rawCounts.workOrderRows;
+  }
+  document.getElementById('syncReportStatus').textContent = statusHtml;
+  document.getElementById('syncConfirm').style.display  = 'block';
+  document.getElementById('doSyncBtn').style.display    = 'none';
+  document.getElementById('syncProgress').style.display = 'none';
+}
+
+window.saveSyncedKPIs = async function() {
+  if (!SYNC_PENDING) { alert('No data to save. Please run the sync first.'); return; }
+  const btn = document.getElementById('saveSyncBtn');
+  btn.textContent='Saving...'; btn.disabled=true;
+  try {
+    const sp = SYNC_PENDING.port, sk = SYNC_PENDING.key;
+    const portsToSave = sp==='all' ? ['all_portfolios'] : [sp];
+    for (const port of portsToSave) {
+      await set(ref(db,'kpis/'+port+'/'+sk), SYNC_PENDING.data);
+    }
+    btn.textContent='✅ Saved!';
+    document.getElementById('leasingUploadSection').style.display='block';
+    LAST_SAVED = { ports:portsToSave, key:sk, port:sp };
+  } catch(e) {
+    alert('Save failed: '+e.message);
+    btn.textContent='Save to Dashboard'; btn.disabled=false;
+  }
+};
+
+window.skipLeasingAndClose = function() {
+  if (LAST_SAVED) {
+    const sp=LAST_SAVED.port, sk=LAST_SAVED.key;
+    closeSyncModal();
+    let pb=null;
+    document.querySelectorAll('.pb').forEach(b => { if(b.getAttribute('onclick')?.includes(sp)) pb=b; });
+    if (!pb) pb=document.querySelector('.pb');
+    if (pb) setPort(sp==='all'?'all':sp, pb);
+    CK=sk; SYNC_PENDING=null; LAST_SAVED=null;
+  } else closeSyncModal();
+};
+
+window.uploadLeasingData = async function() {
+  const fileIn = document.getElementById('leasingFileIn');
+  const status = document.getElementById('leasingUploadStatus');
+  if (!fileIn?.files[0]) { status.textContent='Please select a CSV file.'; return; }
+  if (!LAST_SAVED) { status.textContent='Please save the sync data first.'; return; }
+  status.textContent='Reading file...'; status.style.color='var(--gray)';
+  try {
+    const text = await new Promise((res,rej) => {
+      const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(fileIn.files[0]);
+    });
+    status.textContent='Extracting leasing data...';
+    const lines   = text.split(/\r?\n/).filter(l => l.trim());
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+    let kpis = { leads:null, applications:null, leased:null };
+    for (let i=1; i<lines.length; i++) {
+      const vals = lines[i].split(',').map(v => v.trim().replace(/"/g,''));
+      const row  = {};
+      headers.forEach((h,j) => row[h]=vals[j]||'');
+      const ut = (row['Unit Type']||row['unit_type']||'').toLowerCase();
+      if (ut==='total' || i===lines.length-1) {
+        kpis.leads        = parseInt(row['Inquiries Received']    ||row['inquiries_received']   ||0)||null;
+        kpis.applications = parseInt(row['Applications Received'] ||row['applications_received']||0)||null;
+        kpis.leased       = parseInt(row['Leased']                ||row['leased']               ||0)||null;
+        if (ut==='total') break;
+      }
+    }
+    for (const port of LAST_SAVED.ports) {
+      const updates = [];
+      if (kpis.leads!=null)        updates.push(set(ref(db,'kpis/'+port+'/'+LAST_SAVED.key+'/leads'),kpis.leads));
+      if (kpis.applications!=null) updates.push(set(ref(db,'kpis/'+port+'/'+LAST_SAVED.key+'/applications'),kpis.applications));
+      if (kpis.leased!=null)       updates.push(set(ref(db,'kpis/'+port+'/'+LAST_SAVED.key+'/leased'),kpis.leased));
+      await Promise.all(updates);
+    }
+    status.textContent = '✅ Added — Leads: '+(kpis.leads||0)+', Apps: '+(kpis.applications||0)+', Leased: '+(kpis.leased||0);
+    status.style.color = 'var(--green)';
+    setTimeout(() => skipLeasingAndClose(), 2000);
+  } catch(e) {
+    status.textContent='Upload failed: '+e.message;
+    status.style.color='var(--red)';
+  }
+};
+
+</script>
+</body>
+</html>
