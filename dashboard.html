@@ -558,10 +558,12 @@ window.genTrends=async function(){
 
 window.openModal=function(){
   if(CP!=='all')document.getElementById('mPort').value=CP;
-  // Set today's date as default
   var today=new Date();
-  document.getElementById('mWeekDate').value=today.toISOString().split('T')[0];
-  document.getElementById('mMonthDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  var todayStr=today.toISOString().split('T')[0];
+  var weekStart=new Date(today);
+  weekStart.setDate(today.getDate()-6);
+  document.getElementById('mStartDate').value=weekStart.toISOString().split('T')[0];
+  document.getElementById('mEndDate').value=todayStr;
   document.getElementById('modal').classList.add('open');
 };
 window.closeModal=function(){
