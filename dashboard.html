@@ -1026,7 +1026,10 @@ window.closeSyncModal = function() {
   document.getElementById('syncConfirm').style.display   = 'none';
   document.getElementById('doSyncBtn').style.display     = 'block';
   document.getElementById('leasingUploadSection').style.display = 'none';
-  SYNC_PENDING=null;
+  // Reset save button so next sync can save
+  var saveBtn = document.getElementById('saveSyncBtn');
+  if (saveBtn) { saveBtn.textContent = '💾 Save to Dashboard'; saveBtn.disabled = false; }
+  SYNC_PENDING = null;
 };
 
 try { document.getElementById('syncModal').addEventListener('click', e => { if (e.target === document.getElementById('syncModal')) closeSyncModal(); }); } catch(e) { console.error('syncModal listener failed:', e); }
@@ -1057,6 +1060,10 @@ window.doSync = async function() {
   if (!pi) return;
   const btn  = document.getElementById('doSyncBtn');
   btn.disabled=true; btn.textContent='Syncing...';
+  // Reset save button for fresh sync
+  var sb = document.getElementById('saveSyncBtn');
+  if (sb) { sb.textContent = '💾 Save to Dashboard'; sb.disabled = false; }
+  document.getElementById('syncConfirm').style.display = 'none';
   document.getElementById('syncProgress').style.display = 'block';
   setSP(20,'Connecting to Appfolio...','Pulling '+pi.label+' data...');
   try {
