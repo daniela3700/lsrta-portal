@@ -188,7 +188,7 @@
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn-gold" onclick="openModal()">📤 Upload Reports</button>
-        <button id="appfolioSyncBtn" type="button" data-action="sync-appfolio" style="padding:7px 16px;background:var(--navy);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">🔄 Sync Appfolio</button>
+        <button id="appfolioSyncBtn" style="padding:7px 16px;background:var(--navy);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">🔄 Sync Appfolio</button>
       </div>
     </div>
     <div class="aib">
@@ -267,8 +267,18 @@
           <button onclick="cancelConfirm()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
         </div>
       </div>
+    <!-- LEASING UPLOAD SECTION — shown after save -->
+    <div id="leasingUploadSection" style="display:none;margin:0 24px 24px;padding:16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;min-width:200px;"/>
+        <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
+        <button onclick="skipLeasingAndClose()" style="padding:8px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;">Skip</button>
+      </div>
+      <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
+    </div>
   </div>
-</div>
 </div>
 
 
@@ -325,90 +335,15 @@
         <div id="syncConfirmGrid" style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
         <div id="syncReportStatus" style="padding:8px 16px;font-size:11px;color:var(--gray);border-top:1px solid rgba(15,31,61,0.06);"></div>
         <div style="padding:12px 16px;border-top:1px solid rgba(15,31,61,0.06);display:flex;gap:10px;">
-          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" style="flex:1;">💾 Save to Dashboard</button>
+          <button class="btn-navy" onclick="saveSyncedKPIs()" id="saveSyncBtn" onclick="saveSyncedKPIs()" style="flex:1;">💾 Save to Dashboard</button>
           <button onclick="skipLeasingAndClose()" style="padding:10px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Skip — Go to Dashboard</button>
         </div>
 
-      </div>
-      <!-- LEASING UPLOAD SECTION — shown after sync save -->
-      <div id="leasingUploadSection" style="display:none;margin-bottom:16px;padding:16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;">
-        <div style="font-size:11px;font-weight:600;color:var(--navy);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">📋 Add Leasing Data (Optional)</div>
-        <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Upload your Leasing Summary CSV to add leads, applications, and leased units to this period.</div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <input type="file" id="leasingFileIn" accept=".csv" style="font-size:12px;color:var(--navy);flex:1;min-width:200px;"/>
-          <button onclick="uploadLeasingData()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:2px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;">Upload & Add</button>
-          <button onclick="skipLeasingAndClose()" style="padding:8px 16px;background:transparent;border:1px solid rgba(15,31,61,0.15);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;white-space:nowrap;">Skip</button>
-        </div>
-        <div id="leasingUploadStatus" style="font-size:11px;color:var(--gray);margin-top:8px;"></div>
       </div>
       <button class="btn-navy" id="doSyncBtn" onclick="doSync()" style="width:100%;">🔄 Pull from Appfolio</button>
     </div>
   </div>
 </div>
-
-<script>
-(function() {
-  function isoDate(date) {
-    return date.toISOString().split('T')[0];
-  }
-
-  function showSyncModal(portOverride) {
-    const modal = document.getElementById('syncModal');
-    if (!modal) {
-      alert('Sync modal missing. Please refresh the page and try again.');
-      return;
-    }
-
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - 6);
-
-    const startDate = document.getElementById('sStartDate');
-    const endDate = document.getElementById('sEndDate');
-    const syncPort = document.getElementById('sPort');
-    const currentPort = portOverride || window.__LSRTA_CURRENT_PORTFOLIO || 'all';
-
-    if (startDate) startDate.value = isoDate(weekStart);
-    if (endDate) endDate.value = isoDate(today);
-    if (syncPort) syncPort.value = currentPort;
-
-    modal.classList.add('open');
-  }
-
-  window.__openSyncModal = showSyncModal;
-  window.syncAppfolio = function() {
-    showSyncModal();
-  };
-
-  window.closeSyncModal = window.closeSyncModal || function() {
-    const modal = document.getElementById('syncModal');
-    if (modal) modal.classList.remove('open');
-    ['syncProgress', 'syncConfirm', 'leasingUploadSection'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
-    const pullBtn = document.getElementById('doSyncBtn');
-    if (pullBtn) pullBtn.style.display = 'block';
-  };
-
-  document.addEventListener('click', function(event) {
-    const trigger = event.target && event.target.closest
-      ? event.target.closest('[data-action="sync-appfolio"]')
-      : null;
-    if (!trigger) return;
-    event.preventDefault();
-    window.syncAppfolio();
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('syncModal');
-    if (!modal) return;
-    modal.addEventListener('click', function(event) {
-      if (event.target === modal) window.closeSyncModal();
-    });
-  });
-})();
-</script>
 
 <script type="module">
 
@@ -435,8 +370,8 @@ const db   = getDatabase(app);
 
 // ── State ─────────────────────────────────────────────
 let CU=null, CP='all', CV='weekly', CK=null, CD={}, MF=[];
+window._CP = 'all';
 let PENDING=null, SYNC_PENDING=null, LAST_SAVED=null;
-window.__LSRTA_CURRENT_PORTFOLIO = CP;
 
 // ── Auth ──────────────────────────────────────────────
 onAuthStateChanged(auth, function(u) {
@@ -456,8 +391,7 @@ window.doSignOut = () => signOut(auth).then(() => window.location.href='index.ht
 
 // ── Portfolio / view toggles ──────────────────────────
 window.setPort = function(p, btn) {
-  CP = p; CK = null;
-  window.__LSRTA_CURRENT_PORTFOLIO = CP;
+  CP = p; window._CP = p; CK = null;
   document.querySelectorAll('.pb').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('dashTitle').textContent = N[p] + ' Dashboard';
@@ -569,8 +503,8 @@ function draw() {
       + '<div class="empty-t">No data yet for ' + N[CP] + '</div>'
       + '<div class="empty-s">Upload your Appfolio exports or use Sync Appfolio to pull live data.</div>'
       + '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">'
-      + '<button class="btn-navy" onclick="openModal()">📤 Upload Reports</button>'
-      + '<button class="btn-navy" type="button" data-action="sync-appfolio">🔄 Sync Appfolio</button>'
+      + '<button class="btn-navy" data-action="open-modal">📤 Upload Reports</button>'
+      + '<button class="btn-navy" data-action="sync-appfolio">🔄 Sync Appfolio</button>'
       + '</div></div>';
     return;
   }
@@ -1054,23 +988,37 @@ window.cancelConfirm = function() {
 
 // ── Sync modal ────────────────────────────────────────
 window.syncAppfolio = function() {
-  if (window.__openSyncModal) {
-    window.__openSyncModal(CP);
-    return;
-  }
-
-  const today = new Date();
+  const today     = new Date();
   const weekStart = new Date(today); weekStart.setDate(today.getDate()-6);
-  const startDate = document.getElementById('sStartDate');
-  const endDate = document.getElementById('sEndDate');
-  const syncModal = document.getElementById('syncModal');
+  document.getElementById('sStartDate').value = weekStart.toISOString().split('T')[0];
+  document.getElementById('sEndDate').value   = today.toISOString().split('T')[0];
   const sPort = document.getElementById('sPort');
-  if (startDate) startDate.value = weekStart.toISOString().split('T')[0];
-  if (endDate) endDate.value = today.toISOString().split('T')[0];
-  if (sPort) sPort.value = CP;
-  if (syncModal) syncModal.classList.add('open');
-  else alert('Sync modal missing. Please refresh the page and try again.');
+  if (CP !== 'all' && sPort) sPort.value = CP;
+  document.getElementById('syncModal').classList.add('open');
 };
+
+// Direct event listener — runs after DOM is ready since script is at bottom of body
+(function() {
+  var syncBtnDirect = document.getElementById('appfolioSyncBtn');
+  if (syncBtnDirect) {
+    syncBtnDirect.addEventListener('click', function() {
+      var today = new Date();
+      var weekStart = new Date(today);
+      weekStart.setDate(today.getDate()-6);
+      var sd = document.getElementById('sStartDate');
+      var ed = document.getElementById('sEndDate');
+      var sm = document.getElementById('syncModal');
+      if(sd) sd.value = weekStart.toISOString().split('T')[0];
+      if(ed) ed.value = today.toISOString().split('T')[0];
+      var sPort = document.getElementById('sPort');
+      if(sPort && CP !== 'all') sPort.value = CP;
+      if(sm) sm.classList.add('open');
+      else alert('Sync modal not found!');
+    });
+  } else {
+    alert('Sync button not found!');
+  }
+})();
 
 window.closeSyncModal = function() {
   document.getElementById('syncModal').classList.remove('open');
@@ -1254,6 +1202,76 @@ window.uploadLeasingData = async function() {
   }
 };
 
+</script>
+
+<script>
+// Plain script — runs before ES module, handles ALL sync/modal clicks
+// Uses event delegation so it works for dynamically created buttons too
+(function() {
+  function openSyncModal() {
+    var sm = document.getElementById('syncModal');
+    if (!sm) return;
+    var today = new Date();
+    var ws = new Date(today);
+    ws.setDate(today.getDate() - 6);
+    var sd = document.getElementById('sStartDate');
+    var ed = document.getElementById('sEndDate');
+    if (sd) sd.value = ws.toISOString().split('T')[0];
+    if (ed) ed.value = today.toISOString().split('T')[0];
+    // Sync current portfolio selection into modal
+    var currentPort = window._CP || 'all';
+    var sPort = document.getElementById('sPort');
+    if (sPort && currentPort !== 'all') sPort.value = currentPort;
+    sm.classList.add('open');
+  }
+
+  function openUploadModal() {
+    var m = document.getElementById('modal');
+    if (!m) return;
+    var today = new Date();
+    var ws = new Date(today);
+    ws.setDate(today.getDate() - 6);
+    var sd = document.getElementById('mStartDate');
+    var ed = document.getElementById('mEndDate');
+    if (sd) sd.value = ws.toISOString().split('T')[0];
+    if (ed) ed.value = today.toISOString().split('T')[0];
+    m.classList.add('open');
+  }
+
+  // Delegated listener on document — catches ALL button clicks including dynamic ones
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var id = btn.id;
+    var action = btn.getAttribute('data-action');
+    var onclick = btn.getAttribute('onclick') || '';
+
+    // Sync Appfolio button
+    if (id === 'appfolioSyncBtn' || action === 'sync-appfolio' || onclick.indexOf('syncAppfolio') > -1) {
+      e.preventDefault(); e.stopPropagation();
+      openSyncModal(); return;
+    }
+    // Upload Reports button
+    if (action === 'open-modal' || onclick.indexOf('openModal()') > -1) {
+      e.preventDefault(); e.stopPropagation();
+      openUploadModal(); return;
+    }
+    // All other onclick buttons — call the function by name if module is ready
+    if (onclick && !onclick.indexOf('return') > -1) {
+      var fnName = onclick.replace(/\(.*\)/, '').trim();
+      if (fnName && typeof window[fnName] === 'function') {
+        e.preventDefault(); e.stopPropagation();
+        window[fnName](); return;
+      }
+    }
+  });
+
+  // Also wire directly to the static button as backup
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('appfolioSyncBtn');
+    if (btn) btn.onclick = openSyncModal;
+  });
+})();
 </script>
 </body>
 </html>
