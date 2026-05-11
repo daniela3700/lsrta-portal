@@ -394,7 +394,7 @@ window.doSignOut = () => signOut(auth).then(() => window.location.href='index.ht
 window.setPort = function(p, btn) {
   CP = p; window._CP = p; CK = null;
   document.querySelectorAll('.pb').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   document.getElementById('dashTitle').textContent = N[p] + ' Dashboard';
   if (CV === 'trends') drawTrends(); else draw();
 };
@@ -1264,10 +1264,12 @@ window.uploadLeasingData = async function() {
       e.preventDefault(); e.stopPropagation();
       openUploadModal(); return;
     }
-    // All other onclick buttons — call the function by name if module is ready
-    if (onclick && !onclick.indexOf('return') > -1) {
+    // Other modal buttons with simple no-arg onclick handlers
+    var noArgFns = ['saveSyncedKPIs','closeSyncModal','skipLeasingAndClose','doSync',
+                    'closeModal','cancelConfirm','saveKPIs','genSummary','uploadLeasingData'];
+    if (onclick) {
       var fnName = onclick.replace(/\(.*\)/, '').trim();
-      if (fnName && typeof window[fnName] === 'function') {
+      if (noArgFns.indexOf(fnName) > -1 && typeof window[fnName] === 'function') {
         e.preventDefault(); e.stopPropagation();
         window[fnName](); return;
       }
